@@ -7,8 +7,7 @@ derived from the WACZ spec and the
 actual loader behaviour, with optional producer-specific profiles
 (`browserhive`, etc.) for stricter checks.
 
-The project ships as two packages so the validation engine doesn't
-drag Ink / React along when all you need is the JSON report:
+The project ships as two packages:
 
 | Package                           | bin                | Purpose                                                                                                                                     |
 | --------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
