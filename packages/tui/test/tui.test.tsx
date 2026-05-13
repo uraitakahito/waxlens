@@ -1,23 +1,23 @@
 /**
- * TUI rendering tests.
+ * TUI rendering テスト。
  *
- * Drives the Ink `App` component via `ink-testing-library`, which renders
- * to an in-memory frame buffer and exposes `lastFrame()` / `stdin.write()`.
- * No real terminal is involved, so the suite runs as fast as any other
- * Vitest test and is fully deterministic.
+ * Ink の `App` コンポーネントを `ink-testing-library` で駆動する。
+ * これは in-memory な frame buffer に render して、`lastFrame()` /
+ * `stdin.write()` を露出する。実 terminal は関わらないので、test
+ * スイートは他の Vitest テストと同じくらい速く、完全に決定的に動く。
  *
- * What we assert:
- *   - The component renders all issues with their rule names and
- *     severity icons.
- *   - The cursor (`▶`) starts on the first issue and moves with `↑`/`↓`.
- *   - `enter` toggles the `details` block on the focused issue.
- *   - `q` ends the app cleanly (Ink's `useApp().exit()`).
+ * assert すること:
+ *   - コンポーネントが全 issue を rule 名と severity アイコンつきで
+ *     render する。
+ *   - カーソル (`▶`) は最初の issue から始まり、`↑` / `↓` で移動する。
+ *   - `enter` で focused issue の `details` ブロックがトグルする。
+ *   - `q` で app が綺麗に終了する (Ink の `useApp().exit()`)。
  *
- * What we deliberately don't assert:
- *   - Exact byte-for-byte snapshot of the frame. Ink's render output is
- *     ANSI-rich and can shift with library minor versions; pinning the
- *     bytes would make M2 a moving target. Substring assertions cover
- *     the semantic surface.
+ * 意図的に assert しないこと:
+ *   - フレームのバイト単位 snapshot。Ink の render 出力は ANSI rich で、
+ *     ライブラリの minor バージョンで変動しうる; これを pin すると
+ *     M2 が動く標的になる。substring assertion で意味論的な surface は
+ *     cover できる。
  */
 import { render } from "ink-testing-library";
 import { describe, expect, it } from "vitest";
@@ -73,9 +73,9 @@ describe("tui rendering", () => {
   it("starts with the cursor on the first issue", () => {
     const { lastFrame } = render(<App report={makeReport()} />);
     const frame = lastFrame() ?? "";
-    // The cursor sits on the same line as the first rule name. We
-    // assert by checking the order: ▶ appears before the first rule
-    // and is the only such marker in the frame.
+    // カーソルは最初の rule 名と同じ行に座る。順序を確認することで
+    // assert する: ▶ は最初の rule の手前にあり、フレーム内では
+    // 唯一のマーカー。
     const cursorIdx = frame.indexOf("▶");
     const firstRuleIdx = frame.indexOf("datapackage/profile-required");
     expect(cursorIdx).toBeGreaterThanOrEqual(0);
@@ -85,28 +85,28 @@ describe("tui rendering", () => {
 
   it("expands details on enter", async () => {
     const { lastFrame, stdin } = render(<App report={makeReport()} />);
-    // Before pressing enter, the details payload should not be visible.
+    // enter を押す前は details payload が見えていないはず。
     expect(lastFrame() ?? "").not.toContain("expected:");
 
-    // Press enter — ink-testing-library writes raw bytes to its mock
-    // stdin; `\r` is what Ink interprets as the return key.
+    // enter を押す — ink-testing-library は raw bytes を mock stdin
+    // に書き込む; Ink が return キーとして解釈するのは `\r`。
     stdin.write("\r");
-    // Let the next render tick run.
+    // 次の render tick を走らせる。
     await new Promise((resolve) => setTimeout(resolve, 20));
 
-    // The first issue's details has `{ expected: "data-package" }` —
-    // rendered via the diff view because the `expected` field is
-    // present (even without a paired `actual`, the row falls through
-    // to the generic JSON view; the M3 dispatch requires both).
-    // We assert on the JSON-tail rendering of `expected` to keep this
-    // test agnostic of the dispatch decision.
+    // 最初の issue の details は `{ expected: "data-package" }` —
+    // diff view 経由で render される (`expected` が存在するので。
+    // ペアの `actual` が無くても、行は generic JSON view に流れる;
+    // M3 dispatch は両方を要求する)。
+    // dispatch の判断に依存しないよう、ここでは JSON-tail として
+    // render される `expected` の存在を assert する。
     expect(lastFrame() ?? "").toContain("data-package");
   });
 
   it("moves the cursor with the down arrow", async () => {
     const { lastFrame, stdin } = render(<App report={makeReport()} />);
-    // ESC[B is the ANSI sequence for the down arrow. Ink decodes it
-    // into `key.downArrow` inside `useInput`.
+    // ESC[B は down arrow の ANSI シーケンス。Ink はこれを
+    // `useInput` 内で `key.downArrow` に decode する。
     stdin.write("[B");
     await new Promise((resolve) => setTimeout(resolve, 20));
 
