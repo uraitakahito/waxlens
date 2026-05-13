@@ -1,0 +1,46 @@
+{
+  "name": "waxlens",
+  "version": "0.0.0",
+  "description": "TUI validator for WACZ archives produced by BrowserHive — one-shot validation with expandable details on failures.",
+  "license": "Unlicense",
+  "type": "module",
+  "engines": {
+    "node": ">=24.14.1"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "waxlens": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "postbuild": "chmod +x dist/cli.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run typecheck && npm run lint && npm run format:check && npm test",
+    "prepublishOnly": "npm run check && npm run build"
+  },
+  "dependencies": {
+    "commander": "^12.1.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.15.0",
+    "@types/node": "^24.0.0",
+    "eslint": "^9.15.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.4.0",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.18.0",
+    "vitest": "^2.1.0"
+  }
+}
