@@ -1,13 +1,13 @@
 /**
- * Rule registry — the single list the engine consults at run time.
+ * Rule registry — engine が実行時に参照する唯一のリスト。
  *
- * Adding a new rule = export it from its own file and append it here. No
- * other layer in waxlens needs to learn about the new rule; the CLI's
- * future `--rule` filter (M3+) will key off `ValidationRule.name`.
+ * 新しい rule を追加する = 専用ファイルから export して、ここに append
+ * する。waxlens 内の他の層は新しい rule を知る必要が無い。CLI の将来の
+ * `--rule` filter (M3 以降) は `ValidationRule.name` で識別する。
  *
- * Order matters only for cosmetic reasons: the renderer walks the
- * issues in the order rules produced them, so semantically-grouped rules
- * (datapackage/*, cdxj/*, warc/*) read better when adjacent.
+ * 順序は cosmetic な理由でしか効かない: renderer は rule が生成した
+ * 順に issue を辿るので、意味的にまとまった rule (datapackage/*、
+ * cdxj/*、warc/*) を並べておくと読みやすい。
  */
 import type { ValidationRule } from "../types.js";
 import { cdxjFilenameRule } from "./cdxj-filename.js";
@@ -24,18 +24,18 @@ import { warcPayloadDigestRule } from "./warc-payload-digest.js";
 import { warcStorageStoreRule } from "./warc-storage-store.js";
 
 /**
- * The full validation set. M1_RULES (datapackage + cdxj structural
- * checks) lands first so the most-likely producer bugs surface high in
- * the report; the cross-layer rules (#8 / #9) and WARC-internal rules
- * (#7 / #10) follow.
+ * 完全な validation セット。M1_RULES (datapackage + cdxj の構造的
+ * check) が先頭に来るので、最も可能性の高い producer バグが report
+ * の上の方に上がる。cross-layer rule (#8 / #9) や WARC 内部 rule
+ * (#7 / #10) はその後に続く。
  */
 export const ALL_RULES: readonly ValidationRule[] = [
   datapackageProfileRule,
   datapackageWaczVersionRule,
   datapackageHashesRule,
-  // cdxj/index-recognised-by-wabac comes before the other cdxj/* rules
-  // so the "no index at all" condition fires first in the report,
-  // ahead of derivative complaints from rules that read the index.
+  // cdxj/index-recognised-by-wabac は他の cdxj/* rule より先に来る。
+  // 「index が全く無い」状態を最優先で出して、index を読む派生 rule
+  // の二次的な不満より前に置きたいため。
   cdxjIndexRecognisedRule,
   cdxjNonGzippedRule,
   cdxjFilenameRule,
@@ -48,11 +48,10 @@ export const ALL_RULES: readonly ValidationRule[] = [
 ];
 
 /**
- * Backwards-compatible alias used by the CLI and tests. Keeps the
- * earlier name working while the codebase transitions to ALL_RULES.
- * Today the two are identical; if a smaller subset ever ships (e.g.
- * "structural-only" vs "deep") we can split them here without touching
- * call sites.
+ * CLI / test が使う後方互換 alias。コードベースが ALL_RULES に
+ * 移行する間、古い名前を使えるようにしておく。今は両者は同一。もし
+ * いずれ小さい subset (例: "structural-only" vs "deep") を出すことに
+ * なれば、ここで分割すれば call site を触らずに済む。
  */
 export const M1_RULES = ALL_RULES;
 

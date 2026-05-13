@@ -1,12 +1,12 @@
 /**
- * Plain-text renderer (tui-internal).
+ * Plain-text renderer (tui 内部用)。
  *
- * Used by `waxlens` (the @waxlens/tui bin) when the TUI is suppressed
- * (`--no-tui`, or stdout/stdin not a TTY). NOT part of @waxlens/tui's
- * public API — the only library export of this package is the
- * `App` component in `app.tsx`.
+ * `waxlens` (@waxlens/tui の bin) が TUI を抑止しているとき
+ * (`--no-tui`、または stdout/stdin が TTY でないとき) に使う。
+ * @waxlens/tui の public API ではない — この package が library として
+ * export しているのは `app.tsx` の `App` コンポーネントのみ。
  *
- * Output shape:
+ * 出力形:
  *
  *   waxlens 0.0.0  /path/to/file.wacz
  *
@@ -16,11 +16,12 @@
  *
  *   1 passed, 1 failed, 0 warnings, 0 info  · 12ms
  *
- * Color is delegated to picocolors. When the `color` flag is false the
- * library reverts to no-op functions, so the same template renders
- * cleanly in pipes. picocolors itself also auto-suppresses when stdout
- * isn't a TTY (or `NO_COLOR` is set), so the explicit flag is for
- * scripts that want belt-and-braces guarantees.
+ * Color は picocolors に委譲する。`color` フラグが false のとき
+ * picocolors は no-op 関数群に切り替わるので、同じテンプレートで
+ * pipe でも綺麗に render できる。picocolors 自身も、stdout が TTY
+ * で無い (または `NO_COLOR` が設定されている) ときには自動で抑止
+ * するので、明示的なフラグは belt-and-braces な保証を求めるスクリプト
+ * のためにある。
  */
 import pc from "picocolors";
 import type { Issue, Report } from "@waxlens/core";
@@ -37,9 +38,9 @@ const ICON = {
 } as const;
 
 /**
- * Build the full text. Returns the string; the CLI writes it to stdout in
- * one go, which keeps the output atomic in case multiple processes ever
- * write to the same TTY.
+ * 全テキストを組み立てる。返り値は文字列で、CLI がそれを stdout に
+ * 一気に書く。これによって複数 process が同じ TTY に書いたときの
+ * 出力 atomic 性が保たれる。
  */
 export const renderPlain = (report: Report, opts: PlainRenderOptions): string => {
   const c = opts.color ? pc : noColor;
@@ -48,16 +49,17 @@ export const renderPlain = (report: Report, opts: PlainRenderOptions): string =>
   lines.push(`${c.bold("waxlens")} ${c.dim(report.waxlensVersion)}  ${report.file}`);
   lines.push("");
 
-  // Bucket issues by rule so we can show each rule once. Rules with no
-  // issues are listed with a pass icon; rules with any issue show the
-  // worst severity and the details below.
+  // issue を rule で bucket して、各 rule を 1 度だけ表示できるよう
+  // にする。issue が無い rule は pass アイコン付きで列挙、issue がある
+  // rule は worst severity をヘッダに出してから詳細を下に並べる。
   const ruleNames = new Set<string>();
   for (const issue of report.issues) ruleNames.add(issue.rule);
 
   const rulesWithIssues = Array.from(ruleNames);
-  // The renderer infers from the summary: total passes = summary.passed;
-  // failing rules = issued rules. We render issued rules first, then a
-  // single "+N passing rules" tail so the human signal-to-noise stays high.
+  // renderer は summary から推論する: total passes = summary.passed;
+  // failing rule = issue を出した rule。issue を出した rule を先に
+  // render し、その後に "+N passing rules" を 1 行だけ末尾に置く —
+  // 人間にとっての信号雑音比を高く保つため。
   for (const ruleName of rulesWithIssues) {
     const ruleIssues = report.issues.filter((i) => i.rule === ruleName);
     const worst = worstSeverity(ruleIssues);
@@ -100,9 +102,9 @@ const formatBytes = (n: number): string => {
 };
 
 /**
- * Format a single issue. Location is printed compactly inline; structured
- * details are JSON-stringified on the next indent level so the renderer
- * never lies about the data the JSON consumer would see.
+ * 単一の issue を整形する。location はインラインに簡潔に出し、
+ * 構造化された details は 1 段インデントを下げて JSON 化する。これに
+ * よって renderer が JSON consumer に見えるデータについて嘘をつかない。
  */
 const formatIssue = (issue: Issue, c: typeof pc): string => {
   const where = formatLocation(issue);
@@ -111,9 +113,9 @@ const formatIssue = (issue: Issue, c: typeof pc): string => {
 
   if (issue.details !== undefined) {
     const json = JSON.stringify(issue.details);
-    // Cap the detail line at 200 chars so a long hex dump in `details`
-    // doesn't ruin the plain layout. Full payload is always available
-    // via @waxlens/core's JSON output.
+    // `details` の中の長い hex dump が plain layout を壊さないよう
+    // detail 行は 200 文字で切る。完全な payload は @waxlens/core の
+    // JSON 出力でいつでも見られる。
     const truncated = json.length > 200 ? `${json.slice(0, 200)}…` : json;
     out.push(`      ${c.dim(truncated)}`);
   }
@@ -148,11 +150,11 @@ const worstSeverity = (issues: Issue[]): "error" | "warning" | "info" => {
 };
 
 /**
- * Identity-passing picocolors-shaped object. Replaces the real `pc`
- * import when `--no-color` is requested; keeps the call sites identical.
- * Typed via a structural cast because picocolors' `Colors` interface
- * exposes a long list of style functions — we don't need to mirror them
- * here, only to satisfy the few `c.x(...)` calls used above.
+ * Identity を返す picocolors 形のオブジェクト。`--no-color` のとき
+ * 本物の `pc` import の代わりに使う。call site は同一のままに保てる。
+ * picocolors の `Colors` interface は多数の style 関数を持つが、
+ * ここではすべてミラーする必要は無く、上で使う `c.x(...)` 呼び出しを
+ * 満たせばよいので、structural な cast で型付けする。
  */
 const noColor = {
   bold: (s: string) => s,

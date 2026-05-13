@@ -1,30 +1,30 @@
 /**
  * Rule: cdxj/warc-offsets
  *
- * Every CDXJ entry carries `offset` and `length` fields that name the
- * byte range of the WARC record inside `archive/data.warc.gz`. Both
- * MUST be valid integer strings that land exactly on an independent
- * gzip member boundary — otherwise replay tools that seek by offset
- * fetch garbage and silently return "Archived Page Not Found".
+ * 各 CDXJ entry は `offset` / `length` field を持ち、これが
+ * `archive/data.warc.gz` 内の WARC record の byte range を指す。両方
+ * とも valid な整数文字列で、かつ independent な gzip member 境界に
+ * 正確に当たる必要がある — そうでないと offset で seek する replay
+ * ツールは garbage を fetch して silent に "Archived Page Not Found"
+ * を返す。
  *
- * Spec / convention: pywb / wacz-creator stringify offset / length as
- *       decimal; wabac.js's CDXJ loader parses both string and number
- *       forms, so the string-vs-number choice is producer freedom.
- * Reference producer: browserhive's `src/storage/wacz/cdxj.ts` emits
- *       them as strings.
+ * Spec / 慣習: pywb / wacz-creator は offset / length を decimal で
+ *       文字列化する。wabac.js の CDXJ loader は文字列と数値の両方を
+ *       parse するので、producer 側はどちらでも自由。
+ * Reference producer: browserhive の `src/storage/wacz/cdxj.ts` は
+ *       文字列として出力する。
  *
- * Cross-check strategy:
- *   1. Iterate the WARC file with the existing `iterateWarcMembers`
- *      and collect every (offset, length) pair into a map.
- *   2. For each CDXJ entry whose `filename` resolves to `data.warc.gz`,
- *      parse `offset`/`length` and look up the member.
- *   3. Mismatch → error, with the CDXJ line number AND the candidate
- *      members nearby (so the operator can eyeball the corruption).
+ * クロスチェック戦略:
+ *   1. 既存の `iterateWarcMembers` で WARC を辿り、すべての
+ *      (offset, length) ペアを map に集める。
+ *   2. `filename` が `data.warc.gz` に解決される CDXJ entry ごとに
+ *      `offset` / `length` を parse し、member を lookup。
+ *   3. 不一致 → error。CDXJ の行番号と、近傍の候補 member (operator
+ *      が corruption を目視できるよう) を付ける。
  *
- * Only entries with `filename === "data.warc.gz"` are checked — other
- * filenames point to siblings the WACZ doesn't ship and a different
- * rule (filename-archive-relative, M1) already covers the archive/
- * prefix mistake.
+ * `filename === "data.warc.gz"` の entry だけが対象 — 他の filename は
+ * WACZ が同梱しない別ファイルを指していて、`archive/` プレフィックスの
+ * ミスは別 rule (filename-archive-relative、M1) が既に cover している。
  */
 import { ok } from "../../result.js";
 import { parseCdxj } from "../../wacz/cdxj-parser.js";
@@ -53,12 +53,12 @@ export const cdxjWarcOffsetsRule: ValidationRule = {
 
     const cdxjBuf = await wacz.readEntry(CDXJ_ENTRY);
     const warcBuf = await wacz.readEntry(WARC_ENTRY);
-    if (!cdxjBuf || !warcBuf) return ok(issues); // other rules report absence.
+    if (!cdxjBuf || !warcBuf) return ok(issues); // 不在は他 rule が報告する。
 
-    // `loose: true` because the warc/members-independent rule already
-    // reports decode failures with rich context; we don't want a single
-    // bad member to short-circuit the offset check and lose visibility
-    // into the other CDXJ rows.
+    // `loose: true` にしているのは、warc/members-independent rule が
+    // 既に rich な context つきで decode 失敗を報告するため。member
+    // 1 つの不良で offset check を short-circuit させて、他の CDXJ
+    // 行の visibility を失うのを避けたい。
     let members: WarcMember[];
     try {
       members = Array.from(iterateWarcMembers(warcBuf, { loose: true }));
@@ -95,10 +95,10 @@ export const cdxjWarcOffsetsRule: ValidationRule = {
 
       const member = byOffset.get(offset);
       if (!member) {
-        // Candidates carry the WARC-Type header so the operator can
-        // tell at a glance whether the CDXJ row is pointing into a
-        // plausible record. We sniff the closest two members rather
-        // than dump all of them to keep the detail block readable.
+        // 候補には WARC-Type header を付けて、operator が CDXJ 行が
+        // それらしい record を指しているか一目で分かるようにする。
+        // 全 member を dump せず近接の 2 〜 3 件だけ sniff して、
+        // 詳細ブロックを読める長さに保つ。
         const candidates = members
           .map((m) => ({
             offset: m.offset,
@@ -127,9 +127,9 @@ export const cdxjWarcOffsetsRule: ValidationRule = {
           details: {
             expected: { offset, length },
             actual: { offset: member.offset, length: member.length },
-            // The full header block of the record actually present at
-            // this offset, so the operator can tell whether the CDXJ
-            // length is off by a header bug or the WARC was rewritten.
+            // この offset に実在する record の完全な header block。
+            // CDXJ 側 length のずれが header バグなのか、WARC が
+            // 書き換えられたのかを operator が判別できる。
             warcHeader: snippetHeader(member),
           },
         });
@@ -141,10 +141,10 @@ export const cdxjWarcOffsetsRule: ValidationRule = {
 };
 
 /**
- * Pull the canonical WARC header lines (protocol + Key:Value lines, no
- * blank line separator) out of a member's decoded bytes. Used for
- * issue.details so the TUI's warcHeader view can show "what record
- * actually lives here" alongside the CDXJ row that pointed to it.
+ * member の decode 済み bytes から正式な WARC header 行 (protocol +
+ * Key:Value 行、blank line 区切りを除いたもの) を抜き出す。
+ * issue.details に入れて、TUI の warcHeader view が「CDXJ 行が指し
+ * 示した先には実際にはどの record があるか」を併記できるようにする。
  */
 const snippetHeader = (member: WarcMember): string[] => {
   const record = parseWarcRecord(member.raw);
@@ -160,8 +160,8 @@ const snippetHeader = (member: WarcMember): string[] => {
 const parseIntOrUndef = (raw: unknown): number | undefined => {
   if (typeof raw === "number" && Number.isInteger(raw) && raw >= 0) return raw;
   if (typeof raw !== "string") return undefined;
-  // CDXJ convention is decimal; reject anything with a non-digit so a
-  // hex-looking offset doesn't silently match the wrong member.
+  // CDXJ の慣習は decimal。非数字を含むなら reject — hex 風の
+  // offset が間違った member と silent に match するのを防ぐ。
   if (!/^\d+$/.test(raw)) return undefined;
   return Number.parseInt(raw, 10);
 };

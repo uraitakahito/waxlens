@@ -1,17 +1,18 @@
 /**
- * WACZ fixture generator.
+ * WACZ fixture generator。
  *
- * Builds a minimal but spec-conformant WACZ in memory (no I/O of its own —
- * the caller chooses the output path) and exposes mutation hooks so tests
- * can produce corrupted variants without rewriting the assembly logic.
+ * メモリ上で最小だが spec 準拠の WACZ を組み立てる (それ自身は I/O
+ * を持たない — 呼び出し側が出力先を選ぶ)。mutation hook を露出して
+ * いるので、組み立てロジックを書き直さずに、test が corrupted な
+ * バリアントを生成できる。
  *
- * Why this exists rather than a "good.wacz" checked-in fixture: the inputs
- * are simple, the producers (browserhive) are evolving, and we want the
- * "good" baseline to track the spec we encode here. Checking in a binary
- * blob would make the assertions opaque ("the test broke because the file
- * changed") whereas the generator's diff is reviewable.
+ * "good.wacz" をチェックイン fixture にしないのはなぜか: 入力は
+ * シンプル、producer (browserhive) は進化中で、"good" の baseline は
+ * ここで encode する spec を追いかけたい。バイナリ blob をチェック
+ * インすると assertion が opaque になる ("ファイルが変わったので
+ * test が壊れた")。generator なら diff が review 可能。
  *
- * Layout follows browserhive's `src/storage/wacz/packager.ts`:
+ * レイアウトは browserhive の `src/storage/wacz/packager.ts` に従う:
  *
  *   archive/data.warc.gz       STORE
  *   pages/pages.jsonl          DEFLATE
@@ -23,15 +24,15 @@ import { createHash } from "node:crypto";
 import { writeFile } from "node:fs/promises";
 import { Writable } from "node:stream";
 import { gzipSync } from "node:zlib";
-// archiver 8 is ESM-only and exports per-format classes (the v7 factory
-// `archiver("zip", ...)` no longer exists). Type shim lives in
-// src/types/archiver.d.ts because @types/archiver still tracks the v7
-// surface.
+// archiver 8 は ESM-only で、format ごとのクラスを export する
+// (v7 の factory `archiver("zip", ...)` はもう存在しない)。
+// @types/archiver は依然 v7 の surface を tracking しているので
+// type shim を src/types/archiver.d.ts に置いている。
 import { ZipArchive } from "archiver";
 
 // ---------------------------------------------------------------------------
-// Configuration knobs — every field that a corrupted variant might want to
-// override is exposed. Defaults produce a fully-valid minimal WACZ.
+// 設定 knob — corrupted バリアントが上書きしたいと思う各 field を露出
+// する。デフォルトは完全に valid な最小 WACZ を生成する。
 // ---------------------------------------------------------------------------
 
 export interface FixtureOptions {
@@ -133,16 +134,16 @@ interface DatapackageResource {
 }
 
 // ---------------------------------------------------------------------------
-// WARC content — a single tiny `warcinfo` record. Enough for the CDXJ to
-// reference, and small enough that we can compute its hash by hand in tests
-// when needed. The shape mirrors browserhive's `buildWarcInfoRecord` output.
+// WARC コンテンツ — 単一の最小 `warcinfo` レコード。CDXJ が参照する
+// には十分で、必要なら test 内で手計算できる程度には小さい。形状は
+// browserhive の `buildWarcInfoRecord` の出力に揃えている。
 // ---------------------------------------------------------------------------
 
 /**
- * Build a single `warcinfo` record. When `payloadDigestBad` is true, the
- * record's `WARC-Payload-Digest` is deliberately set to a fixed bogus
- * value so rule #10 fires; otherwise the digest is computed from the
- * actual body so the rule passes on the default fixture.
+ * 単一の `warcinfo` レコードを組み立てる。`payloadDigestBad` が true
+ * のとき、`WARC-Payload-Digest` を意図的に固定の偽値にセットして
+ * rule #10 を発火させる。それ以外のときは実体 body から digest を
+ * 計算して、デフォルト fixture では rule が pass する。
  */
 const buildWarcInfoBytes = (software: string, payloadDigestBad: boolean): Buffer => {
   const body = `software: ${software}\r\n`;
@@ -170,20 +171,21 @@ const buildWarcGz = (
 ): { bytes: Buffer; recordLength: number; offset: number } => {
   const raw = buildWarcInfoBytes(software, opts.payloadDigestBad);
   const gz = gzipSync(raw);
-  // Flip a single bit so the gzip member can no longer be decoded. Done
-  // *after* gzip so the corruption is visible to the iterator (not to the
-  // uncompressed raw bytes the producer thought it was writing).
+  // bit を 1 つ反転して gzip member が decode できないようにする。
+  // gzip *の後* に corrupt させているのは、corruption が iterator に
+  // 可視であってほしいため (producer が書こうとした uncompressed な
+  // raw bytes に corruption を入れるのではない)。
   if (opts.corruptAt !== undefined && opts.corruptAt < gz.byteLength) {
-    // Bounded-index write (corruptAt < gz.byteLength). The
-    // security/detect-object-injection rule isn't enabled in this
-    // preset; index access here is intentional fixture mutation.
+    // 範囲付き index 書き込み (corruptAt < gz.byteLength)。
+    // security/detect-object-injection rule はこの preset では無効。
+    // ここでの index アクセスは意図的な fixture mutation。
     gz[opts.corruptAt] = (gz[opts.corruptAt] ?? 0) ^ 0xff;
   }
   return { bytes: gz, recordLength: gz.byteLength, offset: 0 };
 };
 
-// sha256:<base32> helper — mirrored from src/wacz/digest.ts so the fixture
-// generator stays self-contained.
+// sha256:<base32> 用ヘルパ — fixture generator を self-contained に
+// 保つために src/wacz/digest.ts のものをミラーしている。
 const sha256Base32 = (bytes: Buffer): string => {
   const digest = createHash("sha256").update(bytes).digest();
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
@@ -213,8 +215,8 @@ const buildCdxjLine = (
   cdxjUrl: string,
   opts: { offsetOverride?: string; lengthMismatch?: boolean },
 ): string => {
-  // Single line for the warcinfo record. SURT / timestamp don't matter for
-  // the rules we exercise — any well-formed values work.
+  // warcinfo レコード 1 件の 1 行。ここで動かす rule にとって SURT /
+  // timestamp は問題にならない — well-formed なら何でも動く。
   const json = JSON.stringify({
     url: cdxjUrl,
     mime: "application/warc-fields",
@@ -244,14 +246,14 @@ const sha256Hex = (bytes: Buffer): string =>
   `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
 
 // ---------------------------------------------------------------------------
-// Main entrypoint.
+// メインエントリポイント。
 // ---------------------------------------------------------------------------
 
 export interface BuiltFixture {
   bytes: Buffer;
 }
 
-/** Build a WACZ entirely in memory. Returns the zip bytes. */
+/** WACZ を完全にメモリ上で組み立てる。zip の bytes を返す。 */
 export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixture> => {
   const taskId = options.taskId ?? "00000000-0000-0000-0000-000000000001";
   const pageUrl = options.pageUrl ?? "https://example.com/";
@@ -266,8 +268,9 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
   });
 
   const cdxjFilename = options.cdxjFilenameOverride ?? "data.warc.gz";
-  // The CDXJ "url" field is the URL replay tools look up. Use pageUrl so
-  // rule #9 sees the mainPageURL covered when nothing else overrides it.
+  // CDXJ "url" field は replay ツールが lookup する URL。何も
+  // override しないとき rule #9 が mainPageURL を cover できるよう、
+  // pageUrl を使う。
   const cdxjBody = buildCdxjLine(cdxjFilename, warc.recordLength, warc.offset, pageUrl, {
     ...(options.cdxjOffsetOverride !== undefined && {
       offsetOverride: options.cdxjOffsetOverride,
@@ -278,18 +281,19 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
   });
   const cdxjBytesPlain = Buffer.from(cdxjBody, "utf-8");
 
-  // Index layout — depends on producer + the legacy `cdxjGzipped` knob.
+  // Index レイアウト — producer + legacy な `cdxjGzipped` knob に依存。
   //
-  //   * producer "browserhive" (default) + cdxjGzipped=false → single
-  //     `indexes/index.cdxj` entry (plain text)
-  //   * producer "browserhive" + cdxjGzipped=true → single
-  //     `indexes/index.cdxj.gz` entry (no pair). Used to drive
+  //   * producer "browserhive" (デフォルト) + cdxjGzipped=false →
+  //     `indexes/index.cdxj` の単一 entry (plain text)
+  //   * producer "browserhive" + cdxjGzipped=true →
+  //     `indexes/index.cdxj.gz` の単一 entry (ペア無し)。
   //     `cdxj/index-not-gzipped` (browserhive profile) AND
-  //     `cdxj/index-recognised-by-wabac` (no recognised index).
-  //   * producer "webrecorder" → `indexes/index.cdx.gz` PLUS
-  //     `indexes/index.idx` carrying the `!meta` header that names
-  //     the gzipped pair. Mirrors Webrecorder / pywb's wacz-creator
-  //     output.
+  //     `cdxj/index-recognised-by-wabac` (認識可能 index 無し) を
+  //     動かすため。
+  //   * producer "webrecorder" → `indexes/index.cdx.gz` 加えて
+  //     gzip ペアを名指す `!meta` header を持つ
+  //     `indexes/index.idx`。Webrecorder / pywb の wacz-creator
+  //     出力をミラー。
   const producer = options.producer ?? "browserhive";
 
   interface IndexEntry {
@@ -361,9 +365,10 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
   }
   const datapackageBytes = Buffer.from(`${JSON.stringify(datapackage, null, 2)}\n`, "utf-8");
 
-  // Assemble the zip in memory by piping `archiver` to a Buffer-collecting
-  // Writable. Done this way (rather than write-to-tmpfile-then-read) so the
-  // tests stay hermetic — no filesystem state survives between cases.
+  // `archiver` を Buffer-collecting な Writable に pipe してメモリ上
+  // で zip を組み立てる。tmp ファイルに書いてから読む方式ではなく
+  // こうしているのは、test を hermetic に保つため — ケース間で
+  // ファイルシステム状態が残らない。
   const chunks: Buffer[] = [];
   const collector = new Writable({
     write(chunk: Buffer, _enc, cb): void {
@@ -382,9 +387,9 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
 
   zip.pipe(collector);
 
-  // STORE for the inner warc.gz by default (already gzipped — double-
-  // compressing only inflates). `warcDeflate` flips this to DEFLATE so
-  // we can exercise rule #6.
+  // 内側の warc.gz はデフォルトで STORE (既に gzip 済み — 二重圧縮
+  // するとサイズが膨らむだけ)。`warcDeflate` で DEFLATE に切り替えて
+  // rule #6 を動かす。
   zip.append(warc.bytes, {
     name: "archive/data.warc.gz",
     store: !(options.warcDeflate ?? false),
@@ -404,7 +409,7 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
   return { bytes: Buffer.concat(chunks) };
 };
 
-/** Convenience: build a WACZ and write it to disk. */
+/** 便利関数: WACZ を組み立ててディスクに書き出す。 */
 export const buildWaczToFile = async (
   path: string,
   options: FixtureOptions = {},

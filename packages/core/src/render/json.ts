@@ -1,14 +1,14 @@
 /**
- * JSON renderer.
+ * JSON renderer。
  *
- * Emits the `Report` exactly as produced by the engine — no field
- * reshuffling, no derived fields beyond what `Report` already declares.
- * The shape is documented in `tasks/todo.md` as the M1-stable schema and
- * will be lifted to `docs/json-schema.md` in M4.
+ * engine が生成する `Report` をそのまま出力する — field の並べ替えも、
+ * `Report` が宣言していない派生 field の追加もしない。shape の
+ * ドキュメントは `tasks/todo.md` で M1-stable schema として書かれていて、
+ * M4 で `docs/json-schema.md` に格上げされる予定。
  *
- * Stable serialization: 2-space indent. Determinism matters for snapshot
- * tests; the engine already emits issues in rule registration order, so
- * a plain `JSON.stringify` is reproducible byte-for-byte.
+ * 安定したシリアライゼーション: 2 スペースインデント。snapshot test では
+ * 決定性が重要だが、engine は rule 登録順で issue を出力し、ここでは
+ * 単純な `JSON.stringify` を使うので、バイト単位で再現可能。
  */
 import type { Report } from "../validate/types.js";
 

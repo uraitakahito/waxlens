@@ -1,16 +1,17 @@
 #!/usr/bin/env node
 /**
- * `waxlens-validate` — the validation engine's CLI.
+ * `waxlens-validate` — validation engine の CLI。
  *
- * Machine-readable surface only: a single positional `<file>`, a rule
- * profile selector, and JSON output to stdout. Human-readable
- * rendering (colours, expandable details) lives in `@waxlens/tui`'s
- * `waxlens` bin, which consumes this package as a library import.
+ * machine-readable な surface のみ: 単一の positional `<file>`、rule
+ * profile selector、stdout への JSON 出力。human-readable な
+ * rendering (色、expandable な詳細) は `@waxlens/tui` の `waxlens`
+ * bin にあり、そちらがこの package を library としてインポートして
+ * 消費する。
  *
  * Exit codes:
- *   0 — validation passed (no error-severity issues)
- *   1 — validation failed (one or more error-severity issues)
- *   2 — operational failure (cannot open the file, etc.)
+ *   0 — validation 成功 (error 重大度の issue なし)
+ *   1 — validation 失敗 (error 重大度の issue が 1 件以上)
+ *   2 — operational な失敗 (ファイルが開けない等)
  */
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -74,8 +75,8 @@ async function runCli(filePath: string, opts: CliOptions): Promise<number> {
       rules: M1_RULES,
       profile: opts.profile,
     });
-    // `Result<Report, never>` can only be the ok branch — narrowing
-    // check is still needed under strict mode.
+    // `Result<Report, never>` は ok 分岐しか取りえないが、strict mode
+    // では narrowing check が必要。
     if (!result.ok) return 2;
     const report = result.value;
 

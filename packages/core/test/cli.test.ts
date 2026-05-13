@@ -1,15 +1,16 @@
 /**
- * CLI integration tests.
+ * CLI integration テスト。
  *
- * Spawns the built `dist/cli.js` against generated fixtures and asserts on:
- *   - exit code     — 0 for valid, 1 for invalid, 2 for operational failures
- *   - JSON shape    — snapshot-based, with non-deterministic fields scrubbed
+ * 生成された fixture に対してビルド済みの `dist/cli.js` を spawn し、
+ * 以下を assert する:
+ *   - exit code     — valid なら 0、invalid なら 1、operational な失敗なら 2
+ *   - JSON shape    — snapshot ベース。非決定的な field は scrub する
  *
- * Why spawn instead of importing the CLI module directly: the CLI ends
- * with `process.exit`, which would kill the test runner. Plus the spawn
- * path exercises the shebang / bin-script wiring that the pack-smoke
- * workflow also exercises in CI — keeping the two assertions identical
- * means a failure here points to the same root cause.
+ * CLI module を直接 import するのではなく spawn にしている理由: CLI
+ * は `process.exit` で終わるので、test runner ごと kill されてしまう。
+ * 加えて、spawn 経路は shebang / bin script の配線も検証することに
+ * なり、CI の pack-smoke ワークフローと同じ assertion を走らせて
+ * いる — ここで失敗すれば、同じ根本原因を指してくれる。
  */
 import { execFile } from "node:child_process";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
@@ -32,17 +33,18 @@ interface RunResult {
 }
 
 /**
- * Run the built CLI. `dist/cli.js` is invoked via `node` so we don't depend
- * on the chmod step having been run in this test's session (the test
- * suite drives `npm run build` itself before running).
+ * ビルド済み CLI を実行する。`dist/cli.js` は `node` 経由で起動して
+ * いるので、この test の session で chmod が走っているかどうかに
+ * 依存しない (test スイートが test 走行前に `npm run build` 自体を
+ * 駆動する)。
  */
 const runCli = async (args: string[]): Promise<RunResult> => {
   try {
     const { stdout, stderr } = await execFileAsync("node", [CLI_PATH, ...args]);
     return { stdout, stderr, code: 0 };
   } catch (e) {
-    // execFile rejects on non-zero exit. The rejection value carries
-    // `code`, `stdout`, `stderr` — TS types it as `Error & {...}`.
+    // execFile は非ゼロ exit で reject する。reject 値は `code`、
+    // `stdout`、`stderr` を持つ — TS では `Error & {...}` 型として扱う。
     const err = e as Error & { code?: number; stdout?: string; stderr?: string };
     return {
       stdout: err.stdout ?? "",
@@ -64,9 +66,9 @@ const writeFixture = async (
 };
 
 /**
- * JSON output carries the absolute file path and an elapsed-ms duration
- * — both vary between machines/runs and would make snapshots brittle.
- * Replace them with stable placeholders before snapshotting.
+ * JSON 出力には絶対ファイルパスと elapsed-ms duration が含まれる —
+ * どちらもマシンや実行ごとに変わるので snapshot が脆くなる。安定した
+ * placeholder に置換してから snapshot を取る。
  */
 const stabiliseJson = (text: string): unknown => {
   const parsed = JSON.parse(text) as Record<string, unknown>;

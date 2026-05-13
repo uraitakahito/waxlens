@@ -1,20 +1,21 @@
 /**
  * Rule: cdxj/pages-mainpage
  *
- * `datapackage.json#mainPageURL` is the canonical entrypoint for replay.
- * For it to actually work in ReplayWeb.page, two things must be true:
+ * `datapackage.json#mainPageURL` は replay の正式なエントリポイント。
+ * これが ReplayWeb.page で実際に動くためには 2 つが満たされる必要がある:
  *
- *   1. `pages/pages.jsonl` must contain an entry whose `url` matches it.
- *   2. `indexes/index.cdxj` must contain at least one record covering
- *      that URL (otherwise the replay engine has nothing to serve).
+ *   1. `pages/pages.jsonl` に `url` が一致する entry がある
+ *   2. `indexes/index.cdxj` に少なくとも 1 件、その URL を cover する
+ *      レコードがある (無いと replay engine は何も出せない)
  *
- * Either gap silently breaks the replay landing page without breaking
- * the WACZ "structure" — every M1 / earlier-M3 rule would still pass.
- * That's exactly the kind of latent corruption waxlens is here to catch.
+ * どちらかの gap でも、WACZ の "構造" を壊さずに replay landing page を
+ * silent に壊す — M1 以前の rule では全 pass してしまう。これはまさに
+ * waxlens が捕まえるべき latent な corruption。
  *
- * Severity is `warning`: the WACZ may still be useful for partial
- * replay (deep-linking to other URLs known to the index), so we don't
- * want a missing mainPage reference to fail the validation outright.
+ * Severity は `warning`: その WACZ は他 URL に対する部分的な replay
+ * (index に登録されている URL への deep-link) には使える可能性が
+ * あるので、mainPage 参照の欠落だけで validation を fail させないように
+ * している。
  */
 import { ok } from "../../result.js";
 import { parseCdxj } from "../../wacz/cdxj-parser.js";
@@ -38,20 +39,20 @@ export const cdxjPagesMainpageRule: ValidationRule = {
     const issues: Issue[] = [];
 
     const dpBuf = await wacz.readEntry(DATAPACKAGE_ENTRY);
-    if (!dpBuf) return ok(issues); // profile rule reports absence.
+    if (!dpBuf) return ok(issues); // profile rule が不在を報告する。
     const pkg = parseDatapackage(dpBuf.toString("utf-8"));
     if (!pkg) return ok(issues);
 
     const mainPageURL = pkg.mainPageURL;
     if (typeof mainPageURL !== "string" || mainPageURL.length === 0) {
-      // Missing mainPageURL is its own producer bug, but the WACZ spec
-      // doesn't strictly require it (Webrecorder's spec calls it
-      // "optional but recommended"). We surface only the coverage gap,
-      // not the absence itself.
+      // mainPageURL の不在自体は別の producer バグだが、WACZ spec は
+      // 厳密には必須としていない (Webrecorder の spec は "optional but
+      // recommended" と書いている)。ここでは coverage gap だけを表面化
+      // して、不在そのものは追わない。
       return ok(issues);
     }
 
-    // Pages side --------------------------------------------------------
+    // Pages 側 ----------------------------------------------------------
     const pagesBuf = await wacz.readEntry(PAGES_ENTRY);
     if (pagesBuf) {
       const pages = parsePagesJsonl(pagesBuf.toString("utf-8"));
@@ -69,10 +70,10 @@ export const cdxjPagesMainpageRule: ValidationRule = {
         });
       }
     }
-    // (`pages.jsonl` absent → resource-hashes / file-presence rules
-    // surface it; we stay silent to avoid duplicate noise.)
+    // (`pages.jsonl` 不在 → resource-hashes / file-presence 系の rule
+    // が表面化する。重複ノイズを避けるためここは silent にしておく。)
 
-    // CDXJ side ---------------------------------------------------------
+    // CDXJ 側 -----------------------------------------------------------
     const cdxjBuf = await wacz.readEntry(CDXJ_ENTRY);
     if (cdxjBuf) {
       const { entries } = parseCdxj(cdxjBuf.toString("utf-8"));

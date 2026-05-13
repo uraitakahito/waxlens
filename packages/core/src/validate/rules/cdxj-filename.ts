@@ -1,27 +1,29 @@
 /**
  * Rule: cdxj/filename-archive-relative
  *
- * Every CDXJ entry carries a `filename` field that names the WARC file
- * the (offset, length) pair seeks into. The value MUST be the WARC
- * filename relative to the WACZ's `archive/` directory — e.g.
- * `data.warc.gz`, not `archive/data.warc.gz`. wabac.js prepends
- * `archive/` itself when resolving the file, so writing the full path
- * makes it look up `archive/archive/data.warc.gz` and 404 every URL.
+ * 各 CDXJ entry は `filename` field を持ち、これは (offset, length)
+ * ペアが seek 先とする WARC ファイル名を指す。値は WACZ の `archive/`
+ * ディレクトリからの **相対** な WARC ファイル名でなければならない
+ * — 例えば `data.warc.gz`、`archive/data.warc.gz` ではない。wabac.js
+ * はファイル解決時に `archive/` を自分で先頭に付けるため、フルパスを
+ * 書くと `archive/archive/data.warc.gz` を探しに行って全 URL が 404
+ * になる。
  *
- * Spec / convention: The WACZ spec doesn't pin the relative path
- *       explicitly, but pywb / wacz-creator / browserhive all emit it
- *       this way, and wabac.js bakes in the `archive/` prefix.
- * Replay engine: wabac.js's WACZ file resolver (see `wacz/multiwacz.ts`
- *       loadFileFromNamedWACZ) prepends `archive/` to the CDXJ
- *       filename before fetching from the zip.
+ * Spec / 慣習: WACZ spec は相対パスを明示的には pin していないが、
+ *       pywb / wacz-creator / browserhive のいずれも実際にはこの
+ *       形で出力していて、wabac.js は `archive/` prefix を自前で
+ *       入れている。
+ * Replay engine: wabac.js の WACZ file resolver (`wacz/multiwacz.ts`
+ *       の loadFileFromNamedWACZ 参照) は、zip から fetch する前に
+ *       CDXJ の filename に `archive/` を付ける。
  * Reference producer: browserhive/src/storage/wacz/packager.ts:36-44
- *       names the constant `WARC_FILENAME_FOR_CDX` and documents the
- *       exact gotcha.
+ *       で定数名が `WARC_FILENAME_FOR_CDX` で、コメントに同じ落とし
+ *       穴が説明されている。
  *
- * What we report:
- *   - any CDXJ entry whose `filename` starts with `archive/` → error
- *   - any CDXJ entry missing `filename` → error (replay can't seek)
- *   - any CDXJ parse error → error (line-located)
+ * 何を報告するか:
+ *   - `filename` が `archive/` で始まる CDXJ entry → error
+ *   - `filename` が無い CDXJ entry → error (replay が seek できない)
+ *   - CDXJ parse error → error (line 番号付き)
  */
 import { ok } from "../../result.js";
 import { parseCdxj } from "../../wacz/cdxj-parser.js";
@@ -41,11 +43,10 @@ export const cdxjFilenameRule: ValidationRule = {
     const issues: Issue[] = [];
     const buf = await wacz.readEntry(CDXJ_ENTRY);
     if (!buf) {
-      // Whether the WACZ has *any* wabac-recognised index is owned by
-      // `cdxj/index-recognised-by-wabac`. We stay silent here so the
-      // operator doesn't see two separate complaints for the same
-      // missing-index situation; the new rule emits the canonical
-      // error in every profile.
+      // WACZ が wabac.js 認識可能な index を 1 つでも持つかは
+      // `cdxj/index-recognised-by-wabac` の責務。ここでは silent に
+      // する。同じ "index 欠落" 状況に対して 2 つ別々の不満が出ない
+      // ようにするため。新 rule が全 profile で正式な error を出す。
       return ok(issues);
     }
 

@@ -1,12 +1,11 @@
 /**
- * Validation engine + rule tests.
+ * Validation engine + rule のテスト。
  *
- * Each test builds a WACZ on the fly with the fixture generator (so the
- * "good" baseline tracks the spec we encode rather than a checked-in
- * binary blob), writes it to a temp file, and runs the M1 ruleset
- * against it. We assert on the *issue rule names* — the exact wording of
- * messages is the renderer's concern and is covered by the CLI snapshot
- * tests in `cli.test.ts`.
+ * 各テストは fixture generator で WACZ をオンザフライで作る (チェック
+ * イン済みのバイナリ blob ではなく、ここで encode する spec を "good"
+ * baseline が追えるように)。一時ファイルに書いて M1 rule セットを当てる。
+ * assert は *issue rule 名* に対して行う — メッセージの正確な文言は
+ * renderer の責務で、`cli.test.ts` の CLI snapshot test が cover する。
  */
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -87,10 +86,11 @@ describe("validation engine — corrupted variants", () => {
   });
 
   it("omitted wacz_version → wacz-version-required fires (error)", async () => {
-    // The generator always sets wacz_version, so we mutate via writing a
-    // raw datapackage directly in this test. Simpler: rebuild with the
-    // helper but cast through `unknown` to bypass the option type.
-    // For now we exercise the "unknown version → warning" branch.
+    // generator は常に wacz_version をセットするので、本テストでは
+    // raw な datapackage を直接書く形で mutate する。簡易には helper を
+    // 使って再ビルドしつつ、option 型を bypass するため `unknown` で
+    // cast する。さしあたって "unknown version → warning" 分岐を
+    // 動かす。
     const report = await runAgainstFixture(tmpDir, "unknown-version.wacz", {
       waczVersion: "9.9.9",
     });
@@ -141,11 +141,11 @@ describe("validation engine — corrupted variants", () => {
   it("gzipped CDXJ index (default = spec) → index-not-gzipped emits warnings", async () => {
     const report = await runAgainstFixture(tmpDir, "gz-cdxj.wacz", { cdxjGzipped: true });
     expect(report.profile).toBe("spec");
-    // The rule itself is now demoted to `warning` under the spec
-    // profile. We don't assert on `report.valid` here because the
-    // fixture also has no plain `indexes/index.cdxj` entry, and
-    // `cdxj/index-recognised-by-wabac` reports that as an error
-    // (no recognised index of any flavour).
+    // rule 自体は spec profile では `warning` に降格された。ここでは
+    // `report.valid` を assert しない。fixture には plain な
+    // `indexes/index.cdxj` entry も無く、
+    // `cdxj/index-recognised-by-wabac` がそれを error として
+    // 報告するためである (どの flavour の認識済み index も無い)。
     const issues = report.issues.filter((i) => i.rule === "cdxj/index-not-gzipped");
     expect(issues.length).toBeGreaterThan(0);
     expect(issues.every((i) => i.severity === "warning")).toBe(true);
@@ -160,14 +160,14 @@ describe("validation engine — corrupted variants", () => {
   });
 
   it("producer=webrecorder fixture validates cleanly under spec profile", async () => {
-    // The `.cdx.gz` + `.idx` pair is wabac-recognised, so the new
-    // rule passes; the other producer-specific rules
-    // (`cdxj/index-not-gzipped`, `cdxj/filename-archive-relative`)
-    // are silent or demoted appropriately.
+    // `.cdx.gz` + `.idx` のペアは wabac-recognised なので、新しい
+    // rule は pass する。他の producer 固有 rule
+    // (`cdxj/index-not-gzipped`、`cdxj/filename-archive-relative`)
+    // は silent か適切に降格される。
     const report = await runAgainstFixture(tmpDir, "webrecorder.wacz", { producer: "webrecorder" });
     expect(report.profile).toBe("spec");
-    // No errors — the WACZ is valid in the spec profile even though
-    // its layout differs from BrowserHive's.
+    // error 無し — BrowserHive のレイアウトとは違っても WACZ は
+    // spec profile では valid。
     expect(report.summary.failed).toBe(0);
     expect(report.valid).toBe(true);
   });
@@ -215,13 +215,13 @@ describe("validation engine — corrupted variants", () => {
     const issues = report.issues.filter((i) => i.rule === "warc/storage-store");
     expect(issues).toHaveLength(1);
     expect(issues[0]?.severity).toBe("warning");
-    // Validation as a whole stays valid (warning, not error).
+    // validation 全体としては valid のまま (warning であって error ではない)。
     expect(report.valid).toBe(true);
   });
 
   it("corrupted gzip member → warc/members-independent errors", async () => {
-    // Flip a byte inside the deflate stream (well past the 10-byte gzip
-    // header) so decoding fails.
+    // 10 バイトの gzip header を越えた位置の deflate stream 内で 1 バイト
+    // 反転させて、decode を fail させる。
     const report = await runAgainstFixture(tmpDir, "corrupt-warc.wacz", {
       warcCorruptAt: 30,
     });
@@ -252,7 +252,7 @@ describe("validation engine — corrupted variants", () => {
       mainPageUrlOverride: "https://orphan.example/",
     });
     const issues = report.issues.filter((i) => i.rule === "cdxj/pages-mainpage");
-    // Both pages-side and cdxj-side warnings should fire.
+    // pages 側と cdxj 側の両方の warning が発火するはず。
     expect(issues).toHaveLength(2);
     expect(issues.every((i) => i.severity === "warning")).toBe(true);
   });
@@ -264,7 +264,7 @@ describe("validation engine — corrupted variants", () => {
     const issues = report.issues.filter((i) => i.rule === "fuzzy/valid-json");
     expect(issues).toHaveLength(1);
     expect(issues[0]?.severity).toBe("info");
-    expect(report.valid).toBe(true); // info does not flip valid
+    expect(report.valid).toBe(true); // info は valid を反転させない
   });
 
   it("bad WARC-Payload-Digest → warc/payload-digest warns", async () => {

@@ -1,29 +1,29 @@
 /**
  * Rule: warc/payload-digest
  *
- * The `WARC-Payload-Digest` header MUST match a fresh SHA-256 over the
- * record's payload bytes. "Payload" is type-dependent per the WARC 1.1
- * spec §6.2:
+ * `WARC-Payload-Digest` header は record の payload bytes に対する
+ * 新しい SHA-256 と一致する必要がある。"Payload" は WARC 1.1 spec
+ * §6.2 に従って record type ごとに異なる:
  *
- *   - response / request:  the HTTP entity body (bytes after the inner
- *                          `\r\n\r\n` separator)
- *   - warcinfo / metadata: the record body verbatim
- *   - resource:            the record body verbatim
- *   - revisit:             intentionally NOT checked here — revisit
- *                          records re-state another record's digest
- *                          rather than carrying their own payload, so
- *                          a local sha doesn't apply
+ *   - response / request:  HTTP entity body (内側の `\r\n\r\n` 区切り
+ *                          の後の bytes)
+ *   - warcinfo / metadata: record body をそのまま
+ *   - resource:            record body をそのまま
+ *   - revisit:             ここでは意図的にチェックしない — revisit
+ *                          record は他 record の digest を再記述する
+ *                          だけで自身に payload を持たないため、
+ *                          local な sha が当てはまらない
  *
- * The digest format is `sha256:<BASE32>` (RFC 4648, uppercase, no
- * padding). Producers that emit any other algorithm (`sha1:...`, etc.)
- * are accepted with an info-level note rather than a warning, since
- * the spec allows arbitrary `algorithm:value` and waxlens isn't a
- * spec-coverage suite.
+ * digest フォーマットは `sha256:<BASE32>` (RFC 4648、uppercase、
+ * padding なし)。他のアルゴリズム (`sha1:...` 等) を emit する
+ * producer は warning ではなく info レベルの note として受け入れる。
+ * spec が任意の `algorithm:value` を許容しており、waxlens は
+ * spec-coverage suite ではないため。
  *
- * Severity: `warning`. Replay tools generally don't re-verify digests
- * at lookup time, so a mismatch doesn't break the user-visible behaviour
- * — but it does indicate the WARC bytes were modified after the producer
- * recorded the response, which is almost always corruption.
+ * Severity: `warning`。replay ツールは lookup 時に digest を再検証
+ * しないのが普通なので、不一致はユーザ可視な挙動を壊さない — ただし
+ * producer が response を記録した後で WARC bytes が変更された
+ * シグナルにはなり、ほぼ常に corruption。
  */
 import { ok } from "../../result.js";
 import { formatHexLines } from "../../render/hex.js";
@@ -35,9 +35,9 @@ import type { Issue, ValidationRule } from "../types.js";
 const WARC_ENTRY = "archive/data.warc.gz";
 
 /**
- * Record types whose `WARC-Payload-Digest` covers the record body verbatim.
- * Everything else either uses the HTTP-entity slice (response/request) or
- * lacks a meaningful local payload (revisit).
+ * `WARC-Payload-Digest` が record body をそのまま digest 対象にする
+ * record type。それ以外は HTTP entity スライスを使う (response/request)
+ * か、意味のある local payload を持たない (revisit)。
  */
 const BODY_VERBATIM_TYPES = new Set(["warcinfo", "metadata", "resource"]);
 
@@ -49,7 +49,7 @@ export const warcPayloadDigestRule: ValidationRule = {
   run: async (wacz) => {
     const issues: Issue[] = [];
     const warcBuf = await wacz.readEntry(WARC_ENTRY);
-    if (!warcBuf) return ok(issues); // resource-hashes covers absence.
+    if (!warcBuf) return ok(issues); // 不在は resource-hashes が cover する。
 
     let memberIdx = 0;
     for (const member of iterateWarcMembers(warcBuf, { loose: true })) {
@@ -59,13 +59,13 @@ export const warcPayloadDigestRule: ValidationRule = {
 
       const recordType = (getHeader(record, "WARC-Type") ?? "").toLowerCase();
       const declared = getHeader(record, "WARC-Payload-Digest");
-      if (declared === undefined) continue; // optional per spec.
+      if (declared === undefined) continue; // spec 上 optional。
 
-      if (recordType === "revisit") continue; // see header comment.
+      if (recordType === "revisit") continue; // header コメント参照。
 
-      // Algorithms other than sha256 are accepted by the spec; rule
-      // surfaces them informatively so the operator knows the line is
-      // un-verified rather than mismatched.
+      // sha256 以外のアルゴリズムは spec で許容される。rule は
+      // informational にこれを表面化して、当該行は不一致ではなく
+      // 未検証なのだと operator が把握できるようにする。
       if (!declared.toLowerCase().startsWith("sha256:")) {
         issues.push({
           rule: "warc/payload-digest",
@@ -101,10 +101,10 @@ export const warcPayloadDigestRule: ValidationRule = {
             expected: declared,
             actual: computed,
             payloadBytes: payload.byteLength,
-            // First 256 bytes of the payload as a hex dump — lets the
-            // operator eyeball whether the bytes look like the
-            // resource the record is supposed to be carrying (HTML?
-            // image? all-zero pad?). M3 plan calls this "hex viewer".
+            // payload 先頭 256 bytes の hex dump — operator が record
+            // の運ぶはずのリソース (HTML? image? 全ゼロ pad?) として
+            // 妥当に見えるかを目視確認できる。M3 計画では "hex
+            // viewer" と呼ばれているもの。
             hexPreview: formatHexLines(payload),
           },
         });

@@ -1,13 +1,14 @@
 # @waxlens/core
 
-WACZ validation engine. Emits a machine-readable JSON report to
-stdout. Rules are derived from the WACZ spec and the
-[wabac.js](https://github.com/webrecorder/wabac.js) replay engine's
-actual loader behaviour, with optional producer-specific profiles
-for stricter checks against a known producer.
+WACZ validation engine。machine-readable な JSON report を stdout に
+出力する。rule は WACZ spec と
+[wabac.js](https://github.com/webrecorder/wabac.js) replay engine の
+実際の loader 挙動から導出されており、既知 producer に対する
+より厳しい check 用に producer 固有 profile も任意で選べる。
 
-For the interactive terminal UI on top of this engine, use
-[`@waxlens/tui`](https://github.com/uraitakahito/waxlens/tree/main/packages/tui).
+この engine の上で動く interactive な terminal UI が必要なら
+[`@waxlens/tui`](https://github.com/uraitakahito/waxlens/tree/main/packages/tui)
+を使う。
 
 ## CLI: `waxlens-validate`
 
@@ -20,19 +21,19 @@ waxlens-validate --help
 
 ### Exit codes
 
-| Code | Meaning                                          |
+| Code | 意味                                             |
 | ---- | ------------------------------------------------ |
-| `0`  | validation passed — no `error`-severity issues   |
-| `1`  | validation failed — one or more `error` issues   |
-| `2`  | operational failure (cannot open the file, etc.) |
+| `0`  | validation 成功 — `error` severity の issue なし |
+| `1`  | validation 失敗 — `error` issue が 1 件以上      |
+| `2`  | operational な失敗 (ファイルが開けないなど)      |
 
-Warnings and info-level issues never flip the exit code on their own.
+warning / info レベルの issue が exit code を反転させることは無い。
 
-### Output schema
+### 出力 schema
 
-stdout receives a `WaxlensReport`. Full schema in
-[`docs/json-schema.md`](https://github.com/uraitakahito/waxlens/blob/main/docs/json-schema.md);
-short example:
+stdout には `WaxlensReport` が出力される。full schema は
+[`docs/json-schema.md`](https://github.com/uraitakahito/waxlens/blob/main/docs/json-schema.md)
+を参照。短い例:
 
 ```json
 {
@@ -46,19 +47,19 @@ short example:
 }
 ```
 
-### Profiles
+### プロファイル
 
-| Profile       | Use when                                                        |
-| ------------- | --------------------------------------------------------------- |
-| `spec` (def)  | You want WACZ-spec + wabac.js compatibility. Most consumers.    |
-| `browserhive` | Validating a BrowserHive capture; producer-strict checks.       |
-| `lenient`     | Triaging legacy archives; only the hard "replay broken" errors. |
+| Profile             | こういうときに使う                                                                  |
+| ------------------- | ----------------------------------------------------------------------------------- |
+| `spec` (デフォルト) | WACZ-spec + wabac.js 互換を求めたい。ほとんどの consumer はこれ。                   |
+| `browserhive`       | BrowserHive capture を検証する。producer-strict な check を有効化。                 |
+| `lenient`           | legacy archive をトリアージしたい。"replay が壊れる" 系の hard error だけが欲しい。 |
 
-See
+rule 単位の profile 別 severity matrix は
 [`docs/rules.md`](https://github.com/uraitakahito/waxlens/blob/main/docs/rules.md)
-for the per-rule profile severity matrix.
+を参照。
 
-## Library usage
+## ライブラリとしての使い方
 
 ```ts
 import { runValidation, WaczReader, M1_RULES } from "@waxlens/core";
@@ -77,8 +78,8 @@ try {
 }
 ```
 
-The default export shape (everything `@waxlens/tui` consumes) is in
-`src/public.ts`.
+default export shape (`@waxlens/tui` が消費するもの一式) は
+`src/public.ts` にある。
 
 ## License
 

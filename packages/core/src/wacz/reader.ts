@@ -1,26 +1,28 @@
 /**
  * WaczReader
  *
- * Thin wrapper over `yauzl-promise` that exposes WACZ-shaped accessors:
- *   - `entryNames()` — list of zip entry paths
- *   - `readEntry(name)` — full Buffer of an entry (eager)
- *   - `getEntryMeta(name)` — { compressionMethod, compressedSize, uncompressedSize }
- *     so rules can assert e.g. `archive/data.warc.gz` is STORE (method 0)
+ * `yauzl-promise` の薄いラッパで、WACZ に合わせた accessor を提供する:
+ *   - `entryNames()` — zip entry path のリスト
+ *   - `readEntry(name)` — entry の全 Buffer (eager)
+ *   - `getEntryMeta(name)` — { compressionMethod, compressedSize, uncompressedSize }。
+ *     例えば `archive/data.warc.gz` が STORE (method 0) であることを rule で
+ *     assert できる
  *
- * yauzl-promise is callback-based underneath; `.entries()` returns an async
- * iterator. We iterate once at `open()` time to build a name → entry map.
- * Real-world WACZ archives have a few dozen entries at most, so the memory
- * cost (one entry record per file) is negligible and the map gives O(1)
- * lookups for the validation rules.
+ * yauzl-promise の裏側は callback ベースで、`.entries()` は async
+ * iterator を返す。`open()` のタイミングで一度 iterate して name →
+ * entry map を作る。実世界の WACZ archive は entry が数十個程度なので、
+ * メモリコスト (1 entry につき 1 レコード) は無視できる範囲で、map
+ * によって validation rule に O(1) lookup を提供できる。
  *
- * The reader keeps the zip handle open until `close()` is called — rule
- * runners do this in `finally` so a failed validation can't leak fds.
+ * reader は `close()` が呼ばれるまで zip handle を開きっぱなしにする
+ * — rule runner はこれを `finally` で行うので、validation 失敗で fd
+ * を漏らさない。
  */
 import { open as openZip, type Entry, type ZipFile } from "yauzl-promise";
 
 /**
- * Compression method numbers from the zip spec (PKWARE APPNOTE.TXT §4.4.5).
- * Only two matter for WACZ today: STORE (no compression) and DEFLATE.
+ * zip spec (PKWARE APPNOTE.TXT §4.4.5) の compression method 番号。
+ * WACZ では今のところ STORE (無圧縮) と DEFLATE の 2 つしか登場しない。
  */
 export const ZIP_COMPRESSION_STORE = 0;
 export const ZIP_COMPRESSION_DEFLATE = 8;
@@ -45,9 +47,9 @@ export class WaczReader {
     const zip = await openZip(path);
     const entries = new Map<string, Entry>();
     for await (const entry of zip) {
-      // yauzl's Entry exposes `filename` (the in-zip path). Directory
-      // entries end with `/`; we keep them in the map so callers that
-      // care can detect them, but the M1 rules only look at file entries.
+      // yauzl の Entry は `filename` (zip 内パス) を公開する。
+      // ディレクトリ entry は `/` で終わる。気にする呼び出し側のために
+      // map に入れたままにするが、M1 の rule は file entry しか見ない。
       entries.set(entry.filename, entry);
     }
     return new WaczReader(zip, entries);
@@ -62,9 +64,9 @@ export class WaczReader {
   }
 
   /**
-   * Per-entry metadata without reading the payload. Used by rules that only
-   * care about how an entry was stored in the zip (e.g. rule #6: WARC must
-   * be STORE so the inner gzip isn't double-compressed).
+   * payload を読まずに entry ごとの metadata を返す。entry が zip
+   * にどう格納されているかだけを気にする rule が使う (例: rule #6 —
+   * WARC は STORE であるべきで、内側の gzip を二重圧縮しないため)。
    */
   getEntryMeta(name: string): ZipEntryMeta | undefined {
     const entry = this.entries.get(name);
@@ -78,12 +80,12 @@ export class WaczReader {
   }
 
   /**
-   * Read the full uncompressed payload of an entry. WACZ archives are
-   * bounded in practice by producer-side caps (browserhive: 200 MB, pywb /
-   * browsertrix-crawler: configurable but rarely above a few GB), so
-   * loading whole entries into a Buffer is acceptable today — the
-   * alternative (streaming + on-the-fly hashing) becomes worth the
-   * complexity only if we ever need to validate multi-GB archives.
+   * entry の uncompressed payload 全体を読む。実運用上 WACZ
+   * archive は producer 側の上限で抑えられている (browserhive: 200 MB、
+   * pywb / browsertrix-crawler: 設定可能だがほとんど数 GB 以下)
+   * ので、entry 全体を Buffer に積むのが今は許容される — もし
+   * multi-GB archive を検証する必要が出てきたら、stream + on-the-fly
+   * hashing の複雑さを取りに行く価値が出てくる。
    */
   async readEntry(name: string): Promise<Buffer | undefined> {
     const entry = this.entries.get(name);

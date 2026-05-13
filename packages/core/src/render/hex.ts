@@ -1,26 +1,27 @@
 /**
- * Hex-dump line formatter.
+ * Hex dump 行フォーマッタ。
  *
- * Produces classic `xxd`-style output that both renderers (plain text +
- * Ink TUI) can drop straight into a detail view. Each line covers 16
- * bytes:
+ * 両 renderer (plain text + Ink TUI) が詳細 view にそのまま流し込める
+ * よう、classic な `xxd` スタイルの出力を生成する。各行は 16 バイトを
+ * カバー:
  *
  *   00000000  4e a7 5b 0c 1f 8b 08 00  00 00 00 00 00 03 b5 d3   N.[..........X..
  *
- * Bytes outside the printable ASCII range are rendered as `.` in the
- * trailing ASCII column. Hex bytes are space-separated with a wider gap
- * after the 8th byte (xxd convention) so the human eye can quickly find
- * a specific column.
+ * printable ASCII 範囲外のバイトは末尾の ASCII カラムでは `.` として
+ * 表示する。hex バイトはスペース区切りで、8 バイト目の後にやや広い
+ * 区切りを入れる (xxd の慣習)。これにより目で特定カラムを素早く
+ * 追える。
  */
 
 const BYTES_PER_LINE = 16;
 const HALF = 8;
 
 /**
- * Render a Buffer slice as a sequence of hex-dump lines. The `offsetBase`
- * is added to the byte index so callers tracking real-file offsets get
- * accurate column labels (the WARC member that lives at file offset
- * 1024 still labels its first hex row `00000400`, not `00000000`).
+ * Buffer の slice を hex-dump 行列として render する。`offsetBase` は
+ * バイトインデックスに加算されるので、実ファイルの offset を追って
+ * いる呼び出し側でも正しいカラムラベルが得られる (ファイル offset
+ * 1024 にある WARC member は、最初の hex 行を `00000000` ではなく
+ * `00000400` とラベル付けする)。
  */
 export const formatHexLines = (bytes: Buffer, offsetBase = 0, maxBytes = 256): string[] => {
   const lines: string[] = [];

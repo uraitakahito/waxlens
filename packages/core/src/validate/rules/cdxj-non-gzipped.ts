@@ -1,31 +1,35 @@
 /**
  * Rule: cdxj/index-not-gzipped
  *
- * Producer-strict variant of the wabac-recognition contract: when the
- * producer is expected to emit a plain `indexes/index.cdxj`, this rule
- * surfaces any `.cdxj.gz` / `.cdx.gz` variant (or a `.cdxj` file whose
- * content begins with the gzip magic) as an error.
+ * wabac-recognition コントラクトの producer-strict バリアント。
+ * producer が plain な `indexes/index.cdxj` を出すことが期待される
+ * 場合、この rule は `.cdxj.gz` / `.cdx.gz` バリアント (または
+ * content が gzip magic で始まる `.cdxj` ファイル) を error として
+ * 表面化する。
  *
- * The generic "wabac.js can't load this index" check lives in
- * `cdxj/index-recognised-by-wabac` (Phase D); this rule remains because
- * a producer that emits gzipped CDXJ without a paired `.idx` is broken
- * in the same way regardless — and a producer documented to emit the
- * plain form is doubly broken if it emits the gzipped form instead.
+ * "wabac.js がこの index を読めない" 全般 check は
+ * `cdxj/index-recognised-by-wabac` (Phase D) にある。この rule が
+ * 別途残っている理由は、ペアになる `.idx` を伴わない gzip 済み
+ * CDXJ を吐く producer は同様に壊れているし、plain 形を出すと
+ * ドキュメント化されている producer が gzip 形を出すなら二重に
+ * 壊れているからである。
  *
- * Replay engine: wabac.js `multiwacz.ts:loadIndex` accepts `.cdx` /
- *       `.cdxj` directly and `.idx` (with paired `.cdx.gz` via the
- *       `!meta { format: "cdxj-gzip-1.0", filename }` header).
- *       `.cdx.gz` / `.cdxj.gz` ALONE is never accepted.
+ * Replay engine: wabac.js の `multiwacz.ts:loadIndex` は `.cdx` /
+ *       `.cdxj` を直接受け付け、`.idx` (`!meta { format:
+ *       "cdxj-gzip-1.0", filename }` header 経由でペアになった
+ *       `.cdx.gz`) も受け付ける。`.cdx.gz` / `.cdxj.gz` 単体は
+ *       絶対に受け付けない。
  * Reference producer: browserhive/src/storage/wacz/packager.ts:46-56
- *       commits to plain `indexes/index.cdxj` and documents the
- *       silent-skip trap that motivates this rule.
+ *       は plain な `indexes/index.cdxj` を commit していて、この
+ *       rule の動機となる silent-skip 落とし穴がコメントに書かれて
+ *       いる。
  *
- * Detection strategy:
- *   1. If `indexes/index.cdxj.gz` (or any `.cdxj.gz` / `.cdx.gz` variant)
- *      is present, that's the bug — report with the offending entry name.
- *   2. If `indexes/index.cdxj` is present but starts with the gzip magic
- *      bytes (`1f 8b`), the file was double-handled (named correctly but
- *      gzipped content). Also a producer bug.
+ * 検出戦略:
+ *   1. `indexes/index.cdxj.gz` (または任意の `.cdxj.gz` / `.cdx.gz`
+ *      バリアント) があれば、それがバグ — 該当 entry 名つきで報告。
+ *   2. `indexes/index.cdxj` はあるが、ファイルが gzip magic
+ *      (`1f 8b`) で始まっている場合、ファイルは二重処理されている
+ *      (名前は正しいが content が gzip 済み)。これも producer バグ。
  */
 import { ok } from "../../result.js";
 import type { Issue, ValidationRule } from "../types.js";
@@ -39,11 +43,11 @@ const GZIP_MAGIC_1 = 0x8b;
 export const cdxjNonGzippedRule: ValidationRule = {
   name: "cdxj/index-not-gzipped",
   description: `${EXPECTED_CDXJ} must not be gzipped (wabac.js silently ignores .cdxj.gz)`,
-  // Baseline is `warning` because a gzipped CDXJ is sometimes paired
-  // with a `.idx` header file in spec-conforming WACZs (wabac.js's
-  // `loadIDX` path handles that case). The `browserhive` profile is
-  // stricter — it expects plain `.cdxj` and treats any `.gz` index as
-  // an error.
+  // ベースラインを `warning` にしているのは、gzip された CDXJ が
+  // spec 準拠の WACZ で `.idx` header ファイルとペアになっている
+  // ケースがあるため (wabac.js の `loadIDX` 経路がこれを扱う)。
+  // `browserhive` profile はより厳しく、plain な `.cdxj` を期待し
+  // どんな `.gz` index も error 扱いにする。
   severity: "warning",
   applicability: {
     severityByProfile: {
