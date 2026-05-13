@@ -159,6 +159,45 @@ describe("validation engine — corrupted variants", () => {
     expect(report.valid).toBe(false);
   });
 
+  it("producer=webrecorder fixture validates cleanly under spec profile", async () => {
+    // The `.cdx.gz` + `.idx` pair is wabac-recognised, so the new
+    // rule passes; the other producer-specific rules
+    // (`cdxj/index-not-gzipped`, `cdxj/filename-archive-relative`)
+    // are silent or demoted appropriately.
+    const report = await runAgainstFixture(tmpDir, "webrecorder.wacz", { producer: "webrecorder" });
+    expect(report.profile).toBe("spec");
+    // No errors — the WACZ is valid in the spec profile even though
+    // its layout differs from BrowserHive's.
+    expect(report.summary.failed).toBe(0);
+    expect(report.valid).toBe(true);
+  });
+
+  it("producer=webrecorder fixture → cdxj/index-not-gzipped errors under browserhive profile", async () => {
+    const report = await runAgainstFixture(
+      tmpDir,
+      "webrecorder.wacz",
+      { producer: "webrecorder" },
+      "browserhive",
+    );
+    expect(report.profile).toBe("browserhive");
+    const issues = report.issues.filter((i) => i.rule === "cdxj/index-not-gzipped");
+    expect(issues.length).toBeGreaterThan(0);
+    expect(issues.every((i) => i.severity === "error")).toBe(true);
+    expect(report.valid).toBe(false);
+  });
+
+  it("producer=webrecorder fixture under lenient profile → exit 0", async () => {
+    const report = await runAgainstFixture(
+      tmpDir,
+      "webrecorder.wacz",
+      { producer: "webrecorder" },
+      "lenient",
+    );
+    expect(report.profile).toBe("lenient");
+    expect(report.summary.failed).toBe(0);
+    expect(report.valid).toBe(true);
+  });
+
   it("missing datapackage.json → profile-required reports it", async () => {
     const report = await runAgainstFixture(tmpDir, "no-datapackage.wacz", {
       omitDatapackage: true,

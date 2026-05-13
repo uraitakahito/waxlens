@@ -105,6 +105,24 @@ export interface FixtureOptions {
    * into the warcinfo record. Triggers rule #10.
    */
   payloadDigestBad?: boolean;
+  /**
+   * Producer flavour. Controls indexing layout:
+   *
+   *   - `"browserhive"` (default): emit a single plain
+   *     `indexes/index.cdxj`. Matches BrowserHive's producer
+   *     conventions and the `browserhive` rule profile's
+   *     expectations.
+   *   - `"webrecorder"`: emit `indexes/index.cdx.gz` (gzipped CDXJ
+   *     content) paired with `indexes/index.idx` carrying the
+   *     `!meta { format: "cdxj-gzip-1.0", filename: "index.cdx.gz" }`
+   *     header. Matches Webrecorder's example archives and the
+   *     pywb / wacz-creator convention.
+   *
+   * Independent of `cdxjGzipped` — the older option only rewrote the
+   * BrowserHive layout's filename. `producer: "webrecorder"` emits
+   * the full pair.
+   */
+  producer?: "browserhive" | "webrecorder";
 }
 
 interface DatapackageResource {
@@ -259,8 +277,37 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
     }),
   });
   const cdxjBytesPlain = Buffer.from(cdxjBody, "utf-8");
-  const cdxjBytes = options.cdxjGzipped ? gzipSync(cdxjBytesPlain) : cdxjBytesPlain;
-  const cdxjEntryName = options.cdxjGzipped ? "indexes/index.cdxj.gz" : "indexes/index.cdxj";
+
+  // Index layout — depends on producer + the legacy `cdxjGzipped` knob.
+  //
+  //   * producer "browserhive" (default) + cdxjGzipped=false → single
+  //     `indexes/index.cdxj` entry (plain text)
+  //   * producer "browserhive" + cdxjGzipped=true → single
+  //     `indexes/index.cdxj.gz` entry (no pair). Used to drive
+  //     `cdxj/index-not-gzipped` (browserhive profile) AND
+  //     `cdxj/index-recognised-by-wabac` (no recognised index).
+  //   * producer "webrecorder" → `indexes/index.cdx.gz` PLUS
+  //     `indexes/index.idx` carrying the `!meta` header that names
+  //     the gzipped pair. Mirrors Webrecorder / pywb's wacz-creator
+  //     output.
+  const producer = options.producer ?? "browserhive";
+
+  interface IndexEntry {
+    name: string;
+    bytes: Buffer;
+  }
+  const indexEntries: IndexEntry[] = [];
+  if (producer === "webrecorder") {
+    const cdxGz = gzipSync(cdxjBytesPlain);
+    indexEntries.push({ name: "indexes/index.cdx.gz", bytes: cdxGz });
+    const idxText =
+      `!meta ${JSON.stringify({ format: "cdxj-gzip-1.0", filename: "index.cdx.gz" })}\n` + cdxjBody;
+    indexEntries.push({ name: "indexes/index.idx", bytes: Buffer.from(idxText, "utf-8") });
+  } else {
+    const cdxjEntryName = options.cdxjGzipped ? "indexes/index.cdxj.gz" : "indexes/index.cdxj";
+    const cdxjBytes = options.cdxjGzipped ? gzipSync(cdxjBytesPlain) : cdxjBytesPlain;
+    indexEntries.push({ name: cdxjEntryName, bytes: cdxjBytes });
+  }
 
   const pagesBody = buildPagesJsonl(taskId, pageUrl, pageTitle, capturedAt);
   const pagesBytes = Buffer.from(pagesBody, "utf-8");
@@ -275,12 +322,12 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
       hash: sha256Hex(warc.bytes),
       bytes: warc.bytes.byteLength,
     },
-    {
-      name: cdxjEntryName.split("/").pop() ?? "index.cdxj",
-      path: cdxjEntryName,
-      hash: sha256Hex(cdxjBytes),
-      bytes: cdxjBytes.byteLength,
-    },
+    ...indexEntries.map((e) => ({
+      name: e.name.split("/").pop() ?? e.name,
+      path: e.name,
+      hash: sha256Hex(e.bytes),
+      bytes: e.bytes.byteLength,
+    })),
     {
       name: "pages.jsonl",
       path: "pages/pages.jsonl",
@@ -342,7 +389,9 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
     name: "archive/data.warc.gz",
     store: !(options.warcDeflate ?? false),
   });
-  zip.append(cdxjBytes, { name: cdxjEntryName });
+  for (const entry of indexEntries) {
+    zip.append(entry.bytes, { name: entry.name });
+  }
   zip.append(pagesBytes, { name: "pages/pages.jsonl" });
   zip.append(fuzzyBytes, { name: "fuzzy.json" });
   if (!options.omitDatapackage) {
