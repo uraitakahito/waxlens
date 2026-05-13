@@ -1,28 +1,28 @@
 /**
- * SHA-256 helpers for WACZ validation.
+ * WACZ validation 用の SHA-256 helper。
  *
- * WACZ uses two distinct digest formats:
- *   - `datapackage.json` resource hashes:  `sha256:<hex>`     (this module)
- *   - WARC `WARC-Payload-Digest` headers:  `sha256:<base32>`  (used by
- *     the `warc/payload-digest` rule)
+ * WACZ は 2 つの異なる digest フォーマットを使う:
+ *   - `datapackage.json` resource hash:    `sha256:<hex>`     (この module)
+ *   - WARC `WARC-Payload-Digest` header:   `sha256:<base32>`  (`warc/payload-digest`
+ *                                                              rule が使う)
  *
- * Keeping the two formats in one module so the asymmetry is obvious to
- * anyone touching either side later.
+ * 後で片方を触る人にこの非対称性が見えるよう、2 形式を 1 モジュール
+ * にまとめている。
  */
 import { createHash } from "node:crypto";
 
 /**
- * `sha256:<hex>` over the given bytes. The format specified by the
- * Frictionless Data Package descriptor that WACZ `datapackage.json`
- * embeds.
+ * 与えた bytes に対する `sha256:<hex>`。WACZ `datapackage.json` が
+ * 埋め込む Frictionless Data Package descriptor が指定するフォーマット。
  */
 export const sha256Hex = (bytes: Buffer): string =>
   `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
 
 /**
- * `sha256:<base32>` over the given bytes — the WARC-Payload-Digest format
- * (RFC 4648 base32, no padding, uppercase). Not used yet (M3); shipped here
- * for proximity to the hex variant so the two stay in sync.
+ * 与えた bytes に対する `sha256:<base32>` — WARC-Payload-Digest
+ * フォーマット (RFC 4648 base32、padding なし、uppercase)。M3 では
+ * まだ使われていないが、hex バージョンの近くに置いて両者が同期する
+ * ようにしておく。
  */
 export const sha256Base32 = (bytes: Buffer): string => {
   const digest = createHash("sha256").update(bytes).digest();
@@ -30,8 +30,9 @@ export const sha256Base32 = (bytes: Buffer): string => {
 };
 
 /**
- * RFC 4648 base32 encoder (no padding). Inlined rather than pulled from a
- * dependency: ~30 lines of pure logic, no need to take on a transitive.
+ * RFC 4648 base32 encoder (padding なし)。依存関係を取らずに inline
+ * してある: 純粋なロジックで 30 行ほどなので、推移的依存を増やす
+ * 価値はない。
  */
 const BASE32_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 
@@ -44,8 +45,8 @@ const toBase32 = (bytes: Buffer): string => {
     bits += 8;
     while (bits >= 5) {
       bits -= 5;
-      // BASE32_ALPHABET has exactly 32 chars; the 5-bit value can only
-      // index 0..31, so the lookup is total — `!` is safe here.
+      // BASE32_ALPHABET はちょうど 32 文字。5-bit 値は 0..31 にしか
+      // index しないので lookup は total — `!` は安全。
       const ch = BASE32_ALPHABET[(value >> bits) & 0x1f];
       if (ch !== undefined) output += ch;
     }

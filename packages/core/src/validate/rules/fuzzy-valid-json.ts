@@ -1,17 +1,17 @@
 /**
  * Rule: fuzzy/valid-json
  *
- * `fuzzy.json` is optional per the WACZ spec. When present it MUST be
- * valid JSON whose top level is an object with a `rules` array —
- * replay tools rely on this shape to apply cache-buster strip rules at
- * lookup time. Anything else is silently ignored, which is the "info"
- * severity case here: not a replay-breaking bug, just a producer quirk
- * worth flagging.
+ * `fuzzy.json` は WACZ spec 上 optional。存在する場合は valid な
+ * JSON で、top-level が `rules` array を持つ object である必要が
+ * ある — replay ツールはこの形に依存して lookup 時に cache-buster
+ * の strip rule を適用する。それ以外は silent に無視される。これが
+ * ここで "info" severity を採用する理由: replay-breaking なバグでは
+ * なく、producer の癖として flag する価値があるという位置づけ。
  *
- * Spec: WACZ 1.1 §fuzzy.json (optional, `{ "rules": [...] }` shape).
- * Reference producer: browserhive emits an empty `{ "rules": [] }`
- *       unconditionally; pywb / wacz-creator emit when fuzzy match
- *       rules are configured.
+ * Spec: WACZ 1.1 §fuzzy.json (optional、`{ "rules": [...] }` の形)。
+ * Reference producer: browserhive は無条件で空の `{ "rules": [] }`
+ *       を emit する。pywb / wacz-creator は fuzzy match rule が
+ *       設定されているときに emit する。
  */
 import { ok } from "../../result.js";
 import type { Issue, ValidationRule } from "../types.js";
@@ -27,10 +27,10 @@ export const fuzzyValidJsonRule: ValidationRule = {
     const issues: Issue[] = [];
     const buf = await wacz.readEntry(FUZZY_ENTRY);
     if (!buf) {
-      // Absence is allowed — the WACZ spec lists fuzzy.json as optional.
-      // Producers like browserhive always include an empty stub, but
-      // others might not, so we silently skip rather than fire a noisy
-      // info-level "missing" issue every time.
+      // 不在は許容される — WACZ spec で fuzzy.json は optional。
+      // browserhive のような producer は常に空 stub を入れるが、
+      // 入れない producer もあるので、毎回 info レベルの "missing"
+      // を出すのはノイズが多いため silent に skip する。
       return ok(issues);
     }
 

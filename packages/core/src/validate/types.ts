@@ -1,19 +1,21 @@
 /**
- * Validation domain types.
+ * Validation ドメイン型。
  *
- * Every rule produces an `Issue[]`. The engine merges per-rule outputs into
- * a `Report`. The HTTP / CLI / TUI rendering layers consume only `Report`,
- * so a new rule plugs in by exporting a `ValidationRule` and adding it to
- * the registry — no other layer needs to change.
+ * 各 rule は `Issue[]` を生成する。engine は rule ごとの出力を 1 つの
+ * `Report` にマージする。HTTP / CLI / TUI の rendering 層は `Report`
+ * しか消費しないので、新しい rule を加える際は `ValidationRule` を
+ * export して registry に追加するだけでよく、他の層に変更は要らない。
  *
- * The wire format (`Report`) is what `--json` emits and what `tasks/todo.md`
- * pins as the M1-stable schema. Future-proofing notes:
- *   - `waxlensVersion` lets a downstream consumer detect schema drift.
- *   - `summary.durationMs` is included from the start so CI dashboards can
- *     trend regression in cost.
- *   - `Issue.details` is `unknown` on purpose — rules attach hash diffs,
- *     hex dumps, etc. The renderer formats per-rule; the JSON schema is
- *     "anything serialisable".
+ * wire format (`Report`) は `--json` が出力するもの、また `tasks/todo.md`
+ * が M1-stable schema として pin しているもの。future-proofing のための
+ * note:
+ *   - `waxlensVersion` によって downstream consumer が schema の drift
+ *     を検出できる。
+ *   - `summary.durationMs` を最初から入れることで、CI dashboard が
+ *     コストの regression を trend として追える。
+ *   - `Issue.details` は意図的に `unknown` — rule が hash diff、hex
+ *     dump などを付ける。renderer は rule ごとに整形し、JSON schema
+ *     としては "serialise 可能なら何でも"。
  */
 import type { Result } from "../result.js";
 import type { WaczReader } from "../wacz/reader.js";
@@ -21,28 +23,29 @@ import type { WaczReader } from "../wacz/reader.js";
 export type Severity = "error" | "warning" | "info";
 
 /**
- * Rule-set selectors. Picking a profile reshapes the severity of
- * producer-specific rules (e.g. `cdxj/index-not-gzipped`) but never
- * silences a spec-mandated check. Default is `spec`.
+ * Rule セットの selector。profile を選ぶと producer 固有な rule
+ * (例: `cdxj/index-not-gzipped`) の severity が組み替えられるが、
+ * spec が要求する check を silent にすることはない。デフォルトは
+ * `spec`。
  *
- * - `spec` — WACZ spec + wabac.js loader compatibility. The
- *   default; what most consumers want.
- * - `browserhive` — Add BrowserHive's producer conventions on top
- *   of `spec` (e.g. plain `indexes/index.cdxj` required, no
- *   `index.cdxj.gz` even when paired with `.idx`).
- * - `lenient` — Demote all producer-specific or stylistic
- *   findings to `info`. Useful when triaging legacy archives
- *   where you only want the hard "replay broken" errors.
+ * - `spec` — WACZ spec + wabac.js loader 互換。デフォルトで、
+ *   ほとんどの consumer が望む形。
+ * - `browserhive` — `spec` の上に BrowserHive の producer 慣習を
+ *   重ねる (例: plain な `indexes/index.cdxj` を要求、`.idx` と
+ *   ペアでも `index.cdxj.gz` は許さない、など)。
+ * - `lenient` — producer 固有 / 様式的な findings をすべて `info` に
+ *   降格させる。legacy archive をトリアージしていて "replay 破損"
+ *   系の hard error だけを見たいときに便利。
  */
 export type RuleProfile = "spec" | "browserhive" | "lenient";
 
 export const ALL_PROFILES: readonly RuleProfile[] = ["spec", "browserhive", "lenient"];
 
 /**
- * How a rule reacts to each profile. `severityByProfile` lets a rule
- * sit in the registry once and tune its severity; `excludeProfiles`
- * silences it entirely for a profile (rare — used when a check is
- * meaningless outside one producer's conventions).
+ * 各 rule が profile にどう反応するか。`severityByProfile` を使うと、
+ * registry には 1 度だけ rule を置きつつ severity を調整できる。
+ * `excludeProfiles` はその profile で rule を完全に silence する (まれ
+ * — ある producer の慣習を離れると意味を持たない check で使う)。
  */
 export interface RuleApplicability {
   /** Per-profile severity override. Omitted profile falls back to `ValidationRule.severity`. */
@@ -108,11 +111,11 @@ export interface ReportSummary {
 }
 
 /**
- * Informational metadata about the WACZ that's useful to humans but
- * doesn't fit the issue model — record count, distinct host count, etc.
- * Renderers display this below the summary line. Optional because the
- * engine computes it best-effort: a malformed WARC won't block the
- * report just to extract stats.
+ * WACZ に関する人向けには有用だが issue モデルには馴染まない
+ * informational な metadata — record 数、distinct な host 数など。
+ * Renderer は summary 行の下にこれを表示する。engine が best-effort
+ * で計算するため optional: WARC が壊れていても stats を取りに行く
+ * ために report を block することはしない。
  */
 export interface ReportStats {
   /** Number of independent gzip members the WARC iterator yielded. */

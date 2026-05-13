@@ -1,28 +1,29 @@
 /**
- * Ink TUI renderer.
+ * Ink TUI renderer。
  *
- * Shape:
+ * レイアウト:
  *
  *   waxlens 0.0.0  /path/to/file.wacz
  *
  *   ▶ [✗] datapackage/profile-required
  *       datapackage.json is missing the "profile" field
- *       { "expected": "data-package" }              ← shown only when expanded
+ *       { "expected": "data-package" }              ← expanded のときだけ表示
  *     [✗] cdxj/filename-archive-relative
  *       indexes/index.cdxj:1 — entry "filename" starts with "archive/"
  *
  *   1 passed, 2 failed, 0 warnings  · 12ms
  *   ↑↓ navigate · enter expand · q quit
  *
- * One issue per row, `▶` marks the cursor, `enter` toggles `details`. We
- * deliberately render the same `Issue.details` payload that the JSON
- * renderer emits — so the human and machine views never diverge.
+ * 1 行 1 issue、`▶` がカーソル、`enter` で `details` をトグル。JSON
+ * renderer が emit するのと同じ `Issue.details` payload を意図的に
+ * render する — human view と machine view が乖離しないため。
  *
- * Exit code routing: the CLI sets `process.exitCode` *before* calling
- * `render(...)`, then awaits `instance.waitUntilExit()`. The TUI calls
- * `useApp().exit()` on `q`; Node uses `process.exitCode` for the final
- * status. This avoids needing to plumb the code through Ink's
- * `exit(reason?)` argument (which is reserved for error objects).
+ * Exit code の経路: CLI は `render(...)` を呼ぶ *前* に
+ * `process.exitCode` をセットし、その後 `instance.waitUntilExit()`
+ * を await する。TUI は `q` のときに `useApp().exit()` を呼び、Node
+ * は最終的なステータスとして `process.exitCode` を使う。これによって
+ * Ink の `exit(reason?)` 引数 (error object 用に予約されている) に
+ * code を通さずに済む。
  */
 import { useState, type FC } from "react";
 import { Box, Text, useApp, useInput } from "ink";
@@ -53,8 +54,9 @@ export const App: FC<AppProps> = ({ report }) => {
       return;
     }
     if (key.return && issues.length > 0) {
-      // Toggle expansion of the focused issue. The set is rebuilt to keep
-      // the reference identity stable for React's diffing.
+      // focused な issue の expansion をトグルする。set を作り直して
+      // いるのは、React の diff のために参照の同一性を安定させたい
+      // ため。
       setExpanded((prev) => {
         const next = new Set(prev);
         if (next.has(focused)) next.delete(focused);
@@ -147,11 +149,10 @@ const IssueRow: FC<{ issue: Issue; focused: boolean; expanded: boolean }> = ({
 };
 
 /**
- * Render the `details` payload using the shape-specific view when one
- * matches, falling back to JSON pretty for anything else. The dispatch
- * order matters: an issue with both `expected/actual` AND `hexPreview`
- * (e.g. payload-digest mismatch) gets the diff *and* the hex dump
- * stacked, in that order.
+ * `details` payload を、当てはまる shape 専用 view で render し、
+ * それ以外は JSON pretty に fallback する。dispatch 順序が重要:
+ * `expected/actual` と `hexPreview` の両方を持つ issue (例:
+ * payload-digest mismatch) は diff と hex dump がこの順で積まれる。
  */
 const ExpandedDetails: FC<{ details: unknown }> = ({ details }) => {
   if (typeof details !== "object" || details === null) {
@@ -164,11 +165,11 @@ const ExpandedDetails: FC<{ details: unknown }> = ({ details }) => {
   const hexPreview = Array.isArray(d["hexPreview"]) ? (d["hexPreview"] as unknown[]) : null;
   const candidates = Array.isArray(d["candidates"]) ? (d["candidates"] as unknown[]) : null;
 
-  // Only the specialised views that actually fire consume their fields,
-  // so a lone `expected` (no paired `actual`) still falls through to the
-  // JSON-pretty tail rather than being silently dropped. Without this,
-  // an issue whose `details: { expected: "data-package" }` would render
-  // *nothing* under the expanded view.
+  // 実際に発火した specialised view だけが field を消費するので、
+  // pair の無い `expected` 単独 (`actual` 無し) は silent に drop
+  // されず JSON-pretty の末尾 fallback に流れる。これが無いと、
+  // `details: { expected: "data-package" }` の issue を expanded
+  // view で開いたときに *何も* 表示されない。
   const consumed = new Set<string>();
   if (hasDiff) {
     consumed.add("expected");
@@ -247,9 +248,9 @@ const formatValue = (v: unknown): string => {
 
 const Summary: FC<{ report: Report }> = ({ report }) => {
   const s = report.summary;
-  // exactOptionalPropertyTypes forbids `color={... ? "red" : undefined}` —
-  // omitting the prop entirely is the equivalent. Conditionally spread an
-  // empty object so the call site stays readable.
+  // exactOptionalPropertyTypes は `color={... ? "red" : undefined}` を
+  // 禁じる — prop 自体を省くのが等価。call site の見通しを保つため
+  // 空オブジェクトを条件付きで spread する。
   const failedColor = s.failed > 0 ? { color: "red" as const } : {};
   const warningsColor = s.warnings > 0 ? { color: "yellow" as const } : {};
   return (

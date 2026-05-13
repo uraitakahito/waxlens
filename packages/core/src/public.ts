@@ -1,17 +1,17 @@
 /**
- * @waxlens/core public API.
+ * @waxlens/core の public API。
  *
- * Everything `@waxlens/tui` (and any other downstream consumer) needs
- * to drive validation in-process. Importing this module pulls in
- * `commander` transitively, but never `ink`/`react`; the CLI bin
- * (`waxlens-validate`) is a separate entry that doesn't get loaded
- * unless callers reach for it.
+ * `@waxlens/tui` (および他の downstream consumer) が in-process で
+ * validation を駆動するのに必要なものを一通り export する。この
+ * module をインポートすると `commander` が推移的に入るが、rendering
+ * 系のライブラリは入らない — CLI bin (`waxlens-validate`) は別
+ * entry で、呼ばない限りロードされない。human-readable な rendering
+ * は @waxlens/tui 側に置いてある。
  */
 export { WaczReader } from "./wacz/reader.js";
 export { DEFAULT_PROFILE, runValidation } from "./validate/engine.js";
 export { ALL_RULES, M1_RULES } from "./validate/rules/index.js";
 export { renderJson } from "./render/json.js";
-export { renderPlain, type PlainRenderOptions } from "./render/plain.js";
 export type {
   Issue,
   IssueLocation,

@@ -1,29 +1,29 @@
 /**
- * Validation engine.
+ * Validation engine。
  *
- * Runs every registered rule against the supplied WACZ in parallel,
- * applies the active profile's severity overrides, and folds the
- * results into a single `Report`. The engine itself never throws —
- * rule failures are returned as `Result<Issue[], never>`.
+ * 登録されている全 rule を与えられた WACZ に対して並列に走らせ、
+ * 有効な profile の severity override を適用し、結果を 1 つの `Report`
+ * に畳み込む。engine 自体は throw しない — rule の失敗は
+ * `Result<Issue[], never>` として返る。
  *
- * Parallelism: the rules each read 1–2 zip entries. yauzl-promise can
- * service concurrent read streams from a single ZipFile handle, so
- * running rules in parallel is safe and cuts wall-clock for small WACZ
- * files. A future profiler-driven change might serialise rules that
- * dominate the budget — for now, the simple form is correct and fast.
+ * 並列性: 各 rule は 1 〜 2 個の zip entry を読む。yauzl-promise は
+ * 単一の ZipFile handle から並行 read stream を提供できるので、rule
+ * を並列に走らせるのは安全であり、小さい WACZ では実時間も短くなる。
+ * 将来 profiler ベースで予算を支配する rule を直列化することはあり
+ * うる — 現状はシンプルな形が正しく速い。
  *
  * Profile dispatch:
- *   1. `excludeProfiles` filters the rule out entirely (no issues).
- *   2. `severityByProfile[profile]` overrides every issue's severity.
- *   3. Otherwise the rule's baseline `severity` field stands.
+ *   1. `excludeProfiles` に当たれば rule を完全に除外する (issue なし)。
+ *   2. `severityByProfile[profile]` があれば各 issue の severity を上書き。
+ *   3. それ以外なら rule のベースライン `severity` field をそのまま使う。
  *
- * Steps 2/3 are applied per-issue rather than per-rule because an
- * individual issue may already carry a "weaker" severity than the
- * rule's baseline (e.g. `warc/payload-digest` emits some `info`
- * issues for non-sha256 algorithms even when the rule's baseline is
- * `warning`). We treat the per-issue severity as the floor — the
- * profile override only fires when the issue itself matches the
- * rule's baseline. This keeps mixed-severity rules well-behaved.
+ * Step 2/3 は rule 単位ではなく issue 単位で適用される。これは、ある
+ * issue が rule のベースラインより既に "弱い" severity を持っている
+ * ことがあるため (例: `warc/payload-digest` は rule のベースラインが
+ * `warning` でも非 sha256 アルゴリズムの場合は `info` issue を出す)。
+ * 個別 issue の severity は floor として扱い、profile override は
+ * 当該 issue が rule のベースラインに一致する場合のみ発火する。これに
+ * よって mixed-severity な rule が綺麗に振る舞う。
  */
 import type { Result } from "../result.js";
 import { ok } from "../result.js";
@@ -55,22 +55,21 @@ export const runValidation = async (
   const startedAt = Date.now();
   const profile: RuleProfile = opts.profile ?? DEFAULT_PROFILE;
 
-  // Filter rules by `excludeProfiles` before running, so a skipped rule
-  // doesn't even read its zip entries.
+  // 実行前に `excludeProfiles` で rule をフィルタしておく。skip 対象の
+  // rule は zip entry の読み込みすら走らせない。
   const activeRules = opts.rules.filter(
     (rule) => !rule.applicability?.excludeProfiles?.includes(profile),
   );
 
-  // Run validation rules and stats extraction in parallel — stats is
-  // best-effort (returns undefined on internal failure) and the rules
-  // are independent of it, so there's no ordering hazard.
+  // validation rule と stats 抽出を並列に走らせる — stats は
+  // best-effort (内部失敗時は undefined を返す) で rule とは独立なので、
+  // 順序ハザードは無い。
   const [perRule, stats] = await Promise.all([
     Promise.all(
       activeRules.map(async (rule) => {
         const result = await rule.run(wacz);
-        // `Result<Issue[], never>` can only be the ok branch — narrowing
-        // check is still needed under strict mode. The default is
-        // unreachable.
+        // `Result<Issue[], never>` は ok 分岐しか取りえないが、strict
+        // mode では narrowing check が必要。default 分岐は到達不能。
         if (!result.ok) return [];
         return applyProfile(result.value, rule, profile);
       }),
@@ -88,17 +87,18 @@ export const runValidation = async (
     valid: summary.failed === 0,
     summary,
     issues,
-    // Conditional spread keeps `stats` absent rather than
-    // explicitly-undefined — required by exactOptionalPropertyTypes.
+    // 条件付き spread にすることで `stats` を "明示的に undefined" で
+    // はなく「不在」として表現できる — exactOptionalPropertyTypes が
+    // これを要求する。
     ...(stats !== undefined && { stats }),
   };
   return ok(report);
 };
 
 /**
- * Apply the active profile's severity override to every issue the rule
- * produced. The override only fires for issues whose severity matches
- * the rule's baseline — see the file header for the floor rationale.
+ * rule が生成した各 issue に、現在 profile の severity override を
+ * 適用する。override は issue の severity が rule のベースラインに
+ * 一致するときのみ発火する — floor の根拠はファイルヘッダ参照。
  */
 const applyProfile = (issues: Issue[], rule: ValidationRule, profile: RuleProfile): Issue[] => {
   const override: Severity | undefined = rule.applicability?.severityByProfile?.[profile];
@@ -125,9 +125,10 @@ const summarise = (issues: Issue[], ruleCount: number, durationMs: number): Repo
         break;
     }
   }
-  // `passed` is a per-rule, not per-issue, count: a rule "passes" iff it
-  // produced no error-severity issue. Warning/info-only rules still
-  // count as passed for the headline — they're not failures.
+  // `passed` は issue 単位ではなく rule 単位のカウント: rule が
+  // "passed" になるのは error severity の issue を 1 件も出さなかった
+  // 場合のみ。warning / info しか出さない rule も headline では
+  // passed としてカウントする — fail ではないから。
   const failedRuleNames = new Set(issues.filter((i) => i.severity === "error").map((i) => i.rule));
   const passed = ruleCount - failedRuleNames.size;
 

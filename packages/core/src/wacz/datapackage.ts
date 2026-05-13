@@ -1,29 +1,32 @@
 /**
- * datapackage.json schema (Frictionless Data Package).
+ * datapackage.json schema (Frictionless Data Package)。
  *
- * We intentionally keep the zod schema *loose*: every WACZ-mandated field
- * (`profile`, `wacz_version`, `resources[*].hash`, …) is typed as
- * `unknown` so individual validation rules can produce a precise diagnosis
- * instead of zod failing the whole parse at the first missing key. The
- * shape we DO enforce is "it's a JSON object" — `passthrough()` keeps
- * extra fields, since producers commonly emit `mainPageURL`, `software`,
- * etc. and other producer-specific keys.
+ * zod schema は意図的に *緩く* 保つ: WACZ で必須とされる field
+ * (`profile`、`wacz_version`、`resources[*].hash` …) はすべて
+ * `unknown` 型にする。これによって個別の validation rule が
+ * 「ここでこの key が無い」という precise な diagnosis を出せる —
+ * zod が最初に key を見逃した時点で parse 全体を fail させるのを
+ * 避けたい。実際に enforce するのは "JSON object である" こと。
+ * `passthrough()` で extra field を保持しているのは、producer が
+ * `mainPageURL`、`software` などや producer 固有の key を
+ * 普通に emit するため。
  *
- * Spec: WACZ 1.1 §datapackage.json (built on the Frictionless Data
- *       Package descriptor).
- * Reference producer: browserhive's `src/storage/wacz/datapackage.ts`.
+ * Spec: WACZ 1.1 §datapackage.json (Frictionless Data Package
+ *       descriptor の上に作られている)。
+ * Reference producer: browserhive の `src/storage/wacz/datapackage.ts`。
  */
 import { z } from "zod";
 
 /**
- * Per-resource record inside `resources[]`. Every field is `.optional()` —
- * not because the spec allows omission, but because rule implementations
- * (datapackage-hashes.ts) want to surface a *specific* "this resource is
- * missing field X" issue rather than have zod reject the whole parse.
+ * `resources[]` 内の resource ごとのレコード。各 field を
+ * `.optional()` にしているのは spec が省略を許すからではなく、rule
+ * 側 (datapackage-hashes.ts) が「この resource は field X が欠落」と
+ * いう *具体的な* issue を出したいため。これにより zod が parse 全体
+ * を拒絶することを防ぐ。
  *
- * NB: zod v4 made `z.unknown()` non-optional by default (a breaking change
- * from v3). The `.optional()` suffix restores the v3-equivalent shape we
- * want for permissive WACZ parsing.
+ * NB: zod v4 では `z.unknown()` がデフォルトで non-optional になった
+ * (v3 からの breaking change)。`.optional()` を付けることで、permissive
+ * な WACZ parse のために v3 と等価な形に戻している。
  */
 export const DatapackageResourceSchema = z
   .object({
@@ -37,8 +40,9 @@ export const DatapackageResourceSchema = z
 export const DatapackageSchema = z
   .object({
     profile: z.unknown().optional(),
-    // snake_case key required by the WACZ spec; lint's naming-convention
-    // rule isn't enabled in this preset, so no eslint-disable is needed.
+    // WACZ spec で要求される snake_case 名。この preset では lint の
+    // naming-convention rule が有効化されていないので、eslint-disable
+    // は不要。
     wacz_version: z.unknown().optional(),
     name: z.unknown().optional(),
     software: z.unknown().optional(),
@@ -54,10 +58,10 @@ export type DatapackageResource = z.infer<typeof DatapackageResourceSchema>;
 export type Datapackage = z.infer<typeof DatapackageSchema>;
 
 /**
- * Parse the raw JSON text. Returns `null` for any failure (not JSON, or
- * not even an object) — the caller's rule reports the specific reason as
- * an Issue, so this layer only needs to gatekeep "did it shape into an
- * object at all".
+ * raw JSON テキストを parse する。失敗 (JSON でない、object に
+ * shape できない) は `null` を返す — 呼び出し側 rule が具体的な
+ * 理由を Issue として報告するので、この層は「object として shape
+ * できたか」だけを gate する。
  */
 export const parseDatapackage = (text: string): Datapackage | null => {
   let raw: unknown;
