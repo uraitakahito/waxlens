@@ -2,6 +2,10 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "noEmit": false,
+    // Safety net: don't write a single byte to `dist/` if any file
+    // raised an error. See @waxlens/core's tsconfig.build.json for
+    // the same rationale.
+    "noEmitOnError": true,
     "outDir": "dist",
     "rootDir": "src",
     "declaration": true,

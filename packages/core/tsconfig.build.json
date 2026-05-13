@@ -6,6 +6,12 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "noEmit": false,
+    // Safety net: don't write a single byte to `dist/` if any file
+    // raised an error. Prevents a broken build from sneaking into
+    // `npm pack` / `npm publish`. The base config can't carry this
+    // because it sets `noEmit: true` and the option is meaningless
+    // without emit.
+    "noEmitOnError": true,
     "outDir": "dist",
     "rootDir": "src",
     "declaration": true,
