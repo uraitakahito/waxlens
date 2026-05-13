@@ -11,10 +11,6 @@ validation with expandable details on failures.
 ## Quickstart
 
 ```sh
-# When published, this is the full UX:
-npx waxlens path/to/captured.wacz
-
-# Today (from a clean checkout):
 npm ci && npm run build
 node dist/cli.js path/to/captured.wacz
 ```
