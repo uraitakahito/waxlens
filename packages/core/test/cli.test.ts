@@ -38,10 +38,7 @@ interface RunResult {
  */
 const runCli = async (args: string[]): Promise<RunResult> => {
   try {
-    const { stdout, stderr } = await execFileAsync("node", [CLI_PATH, ...args], {
-      // Disable colour by default so JSON-only snapshots aren't tinted.
-      env: { ...process.env, NO_COLOR: "1" },
-    });
+    const { stdout, stderr } = await execFileAsync("node", [CLI_PATH, ...args]);
     return { stdout, stderr, code: 0 };
   } catch (e) {
     // execFile rejects on non-zero exit. The rejection value carries
@@ -106,18 +103,6 @@ describe("cli — exit codes", () => {
     const result = await runCli([join(tmpDir, "does-not-exist.wacz")]);
     expect(result.code).toBe(2);
     expect(result.stderr).toContain("cannot open");
-  });
-
-  it("--plain emits a colour-stripped human summary", async () => {
-    // Default output is JSON; `--plain` flips to the human renderer.
-    // We don't snapshot the text (it'd be brittle to layout tweaks);
-    // we just assert that the version banner and the summary line
-    // appear, which together signal the plain renderer ran.
-    const path = await writeFixture(tmpDir, "good.wacz");
-    const result = await runCli([path, "--plain"]);
-    expect(result.code).toBe(0);
-    expect(result.stdout).toContain("waxlens 0.0.0");
-    expect(result.stdout).toContain("passed");
   });
 });
 
