@@ -9,8 +9,12 @@
  * tolerated. The first two whitespace-separated tokens are the SURT and
  * the 14-digit timestamp; everything after the second space is the JSON
  * object describing the record (url / mime / status / digest / length /
- * offset / filename). See browserhive's `src/storage/wacz/cdxj.ts` for
- * the producer side.
+ * offset / filename).
+ *
+ * Spec / convention: pywb's CDXJ format docs; the WACZ 1.1 spec leaves
+ *       the index format pluggable but `index.cdxj` is the de-facto
+ *       choice for new producers. Reference producer:
+ *       browserhive's `src/storage/wacz/cdxj.ts`.
  *
  * Splitting strategy: the JSON value itself contains spaces (`": "` etc.),
  * so naïve `.split(" ")` would corrupt it. We find the first two space

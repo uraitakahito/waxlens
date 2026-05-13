@@ -6,10 +6,12 @@
  * `unknown` so individual validation rules can produce a precise diagnosis
  * instead of zod failing the whole parse at the first missing key. The
  * shape we DO enforce is "it's a JSON object" — `passthrough()` keeps
- * extra fields, since browserhive emits `mainPageURL`, `software`, etc.
- * and other producers may add more.
+ * extra fields, since producers commonly emit `mainPageURL`, `software`,
+ * etc. and other producer-specific keys.
  *
- * Source-of-truth comparison: browserhive's `src/storage/wacz/datapackage.ts`.
+ * Spec: WACZ 1.1 §datapackage.json (built on the Frictionless Data
+ *       Package descriptor).
+ * Reference producer: browserhive's `src/storage/wacz/datapackage.ts`.
  */
 import { z } from "zod";
 

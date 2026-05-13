@@ -3,8 +3,8 @@
  *
  * WACZ uses two distinct digest formats:
  *   - `datapackage.json` resource hashes:  `sha256:<hex>`     (this module)
- *   - WARC `WARC-Payload-Digest` headers:  `sha256:<base32>`  (browserhive
- *     emits these too; their verification lands in M3, rule #10)
+ *   - WARC `WARC-Payload-Digest` headers:  `sha256:<base32>`  (used by
+ *     the `warc/payload-digest` rule)
  *
  * Keeping the two formats in one module so the asymmetry is obvious to
  * anyone touching either side later.
@@ -12,9 +12,9 @@
 import { createHash } from "node:crypto";
 
 /**
- * `sha256:<hex>` over the given bytes. Matches the format produced by
- * browserhive's `src/storage/wacz/datapackage.ts` (per the Frictionless Data
- * Package spec).
+ * `sha256:<hex>` over the given bytes. The format specified by the
+ * Frictionless Data Package descriptor that WACZ `datapackage.json`
+ * embeds.
  */
 export const sha256Hex = (bytes: Buffer): string =>
   `sha256:${createHash("sha256").update(bytes).digest("hex")}`;

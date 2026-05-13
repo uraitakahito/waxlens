@@ -78,11 +78,12 @@ export class WaczReader {
   }
 
   /**
-   * Read the full uncompressed payload of an entry. WACZ files are bounded
-   * by browserhive's per-task cap (200 MB by default), so loading whole
-   * entries into a Buffer is acceptable at M1 — the alternative (streaming
-   * + on-the-fly hashing) becomes worth the complexity only if we ever need
-   * to validate multi-GB archives.
+   * Read the full uncompressed payload of an entry. WACZ archives are
+   * bounded in practice by producer-side caps (browserhive: 200 MB, pywb /
+   * browsertrix-crawler: configurable but rarely above a few GB), so
+   * loading whole entries into a Buffer is acceptable today — the
+   * alternative (streaming + on-the-fly hashing) becomes worth the
+   * complexity only if we ever need to validate multi-GB archives.
    */
   async readEntry(name: string): Promise<Buffer | undefined> {
     const entry = this.entries.get(name);

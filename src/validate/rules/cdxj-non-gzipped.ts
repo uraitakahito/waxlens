@@ -1,14 +1,24 @@
 /**
  * Rule: cdxj/index-not-gzipped
  *
- * `indexes/index.cdxj` MUST be a plain (uncompressed) text file inside the
- * WACZ zip. wabac.js's `loadIndex` only recognises entries whose names end
- * with `.cdx`, `.cdxj`, or `.idx` — files named `.cdx.gz` / `.cdxj.gz` are
- * silently skipped, which makes every URL lookup return "Archived Page
- * Not Found" even when the WACZ otherwise looks fine.
+ * Producer-strict variant of the wabac-recognition contract: when the
+ * producer is expected to emit a plain `indexes/index.cdxj`, this rule
+ * surfaces any `.cdxj.gz` / `.cdx.gz` variant (or a `.cdxj` file whose
+ * content begins with the gzip magic) as an error.
  *
- * Source: browserhive/src/storage/wacz/packager.ts:46-56 (the producer
- * comment cites the wabac.js multiwacz.ts `endsWith` branch).
+ * The generic "wabac.js can't load this index" check lives in
+ * `cdxj/index-recognised-by-wabac` (Phase D); this rule remains because
+ * a producer that emits gzipped CDXJ without a paired `.idx` is broken
+ * in the same way regardless — and a producer documented to emit the
+ * plain form is doubly broken if it emits the gzipped form instead.
+ *
+ * Replay engine: wabac.js `multiwacz.ts:loadIndex` accepts `.cdx` /
+ *       `.cdxj` directly and `.idx` (with paired `.cdx.gz` via the
+ *       `!meta { format: "cdxj-gzip-1.0", filename }` header).
+ *       `.cdx.gz` / `.cdxj.gz` ALONE is never accepted.
+ * Reference producer: browserhive/src/storage/wacz/packager.ts:46-56
+ *       commits to plain `indexes/index.cdxj` and documents the
+ *       silent-skip trap that motivates this rule.
  *
  * Detection strategy:
  *   1. If `indexes/index.cdxj.gz` (or any `.cdxj.gz` / `.cdx.gz` variant)

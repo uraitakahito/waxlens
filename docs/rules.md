@@ -30,26 +30,36 @@ position (which is the order the renderers walk issues in).
 
 ## Rule details
 
-Each rule's source file carries a doc comment with the why and an
-inline reference back to the upstream code that motivates it
-(browserhive's `src/storage/wacz/` producer, the WACZ spec, or
-wabac.js). The summary below mirrors those, lightly editorialised.
+Each rule's source file carries a doc comment with the why and inline
+references. The summary below mirrors those, with a consistent
+three-source format:
+
+- **Spec**: the relevant WACZ / WARC / Frictionless-Data clause
+- **Replay engine**: how [wabac.js](https://github.com/webrecorder/wabac.js)
+  (the engine behind ReplayWeb.page) actually treats the field
+- **Reference producer**: where a known producer commits to it in code
+  (today: [BrowserHive](https://github.com/uraitakahito/browserhive),
+  but the rule is the contract, not the producer)
 
 ### `datapackage/profile-required` — error
 
 `datapackage.json` MUST set `profile: "data-package"`. Without it,
-ReplayWeb.page / wabac.js classifies the WACZ as invalid and the CDX
+wabac.js / ReplayWeb.page classifies the WACZ as invalid and the CDX
 lookup never runs, producing the cryptic "Archived Page Not Found"
-error even when everything else is correct. Source:
-[browserhive `wacz/datapackage.ts:42-49`](https://github.com/uraitakahito/browserhive/blob/main/src/storage/wacz/datapackage.ts).
+error even when everything else is correct.
+
+- **Spec**: WACZ 1.1 §datapackage.json (Frictionless Data Package marker)
+- **Reference producer**: [browserhive `wacz/datapackage.ts:42-49`](https://github.com/uraitakahito/browserhive/blob/main/src/storage/wacz/datapackage.ts)
+  documents the silent-fail trap directly.
 
 ### `datapackage/wacz-version-required` — error
 
 The `wacz_version` field MUST be a non-empty string. Recognised values
 are `1.0.0`, `1.1.0`, `1.1.1`; anything else fires a `warning`-level
 issue so an operator can decide whether to upgrade waxlens or accept
-the unknown version. Source:
-[WACZ specs](https://specs.webrecorder.net/wacz/).
+the unknown version.
+
+- **Spec**: [WACZ format specs](https://specs.webrecorder.net/wacz/)
 
 ### `datapackage/resource-hashes` — error
 
@@ -61,11 +71,16 @@ expected/actual hashes in `details` (rendered as a diff in the TUI).
 ### `cdxj/index-not-gzipped` — error
 
 `indexes/index.cdxj` MUST be a plain (uncompressed) text file inside
-the zip. wabac.js's `loadIndex` only recognises entry names ending in
-`.cdx`, `.cdxj`, or `.idx` — `.cdx.gz` / `.cdxj.gz` are silently
-skipped, which makes every URL lookup return "Archived Page Not Found"
-even when the WACZ otherwise looks fine. Source:
-[browserhive `wacz/packager.ts:46-56`](https://github.com/uraitakahito/browserhive/blob/main/src/storage/wacz/packager.ts).
+the zip. wabac.js's `loadIndex` recognises only entry names ending in
+`.cdx`, `.cdxj`, or `.idx` (the last paired with a `.cdx.gz`); a
+producer that emits a gzipped CDXJ without the matching `.idx` makes
+every URL lookup return "Archived Page Not Found".
+
+- **Replay engine**: [wabac.js `multiwacz.ts:loadIndex`](https://github.com/webrecorder/wabac.js/blob/main/src/wacz/multiwacz.ts)
+  `endsWith(".cdx") || endsWith(".cdxj")` for direct loading, plus
+  `endsWith(".idx")` for compressed indices.
+- **Reference producer**: [browserhive `wacz/packager.ts:46-56`](https://github.com/uraitakahito/browserhive/blob/main/src/storage/wacz/packager.ts)
+  commits to plain `indexes/index.cdxj`.
 
 ### `cdxj/filename-archive-relative` — error
 
@@ -73,8 +88,11 @@ Each CDXJ row's `filename` field is the WARC filename RELATIVE to the
 WACZ's `archive/` directory (e.g. `data.warc.gz`, not
 `archive/data.warc.gz`). wabac.js prepends `archive/` itself; writing
 the full path makes it look up `archive/archive/data.warc.gz` and 404
-every URL. Source:
-[browserhive `wacz/packager.ts:36-44`](https://github.com/uraitakahito/browserhive/blob/main/src/storage/wacz/packager.ts).
+every URL.
+
+- **Reference producer**: [browserhive `wacz/packager.ts:36-44`](https://github.com/uraitakahito/browserhive/blob/main/src/storage/wacz/packager.ts)
+  names the constant `WARC_FILENAME_FOR_CDX` with a comment explaining
+  the gotcha.
 
 ### `warc/storage-store` — warning
 

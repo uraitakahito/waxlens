@@ -2,12 +2,14 @@
  * Rule: datapackage/wacz-version-required
  *
  * `datapackage.json` MUST carry a non-empty `wacz_version` string. The
- * value is also constrained — we accept the WACZ versions browserhive is
- * known to produce or that ReplayWeb.page documents as supported. Anything
- * else triggers a warning (still a recognised field, but unverified
- * replay behaviour); a missing field is an error.
+ * value is also constrained — we accept the published WACZ spec revs
+ * (1.0.0 / 1.1.0 / 1.1.1). Anything else triggers a `warning` (still a
+ * recognised field, but unverified replay behaviour); a missing field
+ * is an `error`.
  *
- * Source: browserhive/src/storage/wacz/datapackage.ts (emits "1.1.1").
+ * Spec: WACZ 1.1 §datapackage.json (`wacz_version` is the spec-rev tag
+ *       producers use to declare which feature set they emit).
+ * Reference producer: browserhive emits "1.1.1".
  */
 import { ok } from "../../result.js";
 import { parseDatapackage } from "../../wacz/datapackage.js";

@@ -3,8 +3,9 @@
  *
  * The file is JSON-lines: the first line is a header object (carrying
  * `format`, `id`, `title`), every subsequent non-empty line is an entry
- * with at least `{ url, ts }` plus optional `id` / `title`. browserhive
- * emits a single entry per WACZ today; replay tools support many.
+ * with at least `{ url, ts }` plus optional `id` / `title`. Producers
+ * typically emit a single entry per WACZ for a one-page capture, but
+ * replay tools support many entries for multi-page archives.
  *
  * Same shape philosophy as `datapackage.ts`: parse leniently here, let
  * the validation rules enforce semantics. M1 doesn't have a pages-jsonl

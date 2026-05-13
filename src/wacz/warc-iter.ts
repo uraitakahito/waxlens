@@ -4,9 +4,10 @@
  * A `.warc.gz` produced per the WARC spec is a *concatenation* of
  * independent gzip members — one per record — so that an offset/length pair
  * in the CDXJ index can be used to seek to and decompress a single record
- * without parsing the rest of the file. (See browserhive's
- * `src/storage/warc/writer.ts:1-15` for the producer side.) Verifying that
- * this invariant holds is rule #7 in the M3 set.
+ * without parsing the rest of the file. (WARC 1.1 §A.1; see browserhive's
+ * `src/storage/warc/writer.ts:1-15` for a reference producer implementing
+ * the contract.) Verifying that this invariant holds is the
+ * `warc/members-independent` rule.
  *
  * Detection strategy: each gzip member begins with the magic bytes
  * `0x1f 0x8b`. We scan the buffer for these markers and slice; `gunzipSync`
@@ -94,9 +95,9 @@ export function* iterateWarcMembers(
  * To minimise false positives we additionally require the compression
  * method byte at offset+2 to be 0x08 (DEFLATE, the only method Node's
  * `gunzipSync` accepts). This still isn't bullet-proof, but in practice
- * the producer (browserhive's `WarcWriter`) emits only well-formed
- * members, so the validator's job is to catch real producer bugs — not
- * to be robust against adversarial input.
+ * any standards-compliant producer emits only well-formed members, so
+ * the validator's job is to catch real producer bugs — not to be
+ * robust against adversarial input.
  */
 const findMemberStarts = (bytes: Buffer): number[] => {
   const starts: number[] = [];
