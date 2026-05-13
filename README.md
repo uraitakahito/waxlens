@@ -9,9 +9,9 @@ check 用 profile (`browserhive` など) も任意で選べる。
 
 このプロジェクトは 2 つの package として提供される:
 
-| Package                           | bin                | 目的                                                                                                                                            |
-| --------------------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`@waxlens/core`](packages/core/) | `waxlens-validate` | Validation engine。machine-readable な JSON report を出力する。CI / スクリプト用途。                                                            |
+| Package                           | bin                | 目的                                                                                                                                                 |
+| --------------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`@waxlens/core`](packages/core/) | `waxlens-validate` | Validation engine。machine-readable な JSON report を出力する。CI / スクリプト用途。                                                                 |
 | [`@waxlens/tui`](packages/tui/)   | `waxlens`          | Interactive な terminal UI。TTY 上では report を issue 単位の expandable な詳細つきで表示。pipe / 非 TTY な stdout では plain text に自動 fallback。 |
 
 両 package に共通する spec / 詳細 docs:

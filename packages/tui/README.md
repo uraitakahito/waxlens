@@ -23,11 +23,11 @@ waxlens --help
 
 ### キーバインド (TUI モード)
 
-| キー        | 動作                              |
-| ----------- | --------------------------------- |
-| `↑` / `↓`   | issue 間でカーソル移動            |
-| `enter`     | expanded な詳細パネルをトグル     |
-| `q` / `Esc` | 終了                              |
+| キー        | 動作                          |
+| ----------- | ----------------------------- |
+| `↑` / `↓`   | issue 間でカーソル移動        |
+| `enter`     | expanded な詳細パネルをトグル |
+| `q` / `Esc` | 終了                          |
 
 expanded な詳細は payload の形に応じて自動整形される: hash mismatch
 は `expected` / `actual` の diff、CDXJ↔WARC 系 issue は問題の offset の
@@ -39,11 +39,11 @@ expanded な詳細は payload の形に応じて自動整形される: hash mism
 
 `@waxlens/core` と同じ:
 
-| Code | 意味                                                |
-| ---- | --------------------------------------------------- |
-| `0`  | validation 成功                                     |
-| `1`  | validation 失敗 (`error` issue 1 件以上)            |
-| `2`  | operational な失敗 (ファイルが開けないなど)         |
+| Code | 意味                                        |
+| ---- | ------------------------------------------- |
+| `0`  | validation 成功                             |
+| `1`  | validation 失敗 (`error` issue 1 件以上)    |
+| `2`  | operational な失敗 (ファイルが開けないなど) |
 
 ## 実際の WACZ で試す
 

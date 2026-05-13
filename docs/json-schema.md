@@ -92,12 +92,12 @@ interface IssueLocation {
 render する。それ以外の key は JSON-pretty ブロックに fallback するので、
 field を足しても情報が silent に落ちることはない。
 
-| Key                     | Type        | 利用元                              | レンダリング                       |
-| ----------------------- | ----------- | ----------------------------------- | ---------------------------------- |
+| Key                     | Type        | 利用元                               | レンダリング                      |
+| ----------------------- | ----------- | ------------------------------------ | --------------------------------- |
 | `expected` AND `actual` | any         | hash / digest / wacz_version 系 rule | green/red サイドバイサイドの diff |
-| `warcHeader`            | `string[]`  | `cdxj/warc-offsets`                 | WARC header の行リスト             |
-| `hexPreview`            | `string[]`  | `warc/payload-digest`               | xxd 形式の hex dump                |
-| `candidates`            | `unknown[]` | `cdxj/warc-offsets`                 | 近接 member の 1 行 1 件リスト     |
+| `warcHeader`            | `string[]`  | `cdxj/warc-offsets`                  | WARC header の行リスト            |
+| `hexPreview`            | `string[]`  | `warc/payload-digest`                | xxd 形式の hex dump               |
+| `candidates`            | `unknown[]` | `cdxj/warc-offsets`                  | 近接 member の 1 行 1 件リスト    |
 
 `expected` だけ (または `actual` だけ) は JSON pretty に fallback する
 — diff view は両方が要る。これは意図的: どちらかを合成して埋めると、

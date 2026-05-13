@@ -21,11 +21,11 @@ waxlens-validate --help
 
 ### Exit codes
 
-| Code | 意味                                                |
-| ---- | --------------------------------------------------- |
-| `0`  | validation 成功 — `error` severity の issue なし    |
-| `1`  | validation 失敗 — `error` issue が 1 件以上         |
-| `2`  | operational な失敗 (ファイルが開けないなど)         |
+| Code | 意味                                             |
+| ---- | ------------------------------------------------ |
+| `0`  | validation 成功 — `error` severity の issue なし |
+| `1`  | validation 失敗 — `error` issue が 1 件以上      |
+| `2`  | operational な失敗 (ファイルが開けないなど)      |
 
 warning / info レベルの issue が exit code を反転させることは無い。
 
@@ -49,11 +49,11 @@ stdout には `WaxlensReport` が出力される。full schema は
 
 ### プロファイル
 
-| Profile       | こういうときに使う                                                            |
-| ------------- | ----------------------------------------------------------------------------- |
-| `spec` (デフォルト) | WACZ-spec + wabac.js 互換を求めたい。ほとんどの consumer はこれ。             |
-| `browserhive` | BrowserHive capture を検証する。producer-strict な check を有効化。           |
-| `lenient`     | legacy archive をトリアージしたい。"replay が壊れる" 系の hard error だけが欲しい。 |
+| Profile             | こういうときに使う                                                                  |
+| ------------------- | ----------------------------------------------------------------------------------- |
+| `spec` (デフォルト) | WACZ-spec + wabac.js 互換を求めたい。ほとんどの consumer はこれ。                   |
+| `browserhive`       | BrowserHive capture を検証する。producer-strict な check を有効化。                 |
+| `lenient`           | legacy archive をトリアージしたい。"replay が壊れる" 系の hard error だけが欲しい。 |
 
 rule 単位の profile 別 severity matrix は
 [`docs/rules.md`](https://github.com/uraitakahito/waxlens/blob/main/docs/rules.md)
