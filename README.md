@@ -4,10 +4,6 @@ TUI validator for [WACZ](https://specs.webrecorder.net/wacz/1.0.0/) archives
 produced by [BrowserHive](https://github.com/uraitakahito/browserhive) — one-shot
 validation with expandable details on failures.
 
-> Status: pre-release (`0.0.0`). The CLI surface, JSON output schema, and rule
-> identifiers are stable enough for daily use locally but have not yet been
-> published to npm.
-
 ## Quickstart
 
 ```sh
