@@ -11,7 +11,7 @@ The project ships as two packages:
 
 | Package                           | bin                | Purpose                                                                                                                                          |
 | --------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [`@waxlens/core`](packages/core/) | `waxlens-validate` | Validation engine. Emits a machine-readable JSON report (default) or a colour-aware plain-text view. CI and scripting target.                    |
+| [`@waxlens/core`](packages/core/) | `waxlens-validate` | Validation engine. Emits a machine-readable JSON report. CI and scripting target.                                                                |
 | [`@waxlens/tui`](packages/tui/)   | `waxlens`          | Interactive terminal UI. Renders the report with expandable per-issue details on a TTY; auto-falls-back to plain text on pipes / non-TTY stdout. |
 
 Spec / detail docs that apply to both packages:

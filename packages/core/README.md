@@ -1,11 +1,10 @@
 # @waxlens/core
 
-WACZ validation engine. Emits a machine-readable JSON report (default)
-or a colour-aware plain-text summary. Rules are derived from the WACZ
-spec and the [wabac.js](https://github.com/webrecorder/wabac.js)
-replay engine's actual loader behaviour, with optional
-producer-specific profiles for stricter checks against a known
-producer.
+WACZ validation engine. Emits a machine-readable JSON report to
+stdout. Rules are derived from the WACZ spec and the
+[wabac.js](https://github.com/webrecorder/wabac.js) replay engine's
+actual loader behaviour, with optional producer-specific profiles
+for stricter checks against a known producer.
 
 For the interactive terminal UI on top of this engine, use
 [`@waxlens/tui`](https://github.com/uraitakahito/waxlens/tree/main/packages/tui).
@@ -14,8 +13,6 @@ For the interactive terminal UI on top of this engine, use
 
 ```
 waxlens-validate <file>                    validate the WACZ; emit JSON to stdout
-waxlens-validate <file> --plain            emit a colour-aware human summary instead
-waxlens-validate <file> --no-color         disable ANSI colour escapes in --plain
 waxlens-validate <file> --profile <name>   spec (default) | browserhive | lenient
 waxlens-validate --version
 waxlens-validate --help
@@ -33,7 +30,7 @@ Warnings and info-level issues never flip the exit code on their own.
 
 ### Output schema
 
-`--json` (the default) emits a `WaxlensReport`. Full schema in
+stdout receives a `WaxlensReport`. Full schema in
 [`docs/json-schema.md`](https://github.com/uraitakahito/waxlens/blob/main/docs/json-schema.md);
 short example:
 
