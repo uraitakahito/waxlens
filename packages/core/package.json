@@ -5,7 +5,7 @@
   "license": "Unlicense",
   "type": "module",
   "engines": {
-    "node": ">=24.14.1"
+    "node": ">=24.15.0"
   },
   "main": "dist/public.js",
   "types": "dist/public.d.ts",

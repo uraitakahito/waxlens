@@ -7,13 +7,12 @@ derived from the WACZ spec and the
 actual loader behaviour, with optional producer-specific profiles
 (`browserhive`, etc.) for stricter checks.
 
-The project ships as two packages so the validation engine doesn't
-drag Ink / React along when all you need is the JSON report:
+The project ships as two packages:
 
-| Package                           | bin                | Purpose                                                                                                                                     |
-| --------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`@waxlens/core`](packages/core/) | `waxlens-validate` | Validation engine. Emits a machine-readable JSON report (default) or a colour-aware plain-text view. CI and scripting target.               |
-| [`@waxlens/tui`](packages/tui/)   | `waxlens`          | Ink TUI. Imports `@waxlens/core` in-process and renders the report interactively, with auto-fallback to plain text on non-TTY stdout/stdin. |
+| Package                           | bin                | Purpose                                                                                                                                          |
+| --------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [`@waxlens/core`](packages/core/) | `waxlens-validate` | Validation engine. Emits a machine-readable JSON report (default) or a colour-aware plain-text view. CI and scripting target.                    |
+| [`@waxlens/tui`](packages/tui/)   | `waxlens`          | Interactive terminal UI. Renders the report with expandable per-issue details on a TTY; auto-falls-back to plain text on pipes / non-TTY stdout. |
 
 Spec / detail docs that apply to both packages:
 
@@ -27,7 +26,7 @@ Spec / detail docs that apply to both packages:
 This is an npm-workspaces monorepo. Most operations run from the root:
 
 ```sh
-nvm use                 # Node 24.14.1, see .nvmrc
+nvm use                 # Node 24.15.0, see .nvmrc
 npm ci                  # installs all workspace deps + creates symlinks
 npm run check           # npm audit + format:check + each workspace's check
 npm run build           # builds both packages
