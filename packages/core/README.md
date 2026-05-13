@@ -10,14 +10,6 @@ producer.
 For the interactive terminal UI on top of this engine, use
 [`@waxlens/tui`](https://github.com/uraitakahito/waxlens/tree/main/packages/tui).
 
-## Install
-
-```sh
-npm i -g @waxlens/core
-# or use one-shot:
-npx @waxlens/core path/to/captured.wacz
-```
-
 ## CLI: `waxlens-validate`
 
 ```

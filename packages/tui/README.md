@@ -10,18 +10,6 @@ logs Just Work).
 For machine-readable JSON output, use `@waxlens/core`'s
 `waxlens-validate` bin directly.
 
-## Install
-
-```sh
-npm i -g @waxlens/tui
-# or one-shot:
-npx @waxlens/tui path/to/captured.wacz
-```
-
-`@waxlens/tui` declares `@waxlens/core` as a runtime dependency, so
-both packages install together; no manual `@waxlens/core` install
-required.
-
 ## CLI: `waxlens`
 
 ```
