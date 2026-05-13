@@ -1,29 +1,29 @@
 # waxlens
 
-Monorepo for **waxlens** — a producer-agnostic validator for
-[WACZ](https://specs.webrecorder.net/wacz/1.0.0/) archives. Rules are
-derived from the WACZ spec and the
-[wabac.js](https://github.com/webrecorder/wabac.js) replay engine's
-actual loader behaviour, with optional producer-specific profiles
-(`browserhive`, etc.) for stricter checks.
+**waxlens** の monorepo —
+[WACZ](https://specs.webrecorder.net/wacz/1.0.0/) archive 用の
+producer 非依存な validator。rule は WACZ spec と
+[wabac.js](https://github.com/webrecorder/wabac.js) replay engine の
+実際の loader 挙動から導出されており、producer 固有のより厳しい
+check 用 profile (`browserhive` など) も任意で選べる。
 
-The project ships as two packages:
+このプロジェクトは 2 つの package として提供される:
 
-| Package                           | bin                | Purpose                                                                                                                                          |
-| --------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [`@waxlens/core`](packages/core/) | `waxlens-validate` | Validation engine. Emits a machine-readable JSON report. CI and scripting target.                                                                |
-| [`@waxlens/tui`](packages/tui/)   | `waxlens`          | Interactive terminal UI. Renders the report with expandable per-issue details on a TTY; auto-falls-back to plain text on pipes / non-TTY stdout. |
+| Package                           | bin                | 目的                                                                                                                                            |
+| --------------------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`@waxlens/core`](packages/core/) | `waxlens-validate` | Validation engine。machine-readable な JSON report を出力する。CI / スクリプト用途。                                                            |
+| [`@waxlens/tui`](packages/tui/)   | `waxlens`          | Interactive な terminal UI。TTY 上では report を issue 単位の expandable な詳細つきで表示。pipe / 非 TTY な stdout では plain text に自動 fallback。 |
 
-Spec / detail docs that apply to both packages:
+両 package に共通する spec / 詳細 docs:
 
-- [`docs/rules.md`](docs/rules.md) — every rule with severity, profile
-  matrix, and upstream-source references
-- [`docs/json-schema.md`](docs/json-schema.md) — `WaxlensReport` (the
-  `--json` output) wire format
+- [`docs/rules.md`](docs/rules.md) — 各 rule の severity、profile
+  matrix、upstream 参照
+- [`docs/json-schema.md`](docs/json-schema.md) — `WaxlensReport`
+  (`--json` 出力) の wire format
 
-## Development
+## 開発
 
-This is an npm-workspaces monorepo. Most operations run from the root:
+npm-workspaces monorepo。ほとんどの操作は root から走らせる:
 
 ```sh
 nvm use                 # Node 24.15.0, see .nvmrc
@@ -32,14 +32,15 @@ npm run check           # npm audit + format:check + each workspace's check
 npm run build           # builds both packages
 ```
 
-Per-package commands work via `--workspace`:
+package ごとのコマンドは `--workspace` 経由:
 
 ```sh
 npm run check -w @waxlens/core
 npm run test:watch -w @waxlens/tui
 ```
 
-Adding a new rule? See [`docs/rules.md` → "Adding a new rule"](docs/rules.md).
+新しい rule を追加したい場合は
+[`docs/rules.md` → "新しい rule を追加する"](docs/rules.md) を参照。
 
 ## License
 

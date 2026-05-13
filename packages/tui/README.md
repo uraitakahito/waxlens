@@ -1,14 +1,14 @@
 # @waxlens/tui
 
-Interactive terminal UI for WACZ validation. Wraps
-[`@waxlens/core`](https://www.npmjs.com/package/@waxlens/core) (the
-validation engine) and renders its report interactively, with
-expandable per-issue details. Auto-falls-back to a plain-text view
-when stdout or stdin isn't a TTY (so `waxlens foo.wacz | cat` and CI
-logs Just Work).
+WACZ validation 用の interactive な terminal UI。
+[`@waxlens/core`](https://www.npmjs.com/package/@waxlens/core)
+(validation engine) をラップして、その report を issue 単位の
+expandable な詳細つきで interactive に表示する。stdout または stdin が
+TTY でないときは plain-text view に自動 fallback する
+(`waxlens foo.wacz | cat` や CI ログでも普通に動く)。
 
-For machine-readable JSON output, use `@waxlens/core`'s
-`waxlens-validate` bin directly.
+machine-readable な JSON 出力が欲しい場合は `@waxlens/core` の
+`waxlens-validate` bin を直接使う。
 
 ## CLI: `waxlens`
 
@@ -21,36 +21,35 @@ waxlens --version
 waxlens --help
 ```
 
-### Key bindings (TUI mode)
+### キーバインド (TUI モード)
 
-| Key         | Action                            |
+| キー        | 動作                              |
 | ----------- | --------------------------------- |
-| `↑` / `↓`   | move the cursor between issues    |
-| `enter`     | toggle the expanded details panel |
-| `q` / `Esc` | exit                              |
+| `↑` / `↓`   | issue 間でカーソル移動            |
+| `enter`     | expanded な詳細パネルをトグル     |
+| `q` / `Esc` | 終了                              |
 
-Expanded details auto-format by payload shape: hash mismatches show
-an `expected`/`actual` diff, CDXJ↔WARC issues show the actual WARC
-record header at the contested offset, payload-digest mismatches
-show a hex dump of the first 256 bytes of the payload. Anything else
-falls back to a JSON-pretty block so the human view never loses
-information the JSON output would carry.
+expanded な詳細は payload の形に応じて自動整形される: hash mismatch
+は `expected` / `actual` の diff、CDXJ↔WARC 系 issue は問題の offset の
+実際の WARC record header、payload-digest mismatch は payload 先頭
+256 bytes の hex dump。それ以外は JSON-pretty ブロックに fallback する
+ので、JSON 出力が持っている情報を human view が失うことは無い。
 
 ### Exit codes
 
-Same as `@waxlens/core`:
+`@waxlens/core` と同じ:
 
-| Code | Meaning                                          |
-| ---- | ------------------------------------------------ |
-| `0`  | validation passed                                |
-| `1`  | validation failed (one or more `error` issues)   |
-| `2`  | operational failure (cannot open the file, etc.) |
+| Code | 意味                                                |
+| ---- | --------------------------------------------------- |
+| `0`  | validation 成功                                     |
+| `1`  | validation 失敗 (`error` issue 1 件以上)            |
+| `2`  | operational な失敗 (ファイルが開けないなど)         |
 
-## Trying it with a real WACZ
+## 実際の WACZ で試す
 
-Webrecorder publishes a small example archive in
+Webrecorder が
 [`webrecorder/example-webarchive`](https://github.com/webrecorder/example-webarchive)
-that you can validate directly:
+に小さい example archive を公開していて、これを直接検証できる:
 
 ```sh
 mkdir -p /tmp/waxlens-demo
@@ -61,11 +60,11 @@ curl -sL \
 waxlens /tmp/waxlens-demo/wikipedia.wacz
 ```
 
-Under the default `--profile spec` this exits 0 with a single
-informational warning about the Webrecorder-style gzipped CDXJ — the
-archive is wabac.js-loadable because the paired `.idx` is present.
-The same command with `--profile browserhive` exits 1 because that
-profile enforces BrowserHive's plain-`.cdxj` convention.
+デフォルトの `--profile spec` では exit 0 になり、Webrecorder 流の
+gzip 済み CDXJ に対する informational な warning が 1 件出る — `.idx`
+がペアになっているので archive は wabac.js でロード可能。同じコマンドを
+`--profile browserhive` で動かすと exit 1 になる。これは BrowserHive の
+plain な `.cdxj` 慣習を強制する profile のため。
 
 ## License
 
