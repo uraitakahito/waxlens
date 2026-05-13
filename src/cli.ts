@@ -54,7 +54,7 @@ interface CliOptions {
 const program = new Command();
 program
   .name("waxlens")
-  .description("TUI validator for WACZ archives produced by BrowserHive")
+  .description("TUI validator for WACZ archives")
   .version(manifest.version)
   .argument("<file>", "Path to the .wacz file to validate")
   .option("--json", "Emit a JSON report to stdout instead of the plain text view", false)

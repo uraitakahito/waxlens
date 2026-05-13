@@ -1,8 +1,10 @@
 # waxlens
 
-TUI validator for [WACZ](https://specs.webrecorder.net/wacz/1.0.0/) archives
-produced by [BrowserHive](https://github.com/uraitakahito/browserhive) — one-shot
-validation with expandable details on failures.
+TUI validator for [WACZ](https://specs.webrecorder.net/wacz/1.0.0/) archives —
+one-shot validation with expandable details on failures. Rules are derived
+from the WACZ spec plus the [wabac.js](https://github.com/webrecorder/wabac.js)
+replay engine's actual loader behaviour, with optional producer-specific
+profiles (`browserhive`, etc.) for stricter checks against a known producer.
 
 ## Quickstart
 
