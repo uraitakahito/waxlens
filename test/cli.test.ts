@@ -107,6 +107,18 @@ describe("cli — exit codes", () => {
     expect(result.code).toBe(2);
     expect(result.stderr).toContain("cannot open");
   });
+
+  it("--no-tui forces plain text output even with TUI implied", async () => {
+    // execFile already produces a non-TTY stdout so plain is selected
+    // automatically. We add --no-tui anyway: it asserts the flag is
+    // parsed and that the plain-text branch still emits the version
+    // line + summary (signals plain mode, not JSON, not nothing).
+    const path = await writeFixture(tmpDir, "good.wacz");
+    const result = await runCli([path, "--no-tui"]);
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("waxlens 0.0.0");
+    expect(result.stdout).toContain("passed");
+  });
 });
 
 describe("cli — --json output shape", () => {
