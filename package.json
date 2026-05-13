@@ -31,7 +31,7 @@
     "prepublishOnly": "npm run check && npm run build"
   },
   "dependencies": {
-    "commander": "^12.1.0",
+    "commander": "^14.0.3",
     "ink": "^7.0.2",
     "picocolors": "^1.1.1",
     "react": "^19.2.6",
@@ -41,7 +41,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/archiver": "^7.0.0",
-    "@types/node": "^24.0.0",
+    "@types/node": "^25.6.2",
     "@types/react": "^19.2.14",
     "@types/yauzl-promise": "^4.0.1",
     "archiver": "^8.0.0",
