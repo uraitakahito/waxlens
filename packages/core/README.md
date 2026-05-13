@@ -7,7 +7,7 @@ replay engine's actual loader behaviour, with optional
 producer-specific profiles for stricter checks against a known
 producer.
 
-For the interactive Ink TUI on top of this engine, use
+For the interactive terminal UI on top of this engine, use
 [`@waxlens/tui`](https://github.com/uraitakahito/waxlens/tree/main/packages/tui).
 
 ## Install

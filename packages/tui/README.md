@@ -1,16 +1,14 @@
 # @waxlens/tui
 
-Ink TUI for WACZ validation. Wraps
+Interactive terminal UI for WACZ validation. Wraps
 [`@waxlens/core`](https://www.npmjs.com/package/@waxlens/core) (the
-validation engine) and renders its `Report` interactively, with
+validation engine) and renders its report interactively, with
 expandable per-issue details. Auto-falls-back to a plain-text view
 when stdout or stdin isn't a TTY (so `waxlens foo.wacz | cat` and CI
 logs Just Work).
 
 For machine-readable JSON output, use `@waxlens/core`'s
-`waxlens-validate` bin directly — the split between this package
-and core exists exactly so the JSON consumer doesn't drag Ink /
-React along.
+`waxlens-validate` bin directly.
 
 ## Install
 
