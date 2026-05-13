@@ -15,6 +15,15 @@
     "noFallthroughCasesInSwitch": true,
     "noPropertyAccessFromIndexSignature": true,
     "exactOptionalPropertyTypes": true,
+    // The three checkers below overlap with ESLint's
+    // `@typescript-eslint/no-unused-vars` etc., but having them at the
+    // tsc layer means `npm run typecheck` (the fastest gate) catches
+    // them before lint even runs.
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    // Forces every code path of a return-typed function to actually
+    // return. Not part of `strict`; complements it.
+    "noImplicitReturns": true,
 
     /*
      * Modules
