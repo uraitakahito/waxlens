@@ -15,6 +15,8 @@ if a field is documented here, the TUI uses it too — and vice versa.
 interface WaxlensReport {
   /** Producer version, mirroring `package.json#version`. */
   waxlensVersion: string;
+  /** Rule profile the report was evaluated under. See docs/rules.md → Profiles. */
+  profile: "spec" | "browserhive" | "lenient";
   /** The path the operator gave to the CLI (verbatim — not resolved). */
   file: string;
   /** Convenience field, equivalent to `summary.failed === 0`. */
@@ -26,6 +28,11 @@ interface WaxlensReport {
   stats?: ReportStats;
 }
 ```
+
+The `profile` value reflects whatever was selected via `--profile`;
+default `spec`. It's pinned per-report so a downstream consumer that
+ingests reports from multiple runs can tell which severity policy
+each was evaluated under without out-of-band metadata.
 
 ## `ReportSummary`
 

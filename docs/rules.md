@@ -5,19 +5,25 @@ identifier that ends up in `Issue.rule` and (eventually) the `--rule`
 filter. The table below is the canonical list, ordered by registry
 position (which is the order the renderers walk issues in).
 
-| #   | Name                                | Severity | What it catches                                                                    |
-| --- | ----------------------------------- | -------- | ---------------------------------------------------------------------------------- |
-| 1   | `datapackage/profile-required`      | error    | `datapackage.json` missing or wrong `profile: "data-package"`                      |
-| 2   | `datapackage/wacz-version-required` | error    | `wacz_version` missing or empty; warns on values outside the known-good set        |
-| 3   | `datapackage/resource-hashes`       | error    | resources' sha256 hash or byte length doesn't match the archive                    |
-| 4   | `cdxj/index-not-gzipped`            | error    | `index.cdxj.gz` / `index.cdx.gz` / gzip-magic at the start of `index.cdxj`         |
-| 5   | `cdxj/filename-archive-relative`    | error    | CDXJ `filename` field starts with `archive/`                                       |
-| 6   | `warc/storage-store`                | warning  | `archive/data.warc.gz` is zip-stored with DEFLATE instead of STORE                 |
-| 7   | `warc/members-independent`          | error    | WARC.gz can't be decoded as a concatenation of independent gzip members            |
-| 8   | `cdxj/warc-offsets`                 | error    | CDXJ offset/length doesn't land on a member boundary                               |
-| 9   | `cdxj/pages-mainpage`               | warning  | `datapackage.mainPageURL` is not listed in `pages.jsonl` and/or has no CDXJ record |
-| 10  | `warc/payload-digest`               | warning  | `WARC-Payload-Digest` doesn't match a fresh sha256 of the payload bytes            |
-| 11  | `fuzzy/valid-json`                  | info     | `fuzzy.json` is malformed (not JSON / not an object / missing `rules` array)       |
+Severity columns below show how each rule fires under each profile.
+The default profile is **`spec`** (WACZ spec + wabac.js
+compatibility). See [Profiles](#profiles) below for the full meaning
+of each column.
+
+| #   | Name                                | spec    | browserhive | lenient | What it catches                                                                    |
+| --- | ----------------------------------- | ------- | ----------- | ------- | ---------------------------------------------------------------------------------- |
+| 1   | `datapackage/profile-required`      | error   | error       | error   | `datapackage.json` missing or wrong `profile: "data-package"`                      |
+| 2   | `datapackage/wacz-version-required` | error   | error       | warning | `wacz_version` missing or empty; warns on values outside the known-good set        |
+| 3   | `datapackage/resource-hashes`       | error   | error       | error   | resources' sha256 hash or byte length doesn't match the archive                    |
+| 4   | `cdxj/index-recognised-by-wabac`    | error   | error       | error   | no `.cdx` / `.cdxj` / `.idx` under `indexes/` (wabac.js can't load anything)       |
+| 5   | `cdxj/index-not-gzipped`            | warning | error       | info    | gzipped CDXJ without a paired `.idx` (producer-strict for browserhive)             |
+| 6   | `cdxj/filename-archive-relative`    | error   | error       | warning | CDXJ `filename` field starts with `archive/`                                       |
+| 7   | `warc/storage-store`                | warning | warning     | info    | `archive/data.warc.gz` is zip-stored with DEFLATE instead of STORE                 |
+| 8   | `warc/members-independent`          | error   | error       | error   | WARC.gz can't be decoded as a concatenation of independent gzip members            |
+| 9   | `cdxj/warc-offsets`                 | error   | error       | warning | CDXJ offset/length doesn't land on a member boundary                               |
+| 10  | `cdxj/pages-mainpage`               | warning | warning     | info    | `datapackage.mainPageURL` is not listed in `pages.jsonl` and/or has no CDXJ record |
+| 11  | `warc/payload-digest`               | warning | warning     | warning | `WARC-Payload-Digest` doesn't match a fresh sha256 of the payload bytes            |
+| 12  | `fuzzy/valid-json`                  | info    | info        | info    | `fuzzy.json` is malformed (not JSON / not an object / missing `rules` array)       |
 
 ## Severity legend
 
@@ -27,6 +33,27 @@ position (which is the order the renderers walk issues in).
   WACZ is still likely usable. Does NOT flip exit code.
 - `info` — informational; spec-permitted producer choices that callers
   may want to know about. Does NOT flip exit code.
+
+## Profiles
+
+Selected via `--profile <name>` (default `spec`). A profile reshapes
+the severity of producer-specific or stylistic rules — it never
+silences a check that's spec-mandated.
+
+- **`spec`** (default) — WACZ spec + wabac.js loader compatibility.
+  An archive that exits 0 under this profile should replay correctly
+  in [ReplayWeb.page](https://replayweb.page/) (modulo bugs in
+  wabac.js itself).
+- **`browserhive`** — Adds BrowserHive's stricter producer
+  conventions on top of `spec`. Use when you specifically expect a
+  BrowserHive-produced archive (e.g. `indexes/index.cdxj` plain,
+  not `.cdxj.gz` even when paired with `.idx`).
+- **`lenient`** — Demotes every producer-specific or stylistic
+  finding to `info`. Useful for triaging legacy archives where you
+  only care about the hard "replay broken" errors.
+
+The matrix above is the source of truth; per-rule rationale lives in
+each rule's `applicability` declaration in `src/validate/rules/`.
 
 ## Rule details
 
@@ -68,17 +95,37 @@ hash and byte length of one of the other zip entries. The rule
 recomputes both from the actual bytes and surfaces mismatches with the
 expected/actual hashes in `details` (rendered as a diff in the TUI).
 
-### `cdxj/index-not-gzipped` — error
+### `cdxj/index-recognised-by-wabac` — error (every profile)
 
-`indexes/index.cdxj` MUST be a plain (uncompressed) text file inside
-the zip. wabac.js's `loadIndex` recognises only entry names ending in
-`.cdx`, `.cdxj`, or `.idx` (the last paired with a `.cdx.gz`); a
-producer that emits a gzipped CDXJ without the matching `.idx` makes
-every URL lookup return "Archived Page Not Found".
+The WACZ MUST carry at least one entry under `indexes/` that wabac.js
+will actually load. The loader recognises three suffixes — `.cdx`,
+`.cdxj`, or `.idx` (the last paired with a `.cdx.gz` named via the
+`.idx`'s `!meta { format: "cdxj-gzip-1.0", filename }` header). A
+bare `.cdx.gz` / `.cdxj.gz` with no `.idx` pair is silently skipped
+by wabac.js, so replay never gets an index and every URL lookup
+fails. This rule fires `error` in every profile because the issue
+is replay-breaking regardless of producer.
+
+When an `.idx` is present but the file it names isn't in the zip,
+the rule fires a `warning` (the `.idx` will load but every lookup
+misses).
 
 - **Replay engine**: [wabac.js `multiwacz.ts:loadIndex`](https://github.com/webrecorder/wabac.js/blob/main/src/wacz/multiwacz.ts)
-  `endsWith(".cdx") || endsWith(".cdxj")` for direct loading, plus
+  — `endsWith(".cdx") || endsWith(".cdxj")` for direct loading, plus
   `endsWith(".idx")` for compressed indices.
+
+### `cdxj/index-not-gzipped` — warning (spec) / error (browserhive) / info (lenient)
+
+Producer-strict variant of the wabac-recognition contract: when the
+producer is expected to emit a plain `indexes/index.cdxj`, this rule
+surfaces any `.cdxj.gz` / `.cdx.gz` variant (or a `.cdxj` file whose
+content begins with the gzip magic). It is `warning`-level in the
+default profile because spec-conformant `.cdx.gz` paired with an
+`.idx` is fine; the strict `browserhive` profile escalates it to
+`error` because BrowserHive commits to the plain form.
+
+- **Replay engine**: [wabac.js `multiwacz.ts:loadIndex`](https://github.com/webrecorder/wabac.js/blob/main/src/wacz/multiwacz.ts)
+  — only `.cdx`, `.cdxj`, `.idx` are recognised directly.
 - **Reference producer**: [browserhive `wacz/packager.ts:46-56`](https://github.com/uraitakahito/browserhive/blob/main/src/storage/wacz/packager.ts)
   commits to plain `indexes/index.cdxj`.
 
