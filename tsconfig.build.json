@@ -1,0 +1,18 @@
+{
+  // Inherits all options from tsconfig.json; the overrides below switch
+  // emit on and pin the build output layout. Kept as a separate config so
+  // the root tsconfig (which also covers test/ and *.config.ts) can stay
+  // `noEmit: true` for editor / CI typecheck use.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "dist",
+    "rootDir": "src",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "tsBuildInfoFile": "./.tsbuildinfo"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "test", "**/*.test.ts"]
+}

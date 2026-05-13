@@ -1,0 +1,67 @@
+{
+  "compilerOptions": {
+    /*
+     * Type Checking
+     * https://www.typescriptlang.org/tsconfig/#Type_Checking_6248
+     */
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noPropertyAccessFromIndexSignature": true,
+    // ON intentionally (waggle has it OFF only because the hey-api generated
+    // client trips it). waxlens has no generated code, so we get the stronger
+    // contract — `{ foo?: T }` cannot be assigned `{ foo: undefined }`.
+    "exactOptionalPropertyTypes": true,
+
+    /*
+     * Modules
+     * https://www.typescriptlang.org/tsconfig/#Modules_6244
+     */
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "resolveJsonModule": true,
+
+    /*
+     * Emit
+     * https://www.typescriptlang.org/tsconfig/#Emit_6246
+     */
+    // Type-check only by default; the actual emit pass uses tsconfig.build.json.
+    "noEmit": true,
+
+    /*
+     * Interop Constraints
+     * https://www.typescriptlang.org/tsconfig/#Interop_Constraints_6252
+     */
+    "verbatimModuleSyntax": true,
+    "esModuleInterop": false,
+    "isolatedModules": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+
+    /*
+     * Language and Environment
+     * https://www.typescriptlang.org/tsconfig/#Language_and_Environment_6254
+     */
+    "target": "ES2022",
+    // No DOM — waxlens is a Node-only CLI; nothing pulls Web platform types
+    // (waggle needs DOM only because of the hey-api fetch client).
+    "lib": ["ES2023"],
+
+    /*
+     * JSX
+     * https://www.typescriptlang.org/tsconfig/#jsx
+     */
+    // `react-jsx` uses the React 17+ automatic runtime — JSX compiles to
+    // `_jsx(...)` calls and the `react/jsx-runtime` import is injected by
+    // the compiler. We never write `import React from "react"` (which
+    // would be a value-only import banned by verbatimModuleSyntax with
+    // no value usage), and the auto-runtime keeps the Ink TUI files
+    // (`src/render/tui.tsx`) free of boilerplate.
+    "jsx": "react-jsx"
+  },
+  // Root config covers source, tests, and *.config.ts so editors and the
+  // typecheck script see everything; the build config narrows to src/**.
+  "include": ["src/**/*", "test/**/*", "*.config.ts"],
+  "exclude": ["node_modules", "dist"]
+}
