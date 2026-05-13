@@ -1,15 +1,15 @@
-# `--json` output schema
+# `--json` 出力スキーマ
 
-The schema is pinned for the `0.x` line — a future `1.0.0` release may
-break it, but only with a migration note in the GitHub Release body
-for that tag. Anything you script against the fields below should keep
-working across patch and minor releases until then.
+schema は `0.x` ライン中 pin される — 将来の `1.0.0` リリースで break
+される可能性はあるが、その場合はそのタグの GitHub Release body に
+migration note を付ける。下に書いてある field に対してスクリプトを
+書くなら、patch / minor リリースでは引き続き動き続けるはず。
 
-Renderers consume the same `Report` object that the engine produces;
-`--json` is a stringification of it, not a separate "machine view". So
-if a field is documented here, the TUI uses it too — and vice versa.
+renderer はエンジンが生成するのと同じ `Report` object を消費する。
+`--json` はその文字列化であって、別個の "machine view" ではない。
+つまりこの doc に載っている field は TUI も使っているし、その逆も成り立つ。
 
-## Top level: `WaxlensReport`
+## トップレベル: `WaxlensReport`
 
 ```ts
 interface WaxlensReport {
@@ -29,10 +29,10 @@ interface WaxlensReport {
 }
 ```
 
-The `profile` value reflects whatever was selected via `--profile`;
-default `spec`. It's pinned per-report so a downstream consumer that
-ingests reports from multiple runs can tell which severity policy
-each was evaluated under without out-of-band metadata.
+`profile` 値には `--profile` で選ばれたものがそのまま入る (デフォルト
+`spec`)。report ごとに pin されるので、複数 run の report を取り込む
+downstream consumer が、それぞれどの severity policy で評価されたかを
+out-of-band な metadata なしに判定できる。
 
 ## `ReportSummary`
 
@@ -51,10 +51,10 @@ interface ReportSummary {
 }
 ```
 
-Note: `summary.passed + failingRules = totalRules`. Counting "passed"
-by rule (rather than by issue) lets a rule that produces several
-warnings still count as having passed (it didn't fail), which matches
-the headline operators expect.
+注: `summary.passed + failingRules = totalRules`。"passed" を issue
+ベースではなく rule ベースで数えることで、warning を複数出した rule も
+"passed" として数えられる (fail はしていない)。これは operator が期待
+する headline と一致する。
 
 ## `Issue`
 
@@ -86,23 +86,22 @@ interface IssueLocation {
 }
 ```
 
-### Recognised `details` shapes
+### 認識される `details` の形
 
-Today's renderers (TUI especially) look for the following keys and
-render them in dedicated views. Other keys fall through to a
-JSON-pretty block, so adding fields never silently drops information.
+現在の renderer (特に TUI) は下記の key を探して、それぞれ専用 view に
+render する。それ以外の key は JSON-pretty ブロックに fallback するので、
+field を足しても情報が silent に落ちることはない。
 
-| Key                     | Type        | Used by                            | Rendered as                 |
-| ----------------------- | ----------- | ---------------------------------- | --------------------------- |
-| `expected` AND `actual` | any         | hash / digest / wacz_version rules | green/red side-by-side diff |
-| `warcHeader`            | `string[]`  | `cdxj/warc-offsets`                | WARC header line list       |
-| `hexPreview`            | `string[]`  | `warc/payload-digest`              | xxd-style hex dump          |
-| `candidates`            | `unknown[]` | `cdxj/warc-offsets`                | nearby-members one-per-line |
+| Key                     | Type        | 利用元                              | レンダリング                       |
+| ----------------------- | ----------- | ----------------------------------- | ---------------------------------- |
+| `expected` AND `actual` | any         | hash / digest / wacz_version 系 rule | green/red サイドバイサイドの diff |
+| `warcHeader`            | `string[]`  | `cdxj/warc-offsets`                 | WARC header の行リスト             |
+| `hexPreview`            | `string[]`  | `warc/payload-digest`               | xxd 形式の hex dump                |
+| `candidates`            | `unknown[]` | `cdxj/warc-offsets`                 | 近接 member の 1 行 1 件リスト     |
 
-`expected` without `actual` (or vice versa) falls through to JSON
-pretty — the diff view requires both. This is intentional: we don't
-synthesise either side, so the human and machine views stay
-trustworthy.
+`expected` だけ (または `actual` だけ) は JSON pretty に fallback する
+— diff view は両方が要る。これは意図的: どちらかを合成して埋めると、
+human view と machine view の信頼性が崩れるため。
 
 ## `ReportStats`
 
@@ -117,27 +116,28 @@ interface ReportStats {
 }
 ```
 
-Stats are computed best-effort alongside validation. A malformed WARC
-omits the field rather than failing the report. Renderers display it
-below the summary as
-`<recordCount> records · <archiveBytes> · <hostCount> hosts`.
+stats は validation と並列に best-effort で計算される。WARC が壊れて
+いる場合、report を fail させるのではなくこの field を省く。renderer
+は summary の下に
+`<recordCount> records · <archiveBytes> · <hostCount> hosts` の形で
+表示する。
 
-## Stability promise
+## 安定性の約束
 
-Within the `0.x` line:
+`0.x` ライン中:
 
-- **Added fields are non-breaking.** Consumers must tolerate fields
-  they don't recognise.
-- **Removed or renamed fields are breaking** and ride a minor bump
-  (0.x → 0.(x+1)).
-- **`rule` identifiers never change** for a given check; a renamed
-  rule is a new rule (the old one is removed, with the rename noted
-  in the GitHub Release body for the cutting tag).
-- **Severity downgrades** (error → warning) ride a minor bump;
-  upgrades (warning → error) ride a major.
-- **`summary.passed` semantics** (per-rule count) are fixed.
+- **field の追加は non-breaking。** consumer は認識しない field を
+  許容する必要がある。
+- **field の削除 / リネームは breaking** であり、minor bump
+  (0.x → 0.(x+1)) で行う。
+- **`rule` 識別子は同じ check に対して変わらない。** rename された
+  rule は新しい rule として扱う (古い方は削除され、切り替えタグの
+  GitHub Release body に rename が記載される)。
+- **severity の downgrade** (error → warning) は minor bump、
+  **upgrade** (warning → error) は major bump。
+- **`summary.passed` の意味** (rule 単位カウント) は固定。
 
-## Example: valid WACZ
+## 例: valid な WACZ
 
 ```json
 {
@@ -160,7 +160,7 @@ Within the `0.x` line:
 }
 ```
 
-## Example: failure with diff
+## 例: diff 付きの failure
 
 ```json
 {
