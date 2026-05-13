@@ -16,8 +16,18 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
-    "format": "npm run format --workspaces --if-present",
-    "format:check": "npm run format:check --workspaces --if-present",
-    "check": "npm audit --audit-level=moderate && npm run check -w @waxlens/core && npm run check -w @waxlens/tui"
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm audit --audit-level=moderate && npm run format:check && npm run check -w @waxlens/core && npm run check -w @waxlens/tui"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^25.6.2",
+    "eslint": "^10.3.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.4.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.59.2",
+    "vitest": "^4.1.5"
   }
 }

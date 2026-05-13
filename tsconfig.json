@@ -1,0 +1,45 @@
+{
+  // Base compiler options shared across @waxlens/core and @waxlens/tui.
+  // Each workspace extends this and only sets:
+  //   - `include` / `exclude` (per-workspace layout)
+  //   - emit-related options in its own `tsconfig.build.json`
+  //   - workspace-specific bits like `jsx`, `types`, etc.
+  "compilerOptions": {
+    /*
+     * Type Checking
+     * https://www.typescriptlang.org/tsconfig/#Type_Checking_6248
+     */
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "exactOptionalPropertyTypes": true,
+
+    /*
+     * Modules
+     */
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "resolveJsonModule": true,
+
+    /*
+     * Emit (workspaces flip `noEmit` in tsconfig.build.json).
+     */
+    "noEmit": true,
+
+    /*
+     * Interop Constraints
+     */
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+
+    /*
+     * Language and Environment
+     */
+    "target": "ES2022",
+    "lib": ["ES2023"]
+  }
+}

@@ -1,39 +1,13 @@
 {
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "noFallthroughCasesInSwitch": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "exactOptionalPropertyTypes": true,
-
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "resolveJsonModule": true,
-
-    "noEmit": true,
-
-    "verbatimModuleSyntax": true,
-    "isolatedModules": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
-
-    "target": "ES2022",
-    "lib": ["ES2023"],
+    "jsx": "react-jsx",
     // Explicit `types` because the implicit "scan node_modules/@types"
-    // behaviour stops short of resolving `node:` module specifiers
-    // when this workspace's package.json declares a non-Node peer
-    // (here: `@waxlens/core` via workspace symlink). Naming `node`
-    // and `react` here is enough; everything else still goes via
-    // direct `import`.
-    "types": ["node", "react"],
-
-    // React 17+ automatic runtime — JSX compiles to `_jsx(...)` and the
-    // `react/jsx-runtime` import is injected automatically. We never
-    // write `import React from "react"` (verbatimModuleSyntax would
-    // reject the unused value import), and the auto-runtime keeps the
-    // Ink TUI files (`src/app.tsx`) free of boilerplate.
-    "jsx": "react-jsx"
+    // behaviour stops short of resolving `node:` module specifiers in
+    // this workspace (the `@waxlens/core` symlink in
+    // `node_modules/` confuses the fall-through). Naming the types
+    // here brings them back.
+    "types": ["node", "react"]
   },
   "include": ["src/**/*", "test/**/*", "*.config.ts"],
   "exclude": ["node_modules", "dist"]
