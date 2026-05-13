@@ -1,11 +1,17 @@
 name: pack-smoke
 
-# Asserts the published shape of the package works end-to-end:
+# Asserts the published shape of the package works end-to-end, WITHOUT
+# actually publishing anything. Three checks, in this order:
+#
 #   1. `npm pack` produces a tarball with `dist/cli.js` executable
 #   2. `npx <tarball> --version` runs from a directory with no project state
-# This catches packaging regressions (missing `bin`, lost shebang,
-# excluded files, broken postbuild chmod) that `npm run check` alone
-# cannot see.
+#   3. `npm publish --dry-run` reports a clean publish plan (no auth, no
+#      registry traffic — purely a local validation that `files` /
+#      `bin` / `prepublishOnly` would behave correctly if we DID push)
+#
+# Catches packaging regressions (missing `bin`, lost shebang, excluded
+# files, broken postbuild chmod, `files` field drift) that `npm run check`
+# alone cannot see.
 
 on:
   push:
@@ -23,12 +29,14 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+
       - name: Pack
         id: pack
         run: |
           tarball=$(npm pack --silent)
           echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
           echo "Packed: $tarball"
+
       - name: Smoke test from a clean directory
         run: |
           mkdir -p /tmp/waxlens-smoke
@@ -42,3 +50,14 @@ jobs:
           cp "${GITHUB_WORKSPACE}/${{ steps.pack.outputs.tarball }}" /tmp/waxlens-smoke/
           cd /tmp/waxlens-smoke
           npx --yes "./${{ steps.pack.outputs.tarball }}" --version
+
+      - name: Publish dry-run
+        # `npm publish --dry-run` writes nothing to the registry and
+        # makes no network requests beyond resolving the package name.
+        # It runs `prepublishOnly` (check + build) up-front, so this
+        # step doubles as a final integration test of the release
+        # gate. If you ever genuinely want to publish, replace this
+        # step with a separate, manually-triggered workflow that
+        # requires the NPM_TOKEN secret — never automate `npm publish`
+        # from a `push` / `pull_request` trigger.
+        run: npm publish --dry-run

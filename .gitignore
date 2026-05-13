@@ -144,3 +144,8 @@ vite.config.ts.timestamp-*
 
 # macOS Finder metadata
 .DS_Store
+
+# Locally-downloaded sample WACZ files (see README → "Trying it with a real WACZ").
+# These are large, third-party-hosted blobs we don't want to commit; the README
+# documents how to fetch them on demand.
+samples/
