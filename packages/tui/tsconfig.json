@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    // Explicit `types` because the implicit "scan node_modules/@types"
+    // behaviour stops short of resolving `node:` module specifiers in
+    // this workspace (the `@waxlens/core` symlink in
+    // `node_modules/` confuses the fall-through). Naming the types
+    // here brings them back.
+    "types": ["node", "react"]
+  },
+  "include": ["src/**/*", "test/**/*", "*.config.ts"],
+  "exclude": ["node_modules", "dist"]
+}
