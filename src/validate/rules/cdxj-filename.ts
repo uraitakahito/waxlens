@@ -41,12 +41,11 @@ export const cdxjFilenameRule: ValidationRule = {
     const issues: Issue[] = [];
     const buf = await wacz.readEntry(CDXJ_ENTRY);
     if (!buf) {
-      issues.push({
-        rule: "cdxj/filename-archive-relative",
-        severity: "error",
-        message: `${CDXJ_ENTRY} is missing from the WACZ`,
-        location: { entry: CDXJ_ENTRY },
-      });
+      // Whether the WACZ has *any* wabac-recognised index is owned by
+      // `cdxj/index-recognised-by-wabac`. We stay silent here so the
+      // operator doesn't see two separate complaints for the same
+      // missing-index situation; the new rule emits the canonical
+      // error in every profile.
       return ok(issues);
     }
 

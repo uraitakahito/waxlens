@@ -143,13 +143,20 @@ describe("validation engine — corrupted variants", () => {
     expect(report.profile).toBe("spec");
     // The rule itself is now demoted to `warning` under the spec
     // profile. We don't assert on `report.valid` here because the
-    // fixture also has no plain `indexes/index.cdxj` entry, and the
-    // existing `cdxj/filename-archive-relative` rule reports that as
-    // an error (in every profile). Phase D will tighten this so the
-    // missing-cdxj branch is owned by `cdxj/index-recognised-by-wabac`.
+    // fixture also has no plain `indexes/index.cdxj` entry, and
+    // `cdxj/index-recognised-by-wabac` reports that as an error
+    // (no recognised index of any flavour).
     const issues = report.issues.filter((i) => i.rule === "cdxj/index-not-gzipped");
     expect(issues.length).toBeGreaterThan(0);
     expect(issues.every((i) => i.severity === "warning")).toBe(true);
+  });
+
+  it("no recognised index → cdxj/index-recognised-by-wabac errors (every profile)", async () => {
+    const report = await runAgainstFixture(tmpDir, "gz-cdxj.wacz", { cdxjGzipped: true });
+    const issues = report.issues.filter((i) => i.rule === "cdxj/index-recognised-by-wabac");
+    expect(issues).toHaveLength(1);
+    expect(issues[0]?.severity).toBe("error");
+    expect(report.valid).toBe(false);
   });
 
   it("missing datapackage.json → profile-required reports it", async () => {

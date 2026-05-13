@@ -5,20 +5,30 @@ exports[`cli — --json output shape > gzipped CDXJ JSON snapshot 1`] = `
   "file": "<tmp>/fixture.wacz",
   "issues": [
     {
+      "details": {
+        "acceptedSuffixes": [
+          ".cdx",
+          ".cdxj",
+          ".idx",
+        ],
+        "allIndexEntries": [
+          "indexes/index.cdxj.gz",
+        ],
+      },
+      "location": {
+        "entry": "indexes/",
+      },
+      "message": "No wabac-recognised index file found under indexes/ — wabac.js needs at least one .cdx / .cdxj / .idx entry to serve any URL",
+      "rule": "cdxj/index-recognised-by-wabac",
+      "severity": "error",
+    },
+    {
       "location": {
         "entry": "indexes/index.cdxj.gz",
       },
       "message": "Entry "indexes/index.cdxj.gz" is a gzipped CDXJ — wabac.js does not recognise .cdxj.gz / .cdx.gz",
       "rule": "cdxj/index-not-gzipped",
       "severity": "warning",
-    },
-    {
-      "location": {
-        "entry": "indexes/index.cdxj",
-      },
-      "message": "indexes/index.cdxj is missing from the WACZ",
-      "rule": "cdxj/filename-archive-relative",
-      "severity": "error",
     },
   ],
   "profile": "spec",
@@ -31,7 +41,7 @@ exports[`cli — --json output shape > gzipped CDXJ JSON snapshot 1`] = `
     "durationMs": 0,
     "failed": 1,
     "info": 0,
-    "passed": 10,
+    "passed": 11,
     "warnings": 1,
   },
   "valid": false,
@@ -67,7 +77,7 @@ exports[`cli — --json output shape > missing-profile JSON snapshot 1`] = `
     "durationMs": 0,
     "failed": 1,
     "info": 0,
-    "passed": 10,
+    "passed": 11,
     "warnings": 0,
   },
   "valid": false,
@@ -91,7 +101,7 @@ exports[`cli — --json output shape > valid WACZ JSON snapshot 1`] = `
     "durationMs": 0,
     "failed": 0,
     "info": 0,
-    "passed": 11,
+    "passed": 12,
     "warnings": 0,
   },
   "valid": true,
