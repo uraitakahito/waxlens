@@ -22,12 +22,12 @@ import {
   ALL_PROFILES,
   DEFAULT_PROFILE,
   M1_RULES,
-  renderPlain,
   runValidation,
   WaczReader,
   type Report,
   type RuleProfile,
 } from "@waxlens/core";
+import { renderPlain } from "./render/plain.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const manifestPath = join(here, "..", "package.json");
