@@ -44,6 +44,9 @@ export const cdxjWarcOffsetsRule: ValidationRule = {
   name: "cdxj/warc-offsets",
   description: `${CDXJ_ENTRY} offset/length must land on a WARC gzip-member boundary`,
   severity: "error",
+  applicability: {
+    severityByProfile: { lenient: "warning" },
+  },
 
   run: async (wacz) => {
     const issues: Issue[] = [];

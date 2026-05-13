@@ -30,6 +30,9 @@ export const cdxjPagesMainpageRule: ValidationRule = {
   name: "cdxj/pages-mainpage",
   description: `datapackage.mainPageURL must appear in both ${PAGES_ENTRY} and ${CDXJ_ENTRY}`,
   severity: "warning",
+  applicability: {
+    severityByProfile: { lenient: "info" },
+  },
 
   run: async (wacz) => {
     const issues: Issue[] = [];

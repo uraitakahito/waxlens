@@ -10,7 +10,7 @@ exports[`cli — --json output shape > gzipped CDXJ JSON snapshot 1`] = `
       },
       "message": "Entry "indexes/index.cdxj.gz" is a gzipped CDXJ — wabac.js does not recognise .cdxj.gz / .cdx.gz",
       "rule": "cdxj/index-not-gzipped",
-      "severity": "error",
+      "severity": "warning",
     },
     {
       "location": {
@@ -21,6 +21,7 @@ exports[`cli — --json output shape > gzipped CDXJ JSON snapshot 1`] = `
       "severity": "error",
     },
   ],
+  "profile": "spec",
   "stats": {
     "hosts": [],
     "warcArchiveBytes": 246,
@@ -28,10 +29,10 @@ exports[`cli — --json output shape > gzipped CDXJ JSON snapshot 1`] = `
   },
   "summary": {
     "durationMs": 0,
-    "failed": 2,
+    "failed": 1,
     "info": 0,
-    "passed": 9,
-    "warnings": 0,
+    "passed": 10,
+    "warnings": 1,
   },
   "valid": false,
   "waxlensVersion": "0.0.0",
@@ -54,6 +55,7 @@ exports[`cli — --json output shape > missing-profile JSON snapshot 1`] = `
       "severity": "error",
     },
   ],
+  "profile": "spec",
   "stats": {
     "hosts": [
       "example.com",
@@ -77,6 +79,7 @@ exports[`cli — --json output shape > valid WACZ JSON snapshot 1`] = `
 {
   "file": "<tmp>/fixture.wacz",
   "issues": [],
+  "profile": "spec",
   "stats": {
     "hosts": [
       "example.com",

@@ -33,12 +33,13 @@
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { Command } from "commander";
+import { Command, InvalidArgumentError } from "commander";
 import { renderJson } from "./render/json.js";
 import { renderPlain } from "./render/plain.js";
-import { runValidation } from "./validate/engine.js";
+import { DEFAULT_PROFILE, runValidation } from "./validate/engine.js";
 import { M1_RULES } from "./validate/rules/index.js";
-import type { Report } from "./validate/types.js";
+import type { Report, RuleProfile } from "./validate/types.js";
+import { ALL_PROFILES } from "./validate/types.js";
 import { WaczReader } from "./wacz/reader.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -49,7 +50,13 @@ interface CliOptions {
   json: boolean;
   color: boolean;
   tui: boolean;
+  profile: RuleProfile;
 }
+
+const parseProfile = (raw: string): RuleProfile => {
+  if ((ALL_PROFILES as readonly string[]).includes(raw)) return raw as RuleProfile;
+  throw new InvalidArgumentError(`Unknown profile "${raw}". Valid: ${ALL_PROFILES.join(", ")}.`);
+};
 
 const program = new Command();
 program
@@ -64,6 +71,12 @@ program
   .option(
     "--no-tui",
     "Force plain output even when stdout is a TTY (the default chooses based on isTTY)",
+  )
+  .option(
+    "--profile <name>",
+    `Rule profile (${ALL_PROFILES.join(" | ")}). Defaults to "${DEFAULT_PROFILE}".`,
+    parseProfile,
+    DEFAULT_PROFILE,
   )
   .action(async (filePath: string, options: CliOptions) => {
     const exitCode = await runCli(filePath, options);
@@ -89,6 +102,7 @@ async function runCli(filePath: string, opts: CliOptions): Promise<number> {
       file: filePath,
       waxlensVersion: manifest.version,
       rules: M1_RULES,
+      profile: opts.profile,
     });
     // runValidation's Result<Report, never> can only be the ok branch —
     // narrow with the same idiom used in `engine.ts`.

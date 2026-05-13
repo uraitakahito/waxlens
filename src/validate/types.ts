@@ -20,6 +20,37 @@ import type { WaczReader } from "../wacz/reader.js";
 
 export type Severity = "error" | "warning" | "info";
 
+/**
+ * Rule-set selectors. Picking a profile reshapes the severity of
+ * producer-specific rules (e.g. `cdxj/index-not-gzipped`) but never
+ * silences a spec-mandated check. Default is `spec`.
+ *
+ * - `spec` — WACZ spec + wabac.js loader compatibility. The
+ *   default; what most consumers want.
+ * - `browserhive` — Add BrowserHive's producer conventions on top
+ *   of `spec` (e.g. plain `indexes/index.cdxj` required, no
+ *   `index.cdxj.gz` even when paired with `.idx`).
+ * - `lenient` — Demote all producer-specific or stylistic
+ *   findings to `info`. Useful when triaging legacy archives
+ *   where you only want the hard "replay broken" errors.
+ */
+export type RuleProfile = "spec" | "browserhive" | "lenient";
+
+export const ALL_PROFILES: readonly RuleProfile[] = ["spec", "browserhive", "lenient"];
+
+/**
+ * How a rule reacts to each profile. `severityByProfile` lets a rule
+ * sit in the registry once and tune its severity; `excludeProfiles`
+ * silences it entirely for a profile (rare — used when a check is
+ * meaningless outside one producer's conventions).
+ */
+export interface RuleApplicability {
+  /** Per-profile severity override. Omitted profile falls back to `ValidationRule.severity`. */
+  severityByProfile?: Partial<Record<RuleProfile, Severity>>;
+  /** Profiles where the rule is skipped entirely (no issues emitted). */
+  excludeProfiles?: readonly RuleProfile[];
+}
+
 export interface IssueLocation {
   /** zip entry name where the problem was found, when applicable. */
   entry?: string;
@@ -53,7 +84,18 @@ export interface ValidationRule {
   name: string;
   /** One-sentence rationale. Surfaced by `--help` and docs/rules.md. */
   description: string;
+  /**
+   * Baseline severity, used when no profile-specific override applies.
+   * The engine still routes this through profile logic: a rule with
+   * baseline `error` can be demoted to `warning` under the `lenient`
+   * profile via `applicability.severityByProfile`.
+   */
   severity: Severity;
+  /**
+   * Per-profile overrides. Omitted = the rule applies in every profile
+   * at its baseline severity.
+   */
+  applicability?: RuleApplicability;
   run: (wacz: WaczReader) => Promise<Result<Issue[], never>>;
 }
 
@@ -83,6 +125,8 @@ export interface ReportStats {
 
 export interface Report {
   waxlensVersion: string;
+  /** Rule profile used to evaluate the report. See {@link RuleProfile}. */
+  profile: RuleProfile;
   file: string;
   /** `true` iff `summary.failed === 0`. Cached so the JSON consumer doesn't recompute. */
   valid: boolean;

@@ -34,6 +34,9 @@ export const warcStorageStoreRule: ValidationRule = {
   name: "warc/storage-store",
   description: `${WARC_ENTRY} must be stored with method STORE (0), not DEFLATE`,
   severity: "warning",
+  applicability: {
+    severityByProfile: { lenient: "info" },
+  },
 
   run: async (wacz) => {
     const issues: Issue[] = [];

@@ -14,7 +14,7 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runValidation } from "../src/validate/engine.js";
 import { M1_RULES } from "../src/validate/rules/index.js";
-import type { Report } from "../src/validate/types.js";
+import type { Report, RuleProfile } from "../src/validate/types.js";
 import { WaczReader } from "../src/wacz/reader.js";
 import { buildWacz, type FixtureOptions } from "./fixtures/generator.js";
 
@@ -22,6 +22,7 @@ const runAgainstFixture = async (
   tmpDir: string,
   filename: string,
   options: FixtureOptions = {},
+  profile: RuleProfile = "spec",
 ): Promise<Report> => {
   const { bytes } = await buildWacz(options);
   const path = join(tmpDir, filename);
@@ -32,6 +33,7 @@ const runAgainstFixture = async (
       file: path,
       waxlensVersion: "0.0.0",
       rules: M1_RULES,
+      profile,
     });
     if (!result.ok) throw new Error("runValidation returned err — unreachable");
     return result.value;
@@ -123,10 +125,31 @@ describe("validation engine — corrupted variants", () => {
     expect(ruleNames(report)).toContain("cdxj/filename-archive-relative");
   });
 
-  it("gzipped CDXJ index → index-not-gzipped fires", async () => {
-    const report = await runAgainstFixture(tmpDir, "gz-cdxj.wacz", { cdxjGzipped: true });
+  it("gzipped CDXJ index (browserhive profile) → index-not-gzipped errors", async () => {
+    const report = await runAgainstFixture(
+      tmpDir,
+      "gz-cdxj.wacz",
+      { cdxjGzipped: true },
+      "browserhive",
+    );
     expect(report.valid).toBe(false);
-    expect(ruleNames(report)).toContain("cdxj/index-not-gzipped");
+    const issues = report.issues.filter((i) => i.rule === "cdxj/index-not-gzipped");
+    expect(issues.length).toBeGreaterThan(0);
+    expect(issues.every((i) => i.severity === "error")).toBe(true);
+  });
+
+  it("gzipped CDXJ index (default = spec) → index-not-gzipped emits warnings", async () => {
+    const report = await runAgainstFixture(tmpDir, "gz-cdxj.wacz", { cdxjGzipped: true });
+    expect(report.profile).toBe("spec");
+    // The rule itself is now demoted to `warning` under the spec
+    // profile. We don't assert on `report.valid` here because the
+    // fixture also has no plain `indexes/index.cdxj` entry, and the
+    // existing `cdxj/filename-archive-relative` rule reports that as
+    // an error (in every profile). Phase D will tighten this so the
+    // missing-cdxj branch is owned by `cdxj/index-recognised-by-wabac`.
+    const issues = report.issues.filter((i) => i.rule === "cdxj/index-not-gzipped");
+    expect(issues.length).toBeGreaterThan(0);
+    expect(issues.every((i) => i.severity === "warning")).toBe(true);
   });
 
   it("missing datapackage.json → profile-required reports it", async () => {

@@ -39,7 +39,18 @@ const GZIP_MAGIC_1 = 0x8b;
 export const cdxjNonGzippedRule: ValidationRule = {
   name: "cdxj/index-not-gzipped",
   description: `${EXPECTED_CDXJ} must not be gzipped (wabac.js silently ignores .cdxj.gz)`,
-  severity: "error",
+  // Baseline is `warning` because a gzipped CDXJ is sometimes paired
+  // with a `.idx` header file in spec-conforming WACZs (wabac.js's
+  // `loadIDX` path handles that case). The `browserhive` profile is
+  // stricter — it expects plain `.cdxj` and treats any `.gz` index as
+  // an error.
+  severity: "warning",
+  applicability: {
+    severityByProfile: {
+      browserhive: "error",
+      lenient: "info",
+    },
+  },
 
   run: async (wacz) => {
     const issues: Issue[] = [];
@@ -48,7 +59,7 @@ export const cdxjNonGzippedRule: ValidationRule = {
       if (FORBIDDEN_GZ_SUFFIXES.some((suffix) => name.endsWith(suffix))) {
         issues.push({
           rule: "cdxj/index-not-gzipped",
-          severity: "error",
+          severity: "warning",
           message: `Entry "${name}" is a gzipped CDXJ — wabac.js does not recognise .cdxj.gz / .cdx.gz`,
           location: { entry: name },
         });
@@ -60,7 +71,7 @@ export const cdxjNonGzippedRule: ValidationRule = {
       if (cdxjBuf[0] === GZIP_MAGIC_0 && cdxjBuf[1] === GZIP_MAGIC_1) {
         issues.push({
           rule: "cdxj/index-not-gzipped",
-          severity: "error",
+          severity: "warning",
           message: `${EXPECTED_CDXJ} starts with the gzip magic bytes — the file is named correctly but the content is compressed`,
           location: { entry: EXPECTED_CDXJ },
         });

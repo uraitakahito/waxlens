@@ -33,6 +33,9 @@ export const cdxjFilenameRule: ValidationRule = {
   name: "cdxj/filename-archive-relative",
   description: `${CDXJ_ENTRY} entries must use archive-relative filenames (not "archive/...")`,
   severity: "error",
+  applicability: {
+    severityByProfile: { lenient: "warning" },
+  },
 
   run: async (wacz) => {
     const issues: Issue[] = [];

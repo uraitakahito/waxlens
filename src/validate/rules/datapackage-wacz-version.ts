@@ -28,6 +28,9 @@ export const datapackageWaczVersionRule: ValidationRule = {
   name: "datapackage/wacz-version-required",
   description: `${DATAPACKAGE_ENTRY} must declare a non-empty wacz_version`,
   severity: "error",
+  applicability: {
+    severityByProfile: { lenient: "warning" },
+  },
 
   run: async (wacz) => {
     const issues: Issue[] = [];
