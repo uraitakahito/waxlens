@@ -41,9 +41,6 @@ import { M1_RULES } from "./validate/rules/index.js";
 import type { Report } from "./validate/types.js";
 import { WaczReader } from "./wacz/reader.js";
 
-// package.json#version is the source of truth — we read it at runtime so
-// the bin never drifts from the published version. Relative to `dist/cli.js`,
-// the manifest is one directory up (the package root).
 const here = dirname(fileURLToPath(import.meta.url));
 const manifestPath = join(here, "..", "package.json");
 const manifest = JSON.parse(readFileSync(manifestPath, "utf-8")) as { version: string };
