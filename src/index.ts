@@ -1,9 +1,18 @@
 /**
  * waxlens library entry point.
  *
- * The CLI in `dist/cli.js` is the primary interface; this module exists so
- * consumers can call the validation engine programmatically (e.g. from a
- * test harness or a different CLI). Re-exports land here as M1 onwards
- * fills in the validation engine.
+ * Re-exports the validation primitives so external consumers (test
+ * harnesses, alternative front-ends) can run the engine without going
+ * through the CLI. The CLI in `dist/cli.js` remains the primary surface.
  */
-export {};
+export { WaczReader } from "./wacz/reader.js";
+export { runValidation } from "./validate/engine.js";
+export { M1_RULES } from "./validate/rules/index.js";
+export type {
+  Issue,
+  IssueLocation,
+  Report,
+  ReportSummary,
+  Severity,
+  ValidationRule,
+} from "./validate/types.js";
