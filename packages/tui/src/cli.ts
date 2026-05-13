@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 /**
- * `waxlens` — the Ink TUI for WACZ validation.
+ * `waxlens` — WACZ validation のための Ink TUI。
  *
- * Imports `@waxlens/core` in-process (no spawn) and renders the
- * resulting `Report` interactively. When stdout or stdin isn't a
- * TTY, falls back silently to the same plain-text renderer
- * `waxlens-validate --plain` uses. For machine-readable JSON, use
- * `waxlens-validate` directly — that's the contract this split
- * exists to enforce.
+ * in-process で `@waxlens/core` を import し (spawn 無し)、得られた
+ * `Report` を interactive に render する。stdout または stdin が TTY
+ * でない場合は silent に同じ plain-text renderer
+ * (`waxlens-validate --plain` が使うもの) に fallback する。
+ * machine-readable JSON が欲しい場合は `waxlens-validate` を直接
+ * 使う — そのコントラクトを enforce するために 2 つに分かれている。
  *
- * Exit codes match `waxlens-validate`:
- *   0 — validation passed (no error-severity issues)
- *   1 — validation failed (one or more error-severity issues)
- *   2 — operational failure (cannot open the file, etc.)
+ * Exit code は `waxlens-validate` と同じ:
+ *   0 — validation 成功 (error severity の issue なし)
+ *   1 — validation 失敗 (error severity の issue が 1 件以上)
+ *   2 — operational な失敗 (ファイルが開けない等)
  */
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -102,15 +102,15 @@ async function runCli(filePath: string, opts: CliOptions): Promise<number> {
   }
 }
 
-// `function` declarations rather than `const` arrows so the module-top
-// `await program.parseAsync(...)` above can invoke `runCli` (which calls
-// these) without tripping over the temporal dead zone.
+// `const` の arrow ではなく `function` 宣言にしているのは、module
+// トップの `await program.parseAsync(...)` が `runCli` (これらを呼ぶ)
+// を invoke しても temporal dead zone に当たらないようにするため。
 function shouldUseTui(opts: CliOptions): boolean {
   if (!opts.tui) return false;
-  // Both directions matter: Ink writes to stdout (needs TTY for cursor
-  // control) and reads from stdin (needs raw-mode keystrokes for
-  // navigation). A non-TTY on either side means the interactive surface
-  // would be broken; fall back to plain text instead.
+  // 双方向に意味がある: Ink は stdout に書く (cursor 制御に TTY が
+  // 必要) し stdin から読む (navigation のために raw-mode の
+  // keystroke が必要)。どちらかでも TTY で無いと interactive surface
+  // が壊れるので、plain text に fallback する。
   return Boolean(process.stdout.isTTY) && Boolean(process.stdin.isTTY);
 }
 
