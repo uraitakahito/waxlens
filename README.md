@@ -26,7 +26,7 @@ Spec / detail docs that apply to both packages:
 This is an npm-workspaces monorepo. Most operations run from the root:
 
 ```sh
-nvm use                 # Node 24.14.1, see .nvmrc
+nvm use                 # Node 24.15.0, see .nvmrc
 npm ci                  # installs all workspace deps + creates symlinks
 npm run check           # npm audit + format:check + each workspace's check
 npm run build           # builds both packages
