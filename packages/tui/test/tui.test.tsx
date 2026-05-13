@@ -21,8 +21,8 @@
  */
 import { render } from "ink-testing-library";
 import { describe, expect, it } from "vitest";
-import { App } from "../src/render/tui.js";
-import type { Report } from "../src/validate/types.js";
+import type { Report } from "@waxlens/core";
+import { App } from "../src/app.js";
 
 const makeReport = (overrides: Partial<Report> = {}): Report => ({
   waxlensVersion: "0.0.0",

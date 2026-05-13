@@ -1,4 +1,7 @@
-dist
-node_modules
-coverage
-*.tgz
+# Patterns are resolved relative to wherever `prettier` runs from.
+# `**/` prefix ensures they catch nested workspace dirs too — each
+# package's `dist/`, `node_modules/`, etc.
+**/dist/
+**/node_modules/
+**/coverage/
+**/*.tgz

@@ -26,7 +26,7 @@
  */
 import { useState, type FC } from "react";
 import { Box, Text, useApp, useInput } from "ink";
-import type { Issue, Report } from "../validate/types.js";
+import type { Issue, Report } from "@waxlens/core";
 
 interface AppProps {
   report: Report;

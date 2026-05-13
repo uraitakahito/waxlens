@@ -18,6 +18,6 @@
     "lint": "npm run lint --workspaces --if-present",
     "format": "npm run format --workspaces --if-present",
     "format:check": "npm run format:check --workspaces --if-present",
-    "check": "npm audit --audit-level=moderate && npm run check --workspaces --if-present"
+    "check": "npm audit --audit-level=moderate && npm run check -w @waxlens/core && npm run check -w @waxlens/tui"
   }
 }

@@ -1,34 +1,18 @@
 #!/usr/bin/env node
 /**
- * waxlens CLI entry point.
+ * `waxlens-validate` — the validation engine's CLI.
  *
- * Surface as of M2:
- *
- *   waxlens <file>             validate WACZ; TUI when stdout is a TTY,
- *                              plain text otherwise (auto-fallback for pipes)
- *   waxlens <file> --json      validate, emit JSON report to stdout
- *   waxlens <file> --no-color  disable ANSI colour in plain output
- *   waxlens <file> --no-tui    force plain output even when stdout is a TTY
- *   waxlens --version
+ * Pure machine-and-pipe-friendly surface: a single positional `<file>`,
+ * the rule profile selector, and a choice of `--json` (default,
+ * stable schema documented in `docs/json-schema.md`) or `--plain` for
+ * a colour-aware human summary. No TUI ever; that lives in
+ * `@waxlens/tui`'s `waxlens` bin and consumes this package as a
+ * library import.
  *
  * Exit codes:
  *   0 — validation passed (no error-severity issues)
  *   1 — validation failed (one or more error-severity issues)
  *   2 — operational failure (cannot open the file, etc.)
- *
- * The `--rule <name>...` and `--severity <level>` filters from the original
- * plan are deferred to M3 — with only 5 rules in the registry, filtering
- * adds surface area without saving meaningful time, and the test
- * matrices were getting noisy.
- *
- * TUI dispatch:
- *   - `--json` always wins (machine-readable mode).
- *   - `--no-tui` forces plain text.
- *   - When stdout *or* stdin is not a TTY, we silently fall back to plain.
- *     stdin matters because Ink's `useInput` needs raw-mode keystrokes;
- *     a non-TTY stdin makes the TUI inert and confusing.
- *   - The TUI module is dynamically imported so non-TUI runs (the bulk
- *     of CI usage) don't pay the cost of loading React + Ink.
  */
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -38,7 +22,7 @@ import { renderJson } from "./render/json.js";
 import { renderPlain } from "./render/plain.js";
 import { DEFAULT_PROFILE, runValidation } from "./validate/engine.js";
 import { M1_RULES } from "./validate/rules/index.js";
-import type { Report, RuleProfile } from "./validate/types.js";
+import type { RuleProfile } from "./validate/types.js";
 import { ALL_PROFILES } from "./validate/types.js";
 import { WaczReader } from "./wacz/reader.js";
 
@@ -47,9 +31,9 @@ const manifestPath = join(here, "..", "package.json");
 const manifest = JSON.parse(readFileSync(manifestPath, "utf-8")) as { version: string };
 
 interface CliOptions {
+  /** Default true (JSON). `--plain` flips it to false. */
   json: boolean;
   color: boolean;
-  tui: boolean;
   profile: RuleProfile;
 }
 
@@ -60,26 +44,32 @@ const parseProfile = (raw: string): RuleProfile => {
 
 const program = new Command();
 program
-  .name("waxlens")
-  .description("TUI validator for WACZ archives")
+  .name("waxlens-validate")
+  .description("WACZ validator — emits a machine-readable JSON report by default")
   .version(manifest.version)
   .argument("<file>", "Path to the .wacz file to validate")
-  .option("--json", "Emit a JSON report to stdout instead of the plain text view", false)
-  // commander's --no-<flag> idiom: the parsed value is `color: true` by
-  // default and flips to `color: false` when `--no-color` is present.
-  .option("--no-color", "Disable ANSI colour escapes in plain output")
+  // `--plain` flips the default-on `--json` mode. Both forms map to the
+  // same `opts.json` boolean via commander's `--no-<flag>` idiom; we
+  // expose the human-readable name (`--plain`) rather than `--no-json`
+  // because that's the verb most users actually want to type.
   .option(
-    "--no-tui",
-    "Force plain output even when stdout is a TTY (the default chooses based on isTTY)",
+    "--plain",
+    "Emit colour-aware human-readable text instead of the default JSON report",
+    false,
   )
+  .option("--no-color", "Disable ANSI colour escapes in plain output")
   .option(
     "--profile <name>",
     `Rule profile (${ALL_PROFILES.join(" | ")}). Defaults to "${DEFAULT_PROFILE}".`,
     parseProfile,
     DEFAULT_PROFILE,
   )
-  .action(async (filePath: string, options: CliOptions) => {
-    const exitCode = await runCli(filePath, options);
+  .action(async (filePath: string, options: CliOptions & { plain: boolean }) => {
+    const exitCode = await runCli(filePath, {
+      json: !options.plain,
+      color: options.color,
+      profile: options.profile,
+    });
     process.exit(exitCode);
   });
 
@@ -93,7 +83,7 @@ async function runCli(filePath: string, opts: CliOptions): Promise<number> {
     reader = await WaczReader.open(absolutePath);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    process.stderr.write(`waxlens: cannot open "${filePath}": ${message}\n`);
+    process.stderr.write(`waxlens-validate: cannot open "${filePath}": ${message}\n`);
     return 2;
   }
 
@@ -104,15 +94,13 @@ async function runCli(filePath: string, opts: CliOptions): Promise<number> {
       rules: M1_RULES,
       profile: opts.profile,
     });
-    // runValidation's Result<Report, never> can only be the ok branch —
-    // narrow with the same idiom used in `engine.ts`.
+    // `Result<Report, never>` can only be the ok branch — narrowing
+    // check is still needed under strict mode.
     if (!result.ok) return 2;
     const report = result.value;
 
     if (opts.json) {
       process.stdout.write(renderJson(report));
-    } else if (shouldUseTui(opts)) {
-      await runTui(report);
     } else {
       process.stdout.write(renderPlain(report, { color: opts.color }));
     }
@@ -121,34 +109,4 @@ async function runCli(filePath: string, opts: CliOptions): Promise<number> {
   } finally {
     await reader.close();
   }
-}
-
-// `function` declarations rather than `const` arrows so the module-top
-// `await program.parseAsync(...)` above can invoke `runCli` (which calls
-// these) without tripping over the temporal dead zone. The .action
-// callback fires synchronously during parseAsync, *before* later
-// const-initialisations would run — a classic ESM-top-level-await
-// hazard. Function declarations are hoisted, const arrows are not.
-function shouldUseTui(opts: CliOptions): boolean {
-  if (!opts.tui) return false;
-  // Both directions matter: Ink writes to stdout (needs TTY for cursor
-  // control) and reads from stdin (needs raw-mode keystrokes for
-  // navigation). A non-TTY on either side means the interactive surface
-  // would be broken; fall back to plain text instead.
-  return Boolean(process.stdout.isTTY) && Boolean(process.stdin.isTTY);
-}
-
-/**
- * Run the Ink TUI. Dynamic import so non-TUI runs (CI, pipes, --json) don't
- * pay the React + Ink cold-start cost — `dist/render/tui.js` and its
- * dependencies are not loaded unless we actually need them.
- */
-async function runTui(report: Report): Promise<void> {
-  const [{ render }, { createElement }, { App }] = await Promise.all([
-    import("ink"),
-    import("react"),
-    import("./render/tui.js"),
-  ]);
-  const instance = render(createElement(App, { report }));
-  await instance.waitUntilExit();
 }

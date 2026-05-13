@@ -48,21 +48,10 @@
      * https://www.typescriptlang.org/tsconfig/#Language_and_Environment_6254
      */
     "target": "ES2022",
-    // No DOM — waxlens is a Node-only CLI; nothing pulls Web platform types
-    // (waggle needs DOM only because of the hey-api fetch client).
-    "lib": ["ES2023"],
-
-    /*
-     * JSX
-     * https://www.typescriptlang.org/tsconfig/#jsx
-     */
-    // `react-jsx` uses the React 17+ automatic runtime — JSX compiles to
-    // `_jsx(...)` calls and the `react/jsx-runtime` import is injected by
-    // the compiler. We never write `import React from "react"` (which
-    // would be a value-only import banned by verbatimModuleSyntax with
-    // no value usage), and the auto-runtime keeps the Ink TUI files
-    // (`src/render/tui.tsx`) free of boilerplate.
-    "jsx": "react-jsx"
+    // No DOM, no JSX — @waxlens/core is Node-only and never renders
+    // React. The TUI workspace adds `jsx: "react-jsx"` to its own
+    // tsconfig.
+    "lib": ["ES2023"]
   },
   // Root config covers source, tests, and *.config.ts so editors and the
   // typecheck script see everything; the build config narrows to src/**.

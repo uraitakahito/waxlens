@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`cli — --json output shape > gzipped CDXJ JSON snapshot 1`] = `
+exports[`cli — JSON output shape (default) > gzipped CDXJ JSON snapshot 1`] = `
 {
   "file": "<tmp>/fixture.wacz",
   "issues": [
@@ -49,7 +49,7 @@ exports[`cli — --json output shape > gzipped CDXJ JSON snapshot 1`] = `
 }
 `;
 
-exports[`cli — --json output shape > missing-profile JSON snapshot 1`] = `
+exports[`cli — JSON output shape (default) > missing-profile JSON snapshot 1`] = `
 {
   "file": "<tmp>/fixture.wacz",
   "issues": [
@@ -85,7 +85,7 @@ exports[`cli — --json output shape > missing-profile JSON snapshot 1`] = `
 }
 `;
 
-exports[`cli — --json output shape > valid WACZ JSON snapshot 1`] = `
+exports[`cli — JSON output shape (default) > valid WACZ JSON snapshot 1`] = `
 {
   "file": "<tmp>/fixture.wacz",
   "issues": [],

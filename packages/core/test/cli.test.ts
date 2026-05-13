@@ -108,20 +108,20 @@ describe("cli — exit codes", () => {
     expect(result.stderr).toContain("cannot open");
   });
 
-  it("--no-tui forces plain text output even with TUI implied", async () => {
-    // execFile already produces a non-TTY stdout so plain is selected
-    // automatically. We add --no-tui anyway: it asserts the flag is
-    // parsed and that the plain-text branch still emits the version
-    // line + summary (signals plain mode, not JSON, not nothing).
+  it("--plain emits a colour-stripped human summary", async () => {
+    // Default output is JSON; `--plain` flips to the human renderer.
+    // We don't snapshot the text (it'd be brittle to layout tweaks);
+    // we just assert that the version banner and the summary line
+    // appear, which together signal the plain renderer ran.
     const path = await writeFixture(tmpDir, "good.wacz");
-    const result = await runCli([path, "--no-tui"]);
+    const result = await runCli([path, "--plain"]);
     expect(result.code).toBe(0);
     expect(result.stdout).toContain("waxlens 0.0.0");
     expect(result.stdout).toContain("passed");
   });
 });
 
-describe("cli — --json output shape", () => {
+describe("cli — JSON output shape (default)", () => {
   let tmpDir: string;
   beforeEach(async () => {
     tmpDir = await mkdtemp(join(tmpdir(), "waxlens-cli-test-"));
@@ -132,21 +132,21 @@ describe("cli — --json output shape", () => {
 
   it("valid WACZ JSON snapshot", async () => {
     const path = await writeFixture(tmpDir, "good.wacz");
-    const result = await runCli([path, "--json"]);
+    const result = await runCli([path]);
     expect(result.code).toBe(0);
     expect(stabiliseJson(result.stdout)).toMatchSnapshot();
   });
 
   it("missing-profile JSON snapshot", async () => {
     const path = await writeFixture(tmpDir, "no-profile.wacz", { profile: null });
-    const result = await runCli([path, "--json"]);
+    const result = await runCli([path]);
     expect(result.code).toBe(1);
     expect(stabiliseJson(result.stdout)).toMatchSnapshot();
   });
 
   it("gzipped CDXJ JSON snapshot", async () => {
     const path = await writeFixture(tmpDir, "gz-cdxj.wacz", { cdxjGzipped: true });
-    const result = await runCli([path, "--json"]);
+    const result = await runCli([path]);
     expect(result.code).toBe(1);
     expect(stabiliseJson(result.stdout)).toMatchSnapshot();
   });
