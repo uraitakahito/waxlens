@@ -17,6 +17,7 @@
 import type { Result } from "../result.js";
 import { ok } from "../result.js";
 import type { WaczReader } from "../wacz/reader.js";
+import { computeStats } from "./stats.js";
 import type { Issue, Report, ReportSummary, ValidationRule } from "./types.js";
 
 export interface RunOptions {
@@ -31,16 +32,22 @@ export const runValidation = async (
 ): Promise<Result<Report, never>> => {
   const startedAt = Date.now();
 
-  const perRule = await Promise.all(
-    opts.rules.map(async (rule) => {
-      const result = await rule.run(wacz);
-      // `Result<Issue[], never>` can only be the ok branch — the err
-      // branch's `error` is typed as `never`, which is uninhabited — but
-      // we still need a narrowing check to access `value` under
-      // strict mode. The default below is unreachable.
-      return result.ok ? result.value : [];
-    }),
-  );
+  // Run validation rules and stats extraction in parallel — stats is
+  // best-effort (returns undefined on internal failure) and the rules
+  // are independent of it, so there's no ordering hazard.
+  const [perRule, stats] = await Promise.all([
+    Promise.all(
+      opts.rules.map(async (rule) => {
+        const result = await rule.run(wacz);
+        // `Result<Issue[], never>` can only be the ok branch — the err
+        // branch's `error` is typed as `never`, which is uninhabited — but
+        // we still need a narrowing check to access `value` under
+        // strict mode. The default below is unreachable.
+        return result.ok ? result.value : [];
+      }),
+    ),
+    computeStats(wacz),
+  ]);
 
   const issues = perRule.flat();
   const summary = summarise(issues, opts.rules.length, Date.now() - startedAt);
@@ -51,6 +58,9 @@ export const runValidation = async (
     valid: summary.failed === 0,
     summary,
     issues,
+    // Conditional spread keeps `stats` absent rather than
+    // explicitly-undefined — required by exactOptionalPropertyTypes.
+    ...(stats !== undefined && { stats }),
   };
   return ok(report);
 };

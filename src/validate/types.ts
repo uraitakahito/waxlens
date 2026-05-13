@@ -65,6 +65,22 @@ export interface ReportSummary {
   durationMs: number;
 }
 
+/**
+ * Informational metadata about the WACZ that's useful to humans but
+ * doesn't fit the issue model — record count, distinct host count, etc.
+ * Renderers display this below the summary line. Optional because the
+ * engine computes it best-effort: a malformed WARC won't block the
+ * report just to extract stats.
+ */
+export interface ReportStats {
+  /** Number of independent gzip members the WARC iterator yielded. */
+  warcRecordCount: number;
+  /** Byte length of `archive/data.warc.gz` (zip-uncompressed). */
+  warcArchiveBytes: number;
+  /** Distinct hosts mentioned in CDXJ entries' `url` field. */
+  hosts: string[];
+}
+
 export interface Report {
   waxlensVersion: string;
   file: string;
@@ -72,4 +88,6 @@ export interface Report {
   valid: boolean;
   summary: ReportSummary;
   issues: Issue[];
+  /** Best-effort metadata — see {@link ReportStats}. */
+  stats?: ReportStats;
 }

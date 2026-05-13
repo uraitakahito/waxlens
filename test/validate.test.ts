@@ -51,10 +51,11 @@ describe("validation engine — happy path", () => {
     await rm(tmpDir, { recursive: true, force: true });
   });
 
-  it("a default-generated WACZ passes all M1 rules", async () => {
+  it("a default-generated WACZ passes all rules", async () => {
     const report = await runAgainstFixture(tmpDir, "good.wacz");
     expect(report.valid).toBe(true);
     expect(report.summary.failed).toBe(0);
+    expect(report.summary.warnings).toBe(0);
     expect(report.summary.passed).toBe(M1_RULES.length);
     expect(report.issues).toEqual([]);
   });
@@ -134,5 +135,75 @@ describe("validation engine — corrupted variants", () => {
     });
     expect(report.valid).toBe(false);
     expect(ruleNames(report)).toContain("datapackage/profile-required");
+  });
+
+  // -- M3 rule coverage -----------------------------------------------
+
+  it("DEFLATE-stored warc → warc/storage-store warns", async () => {
+    const report = await runAgainstFixture(tmpDir, "deflate-warc.wacz", {
+      warcDeflate: true,
+    });
+    const issues = report.issues.filter((i) => i.rule === "warc/storage-store");
+    expect(issues).toHaveLength(1);
+    expect(issues[0]?.severity).toBe("warning");
+    // Validation as a whole stays valid (warning, not error).
+    expect(report.valid).toBe(true);
+  });
+
+  it("corrupted gzip member → warc/members-independent errors", async () => {
+    // Flip a byte inside the deflate stream (well past the 10-byte gzip
+    // header) so decoding fails.
+    const report = await runAgainstFixture(tmpDir, "corrupt-warc.wacz", {
+      warcCorruptAt: 30,
+    });
+    expect(report.valid).toBe(false);
+    expect(ruleNames(report)).toContain("warc/members-independent");
+  });
+
+  it("mismatched CDXJ offset → cdxj/warc-offsets errors", async () => {
+    const report = await runAgainstFixture(tmpDir, "bad-cdxj-offset.wacz", {
+      cdxjOffsetOverride: "999999",
+    });
+    expect(report.valid).toBe(false);
+    expect(ruleNames(report)).toContain("cdxj/warc-offsets");
+  });
+
+  it("mismatched CDXJ length → cdxj/warc-offsets errors (length branch)", async () => {
+    const report = await runAgainstFixture(tmpDir, "bad-cdxj-length.wacz", {
+      cdxjLengthMismatch: true,
+    });
+    expect(report.valid).toBe(false);
+    const offset = report.issues.filter((i) => i.rule === "cdxj/warc-offsets");
+    expect(offset).toHaveLength(1);
+    expect(offset[0]?.message).toContain("length");
+  });
+
+  it("mainPageURL not covered → cdxj/pages-mainpage warns", async () => {
+    const report = await runAgainstFixture(tmpDir, "orphan-mainpage.wacz", {
+      mainPageUrlOverride: "https://orphan.example/",
+    });
+    const issues = report.issues.filter((i) => i.rule === "cdxj/pages-mainpage");
+    // Both pages-side and cdxj-side warnings should fire.
+    expect(issues).toHaveLength(2);
+    expect(issues.every((i) => i.severity === "warning")).toBe(true);
+  });
+
+  it("invalid fuzzy.json → fuzzy/valid-json reports info", async () => {
+    const report = await runAgainstFixture(tmpDir, "broken-fuzzy.wacz", {
+      fuzzyOverride: "not json",
+    });
+    const issues = report.issues.filter((i) => i.rule === "fuzzy/valid-json");
+    expect(issues).toHaveLength(1);
+    expect(issues[0]?.severity).toBe("info");
+    expect(report.valid).toBe(true); // info does not flip valid
+  });
+
+  it("bad WARC-Payload-Digest → warc/payload-digest warns", async () => {
+    const report = await runAgainstFixture(tmpDir, "bad-payload-digest.wacz", {
+      payloadDigestBad: true,
+    });
+    const issues = report.issues.filter((i) => i.rule === "warc/payload-digest");
+    expect(issues).toHaveLength(1);
+    expect(issues[0]?.severity).toBe("warning");
   });
 });

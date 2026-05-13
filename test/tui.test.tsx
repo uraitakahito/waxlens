@@ -84,8 +84,8 @@ describe("tui rendering", () => {
 
   it("expands details on enter", async () => {
     const { lastFrame, stdin } = render(<App report={makeReport()} />);
-    // Before pressing enter, the JSON details payload should not be visible.
-    expect(lastFrame() ?? "").not.toContain('"expected": "data-package"');
+    // Before pressing enter, the details payload should not be visible.
+    expect(lastFrame() ?? "").not.toContain("expected:");
 
     // Press enter — ink-testing-library writes raw bytes to its mock
     // stdin; `\r` is what Ink interprets as the return key.
@@ -93,7 +93,13 @@ describe("tui rendering", () => {
     // Let the next render tick run.
     await new Promise((resolve) => setTimeout(resolve, 20));
 
-    expect(lastFrame() ?? "").toContain('"expected": "data-package"');
+    // The first issue's details has `{ expected: "data-package" }` —
+    // rendered via the diff view because the `expected` field is
+    // present (even without a paired `actual`, the row falls through
+    // to the generic JSON view; the M3 dispatch requires both).
+    // We assert on the JSON-tail rendering of `expected` to keep this
+    // test agnostic of the dispatch decision.
+    expect(lastFrame() ?? "").toContain("data-package");
   });
 
   it("moves the cursor with the down arrow", async () => {
@@ -109,5 +115,81 @@ describe("tui rendering", () => {
     const secondRuleIdx = frame.indexOf("cdxj/filename-archive-relative");
     expect(cursorIdx).toBeGreaterThan(firstRuleIdx);
     expect(cursorIdx).toBeLessThan(secondRuleIdx);
+  });
+
+  it("renders the stats footer when report.stats is present", () => {
+    const report = makeReport({
+      stats: { warcRecordCount: 42, warcArchiveBytes: 5 * 1024 * 1024, hosts: ["a", "b", "c"] },
+    });
+    const frame = render(<App report={report} />).lastFrame() ?? "";
+    expect(frame).toContain("42 records");
+    expect(frame).toContain("5.0 MB");
+    expect(frame).toContain("3 hosts");
+  });
+
+  it("diff view shows expected/actual for hash-style issues", async () => {
+    const report = makeReport({
+      issues: [
+        {
+          rule: "datapackage/resource-hashes",
+          severity: "error",
+          message: "hash mismatch",
+          details: { expected: "sha256:GOOD", actual: "sha256:BAD" },
+        },
+      ],
+    });
+    const { lastFrame, stdin } = render(<App report={report} />);
+    stdin.write("\r");
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    const frame = lastFrame() ?? "";
+    expect(frame).toContain("expected:");
+    expect(frame).toContain("actual:");
+    expect(frame).toContain("sha256:GOOD");
+    expect(frame).toContain("sha256:BAD");
+  });
+
+  it("WARC header view renders for CDXJ↔WARC mismatch details", async () => {
+    const report = makeReport({
+      issues: [
+        {
+          rule: "cdxj/warc-offsets",
+          severity: "error",
+          message: "offset mismatch",
+          details: {
+            requested: { offset: 99, length: 100 },
+            candidates: [{ offset: 0, length: 200, warcHeader: ["WARC/1.1"] }],
+          },
+        },
+      ],
+    });
+    const { lastFrame, stdin } = render(<App report={report} />);
+    stdin.write("\r");
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(lastFrame() ?? "").toContain("Nearby WARC members:");
+  });
+
+  it("hex view renders when details carry hexPreview", async () => {
+    const report = makeReport({
+      issues: [
+        {
+          rule: "warc/payload-digest",
+          severity: "warning",
+          message: "payload digest mismatch",
+          details: {
+            expected: "sha256:GOOD",
+            actual: "sha256:BAD",
+            hexPreview: [
+              "00000000  4e a7 5b 0c 1f 8b 08 00  00 00 00 00 00 03 b5 d3   N.[..........X..",
+            ],
+          },
+        },
+      ],
+    });
+    const { lastFrame, stdin } = render(<App report={report} />);
+    stdin.write("\r");
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    const frame = lastFrame() ?? "";
+    expect(frame).toContain("Payload preview (hex):");
+    expect(frame).toContain("4e a7 5b 0c");
   });
 });

@@ -82,9 +82,29 @@ export const App: FC<AppProps> = ({ report }) => {
         )}
       </Box>
       <Summary report={report} />
+      {report.stats ? <Stats stats={report.stats} /> : null}
       <Help />
     </Box>
   );
+};
+
+const Stats: FC<{ stats: NonNullable<Report["stats"]> }> = ({ stats }) => {
+  const recordsLabel = `${String(stats.warcRecordCount)} record${stats.warcRecordCount === 1 ? "" : "s"}`;
+  const hostsLabel = `${String(stats.hosts.length)} host${stats.hosts.length === 1 ? "" : "s"}`;
+  return (
+    <Box>
+      <Text
+        dimColor
+      >{`${recordsLabel}  ·  ${formatBytes(stats.warcArchiveBytes)}  ·  ${hostsLabel}`}</Text>
+    </Box>
+  );
+};
+
+const formatBytes = (n: number): string => {
+  if (n < 1024) return `${String(n)} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  if (n < 1024 * 1024 * 1024) return `${(n / 1024 / 1024).toFixed(1)} MB`;
+  return `${(n / 1024 / 1024 / 1024).toFixed(1)} GB`;
 };
 
 const Header: FC<{ report: Report }> = ({ report }) => (
@@ -119,11 +139,110 @@ const IssueRow: FC<{ issue: Issue; focused: boolean; expanded: boolean }> = ({
       </Box>
       {expanded && issue.details !== undefined ? (
         <Box marginLeft={6} flexDirection="column">
-          <Text dimColor>{JSON.stringify(issue.details, null, 2)}</Text>
+          <ExpandedDetails details={issue.details} />
         </Box>
       ) : null}
     </Box>
   );
+};
+
+/**
+ * Render the `details` payload using the shape-specific view when one
+ * matches, falling back to JSON pretty for anything else. The dispatch
+ * order matters: an issue with both `expected/actual` AND `hexPreview`
+ * (e.g. payload-digest mismatch) gets the diff *and* the hex dump
+ * stacked, in that order.
+ */
+const ExpandedDetails: FC<{ details: unknown }> = ({ details }) => {
+  if (typeof details !== "object" || details === null) {
+    return <Text dimColor>{JSON.stringify(details, null, 2)}</Text>;
+  }
+  const d = details as Record<string, unknown>;
+
+  const hasDiff = "expected" in d && "actual" in d;
+  const warcHeader = Array.isArray(d["warcHeader"]) ? (d["warcHeader"] as unknown[]) : null;
+  const hexPreview = Array.isArray(d["hexPreview"]) ? (d["hexPreview"] as unknown[]) : null;
+  const candidates = Array.isArray(d["candidates"]) ? (d["candidates"] as unknown[]) : null;
+
+  // Only the specialised views that actually fire consume their fields,
+  // so a lone `expected` (no paired `actual`) still falls through to the
+  // JSON-pretty tail rather than being silently dropped. Without this,
+  // an issue whose `details: { expected: "data-package" }` would render
+  // *nothing* under the expanded view.
+  const consumed = new Set<string>();
+  if (hasDiff) {
+    consumed.add("expected");
+    consumed.add("actual");
+  }
+  if (warcHeader) consumed.add("warcHeader");
+  if (hexPreview) consumed.add("hexPreview");
+  if (candidates) consumed.add("candidates");
+
+  const rest: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(d)) {
+    if (!consumed.has(k)) rest[k] = v;
+  }
+
+  return (
+    <Box flexDirection="column">
+      {hasDiff ? <DiffView expected={d["expected"]} actual={d["actual"]} /> : null}
+      {candidates ? <CandidatesView candidates={candidates} /> : null}
+      {warcHeader ? <WarcHeaderView lines={warcHeader} /> : null}
+      {hexPreview ? <HexView lines={hexPreview} /> : null}
+      {Object.keys(rest).length > 0 ? <Text dimColor>{JSON.stringify(rest, null, 2)}</Text> : null}
+    </Box>
+  );
+};
+
+const DiffView: FC<{ expected: unknown; actual: unknown }> = ({ expected, actual }) => (
+  <Box flexDirection="column">
+    <Box>
+      <Text color="green">expected: </Text>
+      <Text>{formatValue(expected)}</Text>
+    </Box>
+    <Box>
+      <Text color="red">actual: </Text>
+      <Text>{formatValue(actual)}</Text>
+    </Box>
+  </Box>
+);
+
+const WarcHeaderView: FC<{ lines: unknown[] }> = ({ lines }) => (
+  <Box flexDirection="column" marginTop={1}>
+    <Text dimColor>WARC record header:</Text>
+    {lines.map((l, i) => (
+      <Text key={`hdr-${String(i)}`}>
+        {"  "}
+        {String(l)}
+      </Text>
+    ))}
+  </Box>
+);
+
+const HexView: FC<{ lines: unknown[] }> = ({ lines }) => (
+  <Box flexDirection="column" marginTop={1}>
+    <Text dimColor>Payload preview (hex):</Text>
+    {lines.map((l, i) => (
+      <Text key={`hex-${String(i)}`}>{String(l)}</Text>
+    ))}
+  </Box>
+);
+
+const CandidatesView: FC<{ candidates: unknown[] }> = ({ candidates }) => (
+  <Box flexDirection="column" marginTop={1}>
+    <Text dimColor>Nearby WARC members:</Text>
+    {candidates.map((c, i) => (
+      <Text key={`cand-${String(i)}`}>
+        {"  "}
+        {JSON.stringify(c)}
+      </Text>
+    ))}
+  </Box>
+);
+
+const formatValue = (v: unknown): string => {
+  if (typeof v === "string") return v;
+  return JSON.stringify(v);
 };
 
 const Summary: FC<{ report: Report }> = ({ report }) => {

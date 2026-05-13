@@ -74,8 +74,25 @@ export const renderPlain = (report: Report, opts: PlainRenderOptions): string =>
 
   lines.push("");
   lines.push(formatSummary(report, c));
+  if (report.stats) lines.push(formatStats(report.stats, c));
 
   return lines.join("\n") + "\n";
+};
+
+const formatStats = (stats: NonNullable<Report["stats"]>, c: typeof pc): string => {
+  const parts = [
+    `${String(stats.warcRecordCount)} record${stats.warcRecordCount === 1 ? "" : "s"}`,
+    formatBytes(stats.warcArchiveBytes),
+    `${String(stats.hosts.length)} host${stats.hosts.length === 1 ? "" : "s"}`,
+  ];
+  return c.dim(parts.join("  ·  "));
+};
+
+const formatBytes = (n: number): string => {
+  if (n < 1024) return `${String(n)} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  if (n < 1024 * 1024 * 1024) return `${(n / 1024 / 1024).toFixed(1)} MB`;
+  return `${(n / 1024 / 1024 / 1024).toFixed(1)} GB`;
 };
 
 /**

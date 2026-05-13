@@ -21,11 +21,16 @@ exports[`cli — --json output shape > gzipped CDXJ JSON snapshot 1`] = `
       "severity": "error",
     },
   ],
+  "stats": {
+    "hosts": [],
+    "warcArchiveBytes": 246,
+    "warcRecordCount": 1,
+  },
   "summary": {
     "durationMs": 0,
     "failed": 2,
     "info": 0,
-    "passed": 3,
+    "passed": 9,
     "warnings": 0,
   },
   "valid": false,
@@ -49,11 +54,18 @@ exports[`cli — --json output shape > missing-profile JSON snapshot 1`] = `
       "severity": "error",
     },
   ],
+  "stats": {
+    "hosts": [
+      "example.com",
+    ],
+    "warcArchiveBytes": 246,
+    "warcRecordCount": 1,
+  },
   "summary": {
     "durationMs": 0,
     "failed": 1,
     "info": 0,
-    "passed": 4,
+    "passed": 10,
     "warnings": 0,
   },
   "valid": false,
@@ -65,11 +77,18 @@ exports[`cli — --json output shape > valid WACZ JSON snapshot 1`] = `
 {
   "file": "<tmp>/fixture.wacz",
   "issues": [],
+  "stats": {
+    "hosts": [
+      "example.com",
+    ],
+    "warcArchiveBytes": 246,
+    "warcRecordCount": 1,
+  },
   "summary": {
     "durationMs": 0,
     "failed": 0,
     "info": 0,
-    "passed": 5,
+    "passed": 11,
     "warnings": 0,
   },
   "valid": true,
