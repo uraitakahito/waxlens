@@ -1,34 +1,32 @@
 /**
  * Rule: cdxj/index-recognised-by-wabac
  *
- * The WACZ MUST carry at least one index file that wabac.js's
- * `multiwacz.ts:loadIndex` will recognise. That loader hard-codes
- * three suffixes:
+ * WACZ は、wabac.js の `multiwacz.ts:loadIndex` が認識する index
+ * ファイルを少なくとも 1 つ持つ必要がある。当該 loader は次の 3 つの
+ * suffix を hard-code している:
  *
- *   - `.cdx`  / `.cdxj`   — loaded directly via `loadCDX`
- *   - `.idx`              — loaded via `loadIDX`, which expects a
+ *   - `.cdx`  / `.cdxj`   — `loadCDX` で直接ロード
+ *   - `.idx`              — `loadIDX` でロード。最初の行に
  *                           `!meta { format: "cdxj-gzip-1.0",
- *                           filename: <file> }` first line and pairs
- *                           with a compressed CDXJ file referenced by
- *                           that `filename`
+ *                           filename: <file> }` が必要で、その
+ *                           `filename` が指す圧縮 CDXJ とペアになる
  *
- * Anything else (a bare `.cdx.gz` / `.cdxj.gz` with no `.idx` pair) is
- * silently skipped by wabac.js, so replay never gets indexed — every
- * URL lookup returns "Archived Page Not Found".
+ * それ以外 (`.idx` のペアが無い裸の `.cdx.gz` / `.cdxj.gz`) は
+ * wabac.js に silent に skip されるので、replay が index を得られず
+ * すべての URL lookup が "Archived Page Not Found" を返す。
  *
  * Replay engine: wabac.js
  *   https://github.com/webrecorder/wabac.js/blob/main/src/wacz/multiwacz.ts
- *   `loadIndex` line ~465: `if (filename.endsWith(".cdx") ||
- *   filename.endsWith(".cdxj"))` and ~471: `else if (filename.endsWith(".idx"))`.
+ *   `loadIndex` ~465 行目: `if (filename.endsWith(".cdx") ||
+ *   filename.endsWith(".cdxj"))`、~471 行目: `else if (filename.endsWith(".idx"))`。
  *
- * What we report:
- *   - No recognised index file in the WACZ → error.
- *   - `.idx` present but `!meta.filename` doesn't exist in the zip →
- *     warning (the `.idx` will load but its lookups will miss).
+ * 何を報告するか:
+ *   - WACZ 内に認識可能な index ファイルが無い → error。
+ *   - `.idx` はあるが `!meta.filename` が zip に存在しない → warning
+ *     (`.idx` 自体はロードされるが、lookup が miss する)。
  *
- * Severity is `error` for the missing-index branch in every profile —
- * an unreadable index is a replay-breaking bug regardless of
- * producer.
+ * "index 欠落" 分岐の severity は全 profile で `error` — 読めない
+ * index は producer に依存せず replay-breaking なバグだから。
  */
 import { ok } from "../../result.js";
 import type { Issue, ValidationRule } from "../types.js";
@@ -37,10 +35,10 @@ const INDEXES_PREFIX = "indexes/";
 const ACCEPTED_SUFFIXES = [".cdx", ".cdxj", ".idx"] as const;
 
 /**
- * Read the first line of an `.idx` file and pull out the
- * `filename` field from the `!meta { format, filename }` header
- * that pywb / wacz-creator emit. Returns null when the header is
- * absent or malformed — the caller treats that as "no pair claimed".
+ * `.idx` の先頭行を読み、pywb / wacz-creator が emit する
+ * `!meta { format, filename }` header から `filename` field を取り
+ * 出す。header が無い / 壊れている場合は null を返し、呼び出し側は
+ * これを "ペア未宣言" として扱う。
  */
 const parseIdxPairFilename = (text: string): string | null => {
   const firstLine = text.split("\n", 1)[0] ?? "";
@@ -86,21 +84,22 @@ export const cdxjIndexRecognisedRule: ValidationRule = {
       return ok(issues);
     }
 
-    // For every `.idx` entry, verify its `!meta.filename` pair exists
-    // in the zip. A broken pair lets wabac.js see the `.idx` and walk
-    // it, but every lookup misses because the compressed CDXJ isn't
-    // there.
+    // すべての `.idx` entry について、`!meta.filename` のペアが zip
+    // に存在するかを確認する。ペアが壊れていると wabac.js は `.idx`
+    // 自体は見えるが、圧縮 CDXJ が無いのですべての lookup が miss
+    // する。
     for (const name of indexEntries) {
       if (!name.endsWith(".idx")) continue;
       const buf = await wacz.readEntry(name);
       if (!buf) continue;
       const pair = parseIdxPairFilename(buf.toString("utf-8"));
-      if (pair === null) continue; // no header claim; lookups won't work but a separate
-      //                              "no claim" diagnostic is more confusing than useful
-      //                              this early in the project.
-      // `.idx` files reference their CDXJ pair by name only; the zip
-      // stores them in the same directory (typically `indexes/`).
-      // Look it up both directly and under `indexes/`.
+      if (pair === null) continue; // header claim 無し; lookup は動かないが
+      //                              プロジェクトの早い段階で別個の
+      //                              "no claim" diagnostic を出すのは
+      //                              かえって混乱するので silent にする。
+      // `.idx` は CDXJ ペアを名前のみで参照していて、zip は同じ
+      // ディレクトリ (通常 `indexes/`) に保存している。直接と
+      // `indexes/` 配下の両方を見る。
       const candidates = [pair, `${INDEXES_PREFIX}${pair}`];
       const found = candidates.some((p) => wacz.hasEntry(p));
       if (!found) {

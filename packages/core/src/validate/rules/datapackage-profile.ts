@@ -1,17 +1,17 @@
 /**
  * Rule: datapackage/profile-required
  *
- * `datapackage.json` MUST set `profile: "data-package"`. The field is
- * specified by the Frictionless Data Package descriptor that WACZ
- * embeds; without it, wabac.js / ReplayWeb.page silently classifies
- * the WACZ as invalid and the CDX lookup never runs — producing the
- * cryptic "Archived Page Not Found" error even when everything else
- * is correct.
+ * `datapackage.json` は `profile: "data-package"` を必ず指定する必要
+ * がある。この field は WACZ が埋め込む Frictionless Data Package
+ * descriptor で定義されていて、これが無いと wabac.js / ReplayWeb.page
+ * は WACZ を silent に invalid と判定し CDX lookup が走らない —
+ * 他がすべて正しくても "Archived Page Not Found" という分かりにくい
+ * エラーになる。
  *
- * Spec: WACZ 1.1 §datapackage.json (the `profile` literal is mandated
- *       there as the Frictionless Data marker).
+ * Spec: WACZ 1.1 §datapackage.json (`profile` literal は Frictionless
+ *       Data marker として必須と定められている)。
  * Reference producer: browserhive/src/storage/wacz/datapackage.ts:42-49
- *       documents the silent-fail trap directly.
+ *       に silent-fail trap がコメントで直接書かれている。
  */
 import { ok } from "../../result.js";
 import { parseDatapackage } from "../../wacz/datapackage.js";
@@ -61,9 +61,10 @@ export const datapackageProfileRule: ValidationRule = {
     }
 
     if (pkg.profile !== EXPECTED_PROFILE) {
-      // `JSON.stringify` rather than `String(...)` — the profile field is
-      // typed as `unknown`, so a non-string value would otherwise stringify
-      // to "[object Object]" and lose the actual content from the message.
+      // `String(...)` ではなく `JSON.stringify` を使う。profile field
+      // の型が `unknown` のため、非文字列の値は `String(...)` だと
+      // "[object Object]" になってメッセージから実際の中身が
+      // 失われてしまう。
       issues.push({
         rule: "datapackage/profile-required",
         severity: "error",

@@ -1,24 +1,25 @@
 /**
  * Rule: datapackage/resource-hashes
  *
- * Every entry in `datapackage.json#resources[]` declares `path` + `hash` +
- * `bytes` for one of the other WACZ files (archive/data.warc.gz,
- * indexes/index.cdxj, pages/pages.jsonl, fuzzy.json, …). The hashes are
- * `sha256:<hex>` over the *uncompressed* entry payload, and the bytes
- * field is the corresponding length. We recompute both from the actual
- * zip contents and flag any mismatch.
+ * `datapackage.json#resources[]` の各 entry は、他の WACZ ファイル
+ * (archive/data.warc.gz、indexes/index.cdxj、pages/pages.jsonl、
+ * fuzzy.json …) のいずれかに対する `path` + `hash` + `bytes` を
+ * 宣言する。hash は entry の *非圧縮* payload に対する
+ * `sha256:<hex>`、bytes はそれに対応する length。我々は zip の実際
+ * の中身からどちらも再計算し、不一致を flag する。
  *
- * Spec: Frictionless Data Package descriptor (the format WACZ borrows
- *       for `datapackage.json#resources[]`) defines `hash` as
- *       `sha256:<hex>` and `bytes` as the integer file length.
+ * Spec: Frictionless Data Package descriptor (WACZ が
+ *       `datapackage.json#resources[]` に借用しているフォーマット) は
+ *       `hash` を `sha256:<hex>`、`bytes` を整数のファイル長と定義する。
  * Reference producer: browserhive/src/storage/wacz/datapackage.ts:68-83
- *       shows the hash + length assembly straight from emitted bytes.
+ *       で、emit するバイト列から hash + length が組み立てられている
+ *       様子が直接読める。
  *
- * Failure modes worth distinguishing in the report:
- *   - resource missing from the zip            → error
- *   - resource present but hash mismatched     → error (with expected/actual)
- *   - resource present but bytes mismatched    → error (separate issue)
- *   - resources[] empty / non-array            → error (signals a producer bug)
+ * report で区別する価値のある失敗モード:
+ *   - resource が zip から欠落           → error
+ *   - resource はあるが hash が不一致   → error (expected/actual 付き)
+ *   - resource はあるが bytes が不一致  → error (別 issue)
+ *   - resources[] が空 / 非配列          → error (producer バグの兆候)
  */
 import { ok } from "../../result.js";
 import { sha256Hex } from "../../wacz/digest.js";
@@ -35,10 +36,10 @@ export const datapackageHashesRule: ValidationRule = {
   run: async (wacz) => {
     const issues: Issue[] = [];
     const buf = await wacz.readEntry(DATAPACKAGE_ENTRY);
-    if (!buf) return ok(issues); // profile rule already reported the absence.
+    if (!buf) return ok(issues); // profile rule が不在を既に報告している。
 
     const pkg = parseDatapackage(buf.toString("utf-8"));
-    if (!pkg) return ok(issues); // profile rule already reported the parse failure.
+    if (!pkg) return ok(issues); // profile rule が parse 失敗を既に報告している。
 
     const resources = pkg.resources;
     if (!Array.isArray(resources) || resources.length === 0) {

@@ -1,25 +1,24 @@
 /**
- * CDXJ parser.
+ * CDXJ parser。
  *
- * Each non-empty line of `indexes/index.cdxj` has the shape:
+ * `indexes/index.cdxj` の各非空行は次の形を持つ:
  *
  *   <surt-url> <yyyymmddhhmmss> <json>
  *
- * Lines are separated by `\n`. Empty lines and a trailing newline are
- * tolerated. The first two whitespace-separated tokens are the SURT and
- * the 14-digit timestamp; everything after the second space is the JSON
- * object describing the record (url / mime / status / digest / length /
- * offset / filename).
+ * 行は `\n` で区切られる。空行や末尾の改行は許容する。最初の 2 つの
+ * 空白区切りトークンが SURT と 14 桁の timestamp。2 つ目の空白から
+ * 後がレコードを表す JSON object (url / mime / status / digest /
+ * length / offset / filename)。
  *
- * Spec / convention: pywb's CDXJ format docs; the WACZ 1.1 spec leaves
- *       the index format pluggable but `index.cdxj` is the de-facto
- *       choice for new producers. Reference producer:
- *       browserhive's `src/storage/wacz/cdxj.ts`.
+ * Spec / 慣習: pywb の CDXJ format ドキュメント。WACZ 1.1 spec は
+ *       index format を差し替え可能にしているが、`index.cdxj` が
+ *       新しい producer の事実上の選択肢。Reference producer:
+ *       browserhive の `src/storage/wacz/cdxj.ts`。
  *
- * Splitting strategy: the JSON value itself contains spaces (`": "` etc.),
- * so naïve `.split(" ")` would corrupt it. We find the first two space
- * indices and slice — `String#indexOf` two times is faster and clearer
- * than a regex with capture groups for what amounts to a fixed shape.
+ * 分割戦略: JSON 値自身に空白が含まれる (`": "` 等) ため、ナイーブな
+ * `.split(" ")` は JSON を壊す。最初の 2 つの空白位置を求めて slice
+ * する — `String#indexOf` を 2 回するのは、形が固定であることを
+ * 考えると、capture group を伴う regex より速く明快。
  */
 import { err, ok, type Result } from "../result.js";
 
@@ -52,11 +51,11 @@ export interface CdxjParseResult {
 const MAX_RAW_LINE_LEN = 200;
 
 /**
- * Parse a CDXJ document. Always returns a result with both arrays — the
- * caller decides whether the presence of `errors` is a validation failure
- * or just informational. (M1's CDXJ-related rule cares only about the
- * parsed entries' `filename` field, so per-line parse errors land in the
- * `errors` array without short-circuiting.)
+ * CDXJ ドキュメントを parse する。結果は常に両方の array を持つ —
+ * 呼び出し側が `errors` の存在を validation 失敗とみなすか、それとも
+ * informational として扱うかを決める。(M1 の CDXJ 系 rule は parse
+ * 済み entry の `filename` field だけを見るので、行単位の parse
+ * エラーは short-circuit せず `errors` array に積む。)
  */
 export const parseCdxj = (text: string): CdxjParseResult => {
   const entries: CdxjEntry[] = [];

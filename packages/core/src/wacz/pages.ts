@@ -1,16 +1,17 @@
 /**
- * pages.jsonl reader.
+ * pages.jsonl reader。
  *
- * The file is JSON-lines: the first line is a header object (carrying
- * `format`, `id`, `title`), every subsequent non-empty line is an entry
- * with at least `{ url, ts }` plus optional `id` / `title`. Producers
- * typically emit a single entry per WACZ for a one-page capture, but
- * replay tools support many entries for multi-page archives.
+ * ファイルは JSON-lines: 最初の行は header object (`format`、`id`、
+ * `title` を持つ)、それ以降の非空行は entry で、少なくとも
+ * `{ url, ts }` を持ち、`id` / `title` は optional。producer は
+ * 1 ページ capture では 1 つの entry を出すのが普通だが、replay
+ * ツールは multi-page archive のために多数の entry をサポートする。
  *
- * Same shape philosophy as `datapackage.ts`: parse leniently here, let
- * the validation rules enforce semantics. M1 doesn't have a pages-jsonl
- * rule yet (rule #9, "pages.mainPageURL ↔ CDXJ integrity", lands in M3),
- * but having the parser ready means rules can compose without churn.
+ * `datapackage.ts` と同じ思想: ここは緩く parse して、semantics は
+ * validation rule に任せる。M1 にはまだ pages-jsonl 系の rule は
+ * 無いが (rule #9 "pages.mainPageURL ↔ CDXJ integrity" は M3 で
+ * 着地)、parser を先に用意しておくことで後続 rule が churn なく
+ * 組み立てられる。
  */
 
 export interface PagesJsonlHeader {

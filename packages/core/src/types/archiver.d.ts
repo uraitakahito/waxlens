@@ -1,13 +1,14 @@
 /**
- * Minimal type shim for archiver 8.x.
+ * archiver 8.x 用の最小 type shim。
  *
- * archiver 8 is ESM-only and dropped the v7 factory function
- * (`archiver(format, options)`) in favour of per-format classes
- * (`new ZipArchive(opts)`). DefinitelyTyped's `@types/archiver` still
- * tracks the v7 factory shape, so we declaration-merge the class API on
- * top of it for the surface this codebase consumes.
+ * archiver 8 は ESM 専用で、v7 の factory 関数
+ * (`archiver(format, options)`) は廃止され、format ごとのクラス
+ * (`new ZipArchive(opts)`) に置き換えられた。DefinitelyTyped の
+ * `@types/archiver` はまだ v7 の factory 形しか追っていないので、
+ * このコードベースが消費する surface についてだけ class API を
+ * declaration-merge で重ねている。
  *
- * Drop this file once `@types/archiver@^8` lands upstream.
+ * `@types/archiver@^8` が upstream に出たらこのファイルは削除する。
  */
 declare module "archiver" {
   export class ZipArchive {
