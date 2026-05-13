@@ -27,11 +27,11 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run typecheck && npm run lint && npm run format:check && npm run build && npm test",
+    "check": "npm audit --audit-level=moderate && npm run typecheck && npm run lint && npm run format:check && npm run build && npm test",
     "prepublishOnly": "npm run check && npm run build"
   },
   "dependencies": {
-    "commander": "^12.1.0",
+    "commander": "^14.0.3",
     "ink": "^7.0.2",
     "picocolors": "^1.1.1",
     "react": "^19.2.6",
@@ -39,18 +39,18 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@eslint/js": "^9.15.0",
+    "@eslint/js": "^10.0.1",
     "@types/archiver": "^7.0.0",
-    "@types/node": "^24.0.0",
+    "@types/node": "^25.6.2",
     "@types/react": "^19.2.14",
     "@types/yauzl-promise": "^4.0.1",
     "archiver": "^8.0.0",
-    "eslint": "^9.15.0",
-    "eslint-config-prettier": "^9.1.0",
+    "eslint": "^10.3.0",
+    "eslint-config-prettier": "^10.1.8",
     "ink-testing-library": "^4.0.0",
     "prettier": "^3.4.0",
-    "typescript": "^5.7.0",
-    "typescript-eslint": "^8.18.0",
-    "vitest": "^2.1.0"
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.59.2",
+    "vitest": "^4.1.5"
   }
 }

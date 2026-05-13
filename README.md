@@ -6,15 +6,11 @@ validation with expandable details on failures.
 
 > Status: pre-release (`0.0.0`). The CLI surface, JSON output schema, and rule
 > identifiers are stable enough for daily use locally but have not yet been
-> published to npm. See `docs/release.md` for the planned cut-over.
+> published to npm.
 
 ## Quickstart
 
 ```sh
-# When published, this is the full UX:
-npx waxlens path/to/captured.wacz
-
-# Today (from a clean checkout):
 npm ci && npm run build
 node dist/cli.js path/to/captured.wacz
 ```
