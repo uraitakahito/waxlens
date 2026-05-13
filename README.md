@@ -11,9 +11,6 @@ npm ci && npm run build
 node dist/cli.js path/to/captured.wacz
 ```
 
-The CLI auto-selects a colour TUI when stdout _and_ stdin are TTYs, and falls
-back to plain text otherwise (so piping to `cat` / CI logs Just Works).
-
 ## Trying it with a real WACZ
 
 If you don't have a BrowserHive capture handy, Webrecorder publishes a
