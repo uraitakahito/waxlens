@@ -1,16 +1,21 @@
 /**
  * Rule: warc/storage-store
  *
- * `archive/data.warc.gz` MUST be stored in the WACZ zip with method STORE
- * (compression method 0) — never DEFLATE. The inner WARC is already
- * gzipped per the WARC spec; deflating the gzip wrapper inflates the file
- * for no decompression benefit and breaks the offset/length contract
- * downstream tools rely on (the offsets in the CDXJ index point into the
- * *uncompressed* zip entry — and "uncompressed" here means STORE-stored).
+ * `archive/data.warc.gz` SHOULD be stored in the WACZ zip with method
+ * STORE (compression method 0) — never DEFLATE. The inner WARC is
+ * already gzipped per the WARC spec; deflating the gzip wrapper inflates
+ * the file for no decompression benefit and breaks the offset/length
+ * contract downstream tools rely on (the offsets in the CDXJ index point
+ * into the *uncompressed* zip entry — and "uncompressed" here means
+ * STORE-stored).
  *
- * Source: browserhive/src/storage/wacz/packager.ts:152-169 (the producer
- * comment marks `archive/data.warc.gz` as the only STORE entry; everything
- * else is DEFLATE).
+ * Spec / convention: WACZ doesn't strictly mandate STORE, but the
+ *       random-access design that justifies the format depends on it,
+ *       and every reference producer (browserhive, pywb, wacz-creator)
+ *       emits STORE for the WARC entry.
+ * Reference producer: browserhive/src/storage/wacz/packager.ts:152-169
+ *       marks `archive/data.warc.gz` as the only STORE entry; the rest
+ *       are DEFLATE.
  *
  * Severity is `warning`, not `error`: a DEFLATE-stored warc.gz still
  * decompresses cleanly via standard zip readers, so replay tools that
@@ -29,6 +34,9 @@ export const warcStorageStoreRule: ValidationRule = {
   name: "warc/storage-store",
   description: `${WARC_ENTRY} must be stored with method STORE (0), not DEFLATE`,
   severity: "warning",
+  applicability: {
+    severityByProfile: { lenient: "info" },
+  },
 
   run: async (wacz) => {
     const issues: Issue[] = [];

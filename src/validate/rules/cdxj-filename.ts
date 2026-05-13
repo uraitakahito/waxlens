@@ -1,16 +1,22 @@
 /**
  * Rule: cdxj/filename-archive-relative
  *
- * Every CDXJ entry carries a `filename` field that names the WARC file the
- * (offset, length) pair seeks into. The value MUST be the WARC filename
- * **relative to the WACZ's `archive/` directory** — e.g. `data.warc.gz`,
- * not `archive/data.warc.gz`. wabac.js (the replay engine behind
- * ReplayWeb.page) prepends `archive/` itself, so writing the full path
+ * Every CDXJ entry carries a `filename` field that names the WARC file
+ * the (offset, length) pair seeks into. The value MUST be the WARC
+ * filename relative to the WACZ's `archive/` directory — e.g.
+ * `data.warc.gz`, not `archive/data.warc.gz`. wabac.js prepends
+ * `archive/` itself when resolving the file, so writing the full path
  * makes it look up `archive/archive/data.warc.gz` and 404 every URL.
  *
- * Source: browserhive/src/storage/wacz/packager.ts:36-44 (the constant is
- * literally named WARC_FILENAME_FOR_CDX with a comment explaining the
- * exact gotcha).
+ * Spec / convention: The WACZ spec doesn't pin the relative path
+ *       explicitly, but pywb / wacz-creator / browserhive all emit it
+ *       this way, and wabac.js bakes in the `archive/` prefix.
+ * Replay engine: wabac.js's WACZ file resolver (see `wacz/multiwacz.ts`
+ *       loadFileFromNamedWACZ) prepends `archive/` to the CDXJ
+ *       filename before fetching from the zip.
+ * Reference producer: browserhive/src/storage/wacz/packager.ts:36-44
+ *       names the constant `WARC_FILENAME_FOR_CDX` and documents the
+ *       exact gotcha.
  *
  * What we report:
  *   - any CDXJ entry whose `filename` starts with `archive/` → error
@@ -27,17 +33,19 @@ export const cdxjFilenameRule: ValidationRule = {
   name: "cdxj/filename-archive-relative",
   description: `${CDXJ_ENTRY} entries must use archive-relative filenames (not "archive/...")`,
   severity: "error",
+  applicability: {
+    severityByProfile: { lenient: "warning" },
+  },
 
   run: async (wacz) => {
     const issues: Issue[] = [];
     const buf = await wacz.readEntry(CDXJ_ENTRY);
     if (!buf) {
-      issues.push({
-        rule: "cdxj/filename-archive-relative",
-        severity: "error",
-        message: `${CDXJ_ENTRY} is missing from the WACZ`,
-        location: { entry: CDXJ_ENTRY },
-      });
+      // Whether the WACZ has *any* wabac-recognised index is owned by
+      // `cdxj/index-recognised-by-wabac`. We stay silent here so the
+      // operator doesn't see two separate complaints for the same
+      // missing-index situation; the new rule emits the canonical
+      // error in every profile.
       return ok(issues);
     }
 

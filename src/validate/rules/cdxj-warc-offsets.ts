@@ -7,9 +7,11 @@
  * gzip member boundary — otherwise replay tools that seek by offset
  * fetch garbage and silently return "Archived Page Not Found".
  *
- * The CDXJ producer (browserhive `wacz/cdxj.ts`) stringifies these as
- * decimal, matching pywb / wacz-creator convention. We don't enforce
- * the string-vs-number form because wabac.js parses both.
+ * Spec / convention: pywb / wacz-creator stringify offset / length as
+ *       decimal; wabac.js's CDXJ loader parses both string and number
+ *       forms, so the string-vs-number choice is producer freedom.
+ * Reference producer: browserhive's `src/storage/wacz/cdxj.ts` emits
+ *       them as strings.
  *
  * Cross-check strategy:
  *   1. Iterate the WARC file with the existing `iterateWarcMembers`
@@ -42,6 +44,9 @@ export const cdxjWarcOffsetsRule: ValidationRule = {
   name: "cdxj/warc-offsets",
   description: `${CDXJ_ENTRY} offset/length must land on a WARC gzip-member boundary`,
   severity: "error",
+  applicability: {
+    severityByProfile: { lenient: "warning" },
+  },
 
   run: async (wacz) => {
     const issues: Issue[] = [];

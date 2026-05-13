@@ -1,7 +1,7 @@
 {
   "name": "waxlens",
   "version": "0.0.0",
-  "description": "TUI validator for WACZ archives produced by BrowserHive — one-shot validation with expandable details on failures.",
+  "description": "TUI validator for WACZ archives — one-shot validation with expandable details on failures.",
   "license": "Unlicense",
   "type": "module",
   "engines": {

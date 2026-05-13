@@ -11,6 +11,7 @@
  */
 import type { ValidationRule } from "../types.js";
 import { cdxjFilenameRule } from "./cdxj-filename.js";
+import { cdxjIndexRecognisedRule } from "./cdxj-index-recognised.js";
 import { cdxjNonGzippedRule } from "./cdxj-non-gzipped.js";
 import { cdxjPagesMainpageRule } from "./cdxj-pages-mainpage.js";
 import { cdxjWarcOffsetsRule } from "./cdxj-warc-offsets.js";
@@ -32,9 +33,12 @@ export const ALL_RULES: readonly ValidationRule[] = [
   datapackageProfileRule,
   datapackageWaczVersionRule,
   datapackageHashesRule,
+  // cdxj/index-recognised-by-wabac comes before the other cdxj/* rules
+  // so the "no index at all" condition fires first in the report,
+  // ahead of derivative complaints from rules that read the index.
+  cdxjIndexRecognisedRule,
   cdxjNonGzippedRule,
   cdxjFilenameRule,
-  // -- M3 additions below --
   warcStorageStoreRule,
   warcMembersIndependentRule,
   cdxjWarcOffsetsRule,
@@ -55,6 +59,7 @@ export const M1_RULES = ALL_RULES;
 /** Re-export for tests / library consumers that want to compose their own list. */
 export {
   cdxjFilenameRule,
+  cdxjIndexRecognisedRule,
   cdxjNonGzippedRule,
   cdxjPagesMainpageRule,
   cdxjWarcOffsetsRule,

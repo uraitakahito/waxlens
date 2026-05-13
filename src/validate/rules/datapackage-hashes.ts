@@ -8,7 +8,11 @@
  * field is the corresponding length. We recompute both from the actual
  * zip contents and flag any mismatch.
  *
- * Source: browserhive/src/storage/wacz/datapackage.ts:68-83.
+ * Spec: Frictionless Data Package descriptor (the format WACZ borrows
+ *       for `datapackage.json#resources[]`) defines `hash` as
+ *       `sha256:<hex>` and `bytes` as the integer file length.
+ * Reference producer: browserhive/src/storage/wacz/datapackage.ts:68-83
+ *       shows the hash + length assembly straight from emitted bytes.
  *
  * Failure modes worth distinguishing in the report:
  *   - resource missing from the zip            → error

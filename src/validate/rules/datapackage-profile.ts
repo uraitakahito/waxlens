@@ -1,14 +1,17 @@
 /**
  * Rule: datapackage/profile-required
  *
- * `datapackage.json` MUST set `profile: "data-package"`. Without it,
- * ReplayWeb.page / wabac.js silently classifies the WACZ as invalid and
- * the CDX lookup never runs — producing the cryptic "Archived Page Not
- * Found" error even when everything else is correct.
+ * `datapackage.json` MUST set `profile: "data-package"`. The field is
+ * specified by the Frictionless Data Package descriptor that WACZ
+ * embeds; without it, wabac.js / ReplayWeb.page silently classifies
+ * the WACZ as invalid and the CDX lookup never runs — producing the
+ * cryptic "Archived Page Not Found" error even when everything else
+ * is correct.
  *
- * Source: browserhive/src/storage/wacz/datapackage.ts:42-49 (the literal
- * `"data-package"` requirement is highlighted there with the same
- * silent-fail warning).
+ * Spec: WACZ 1.1 §datapackage.json (the `profile` literal is mandated
+ *       there as the Frictionless Data marker).
+ * Reference producer: browserhive/src/storage/wacz/datapackage.ts:42-49
+ *       documents the silent-fail trap directly.
  */
 import { ok } from "../../result.js";
 import { parseDatapackage } from "../../wacz/datapackage.js";

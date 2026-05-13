@@ -1,8 +1,10 @@
 # waxlens
 
-TUI validator for [WACZ](https://specs.webrecorder.net/wacz/1.0.0/) archives
-produced by [BrowserHive](https://github.com/uraitakahito/browserhive) — one-shot
-validation with expandable details on failures.
+TUI validator for [WACZ](https://specs.webrecorder.net/wacz/1.0.0/) archives —
+one-shot validation with expandable details on failures. Rules are derived
+from the WACZ spec plus the [wabac.js](https://github.com/webrecorder/wabac.js)
+replay engine's actual loader behaviour, with optional producer-specific
+profiles (`browserhive`, etc.) for stricter checks against a known producer.
 
 ## Quickstart
 
@@ -11,13 +13,10 @@ npm ci && npm run build
 node dist/cli.js path/to/captured.wacz
 ```
 
-The CLI auto-selects a colour TUI when stdout _and_ stdin are TTYs, and falls
-back to plain text otherwise (so piping to `cat` / CI logs Just Works).
-
 ## Trying it with a real WACZ
 
-If you don't have a BrowserHive capture handy, Webrecorder publishes a
-small example archive in [`webrecorder/example-webarchive`](https://github.com/webrecorder/example-webarchive)
+Webrecorder publishes a small example archive in
+[`webrecorder/example-webarchive`](https://github.com/webrecorder/example-webarchive)
 that you can validate directly:
 
 ```sh
@@ -29,30 +28,42 @@ curl -sL \
 node dist/cli.js samples/wikipedia.wacz --no-tui
 ```
 
-The `samples/` directory is in `.gitignore` so the downloaded blobs never
-land in commits. The repo also ships two more sample archives at
-`items/birth-web/archive.wacz` and `items/www-talk/archive.wacz` if the
-Wikipedia one is too small for what you want to exercise.
+Under the default `--profile spec` this exits 0 with a single
+informational `warning` about the Webrecorder-style gzipped CDXJ —
+the archive itself is wabac.js-loadable because the paired `.idx` is
+present. The same command with `--profile browserhive` exits 1
+because that profile enforces BrowserHive's plain-`.cdxj` convention.
 
-> **Heads-up about the result.** Webrecorder's own captures use the
-> `indexes/index.cdx.gz` shape rather than `indexes/index.cdxj`, which
-> waxlens flags as two errors (`cdxj/index-not-gzipped` and
-> `cdxj/filename-archive-relative`). That's expected: this tool's rule
-> set is tuned to BrowserHive's producer conventions, and the
-> divergence is itself a useful demonstration of what waxlens reports
-> for a producer mismatch. Run the same command against a BrowserHive
-> capture and it should exit 0.
+The `samples/` directory is in `.gitignore` so the downloaded blobs
+never land in commits. The repo also ships two more sample archives
+at `items/birth-web/archive.wacz` and `items/www-talk/archive.wacz`
+if Wikipedia isn't enough.
 
 ## CLI
 
 ```
-waxlens <file>             validate the WACZ; TUI on a TTY, plain text on a pipe
-waxlens <file> --json      emit a machine-readable JSON report
-waxlens <file> --no-color  disable ANSI escapes in the plain output
-waxlens <file> --no-tui    force plain output even on a TTY
+waxlens <file>                    validate the WACZ; TUI on a TTY, plain text on a pipe
+waxlens <file> --json             emit a machine-readable JSON report
+waxlens <file> --no-color         disable ANSI escapes in the plain output
+waxlens <file> --no-tui           force plain output even on a TTY
+waxlens <file> --profile <name>   spec (default) | browserhive | lenient
 waxlens --version
 waxlens --help
 ```
+
+### Profiles
+
+A profile reshapes the severity of producer-specific or stylistic
+rules; it never silences a spec-mandated check.
+
+| Profile       | Use when                                                                 |
+| ------------- | ------------------------------------------------------------------------ |
+| `spec` (def)  | You want WACZ-spec + wabac.js compatibility. Most consumers.             |
+| `browserhive` | You're validating a BrowserHive capture and want producer-strict checks. |
+| `lenient`     | Triaging legacy archives; you only want hard "replay broken" errors.     |
+
+See [`docs/rules.md`](docs/rules.md) for the per-rule profile severity
+matrix.
 
 ### Exit codes
 
@@ -72,6 +83,7 @@ A minimal example for a valid WACZ:
 ```json
 {
   "waxlensVersion": "0.0.0",
+  "profile": "spec",
   "file": "/tmp/good.wacz",
   "valid": true,
   "summary": {
@@ -110,22 +122,25 @@ For a failure (missing `profile` in `datapackage.json`):
 
 ## Rules
 
-11 rules are wired in, grouped by area. Full reference with rationale and
-upstream-spec links lives in [`docs/rules.md`](docs/rules.md).
+12 rules are wired in, grouped by area. Full reference with rationale,
+upstream-spec links, and the per-profile severity matrix lives in
+[`docs/rules.md`](docs/rules.md). Severities below are the default
+(`--profile spec`).
 
-| Rule                                | Severity | Catches                                       |
-| ----------------------------------- | -------- | --------------------------------------------- |
-| `datapackage/profile-required`      | error    | missing/wrong `profile: "data-package"`       |
-| `datapackage/wacz-version-required` | error    | missing `wacz_version` (warns on unknown)     |
-| `datapackage/resource-hashes`       | error    | sha256 / byte-length mismatch                 |
-| `cdxj/index-not-gzipped`            | error    | `index.cdxj.gz` (wabac.js silently ignores)   |
-| `cdxj/filename-archive-relative`    | error    | `filename: "archive/..."` double-prefix bug   |
-| `warc/storage-store`                | warning  | WARC zip-stored as DEFLATE instead of STORE   |
-| `warc/members-independent`          | error    | broken concatenated gzip-member layout        |
-| `cdxj/warc-offsets`                 | error    | offset/length doesn't land on a member        |
-| `cdxj/pages-mainpage`               | warning  | `mainPageURL` not covered by pages.jsonl/CDXJ |
-| `warc/payload-digest`               | warning  | `WARC-Payload-Digest` sha256 mismatch         |
-| `fuzzy/valid-json`                  | info     | malformed `fuzzy.json`                        |
+| Rule                                | Severity | Catches                                                                        |
+| ----------------------------------- | -------- | ------------------------------------------------------------------------------ |
+| `datapackage/profile-required`      | error    | missing/wrong `profile: "data-package"`                                        |
+| `datapackage/wacz-version-required` | error    | missing `wacz_version` (warns on unknown)                                      |
+| `datapackage/resource-hashes`       | error    | sha256 / byte-length mismatch                                                  |
+| `cdxj/index-recognised-by-wabac`    | error    | no `.cdx` / `.cdxj` / `.idx` in `indexes/` (wabac.js can't load anything)      |
+| `cdxj/index-not-gzipped`            | warning  | `index.cdxj.gz` without paired `.idx` (browserhive profile escalates to error) |
+| `cdxj/filename-archive-relative`    | error    | `filename: "archive/..."` double-prefix bug                                    |
+| `warc/storage-store`                | warning  | WARC zip-stored as DEFLATE instead of STORE                                    |
+| `warc/members-independent`          | error    | broken concatenated gzip-member layout                                         |
+| `cdxj/warc-offsets`                 | error    | offset/length doesn't land on a member                                         |
+| `cdxj/pages-mainpage`               | warning  | `mainPageURL` not covered by pages.jsonl/CDXJ                                  |
+| `warc/payload-digest`               | warning  | `WARC-Payload-Digest` sha256 mismatch                                          |
+| `fuzzy/valid-json`                  | info     | malformed `fuzzy.json`                                                         |
 
 ## TUI key bindings
 

@@ -1,12 +1,11 @@
 /**
  * Result<T, E> — discriminated-union return type for fallible operations.
  *
- * The stack-wide convention (browserhive, waggle) is to use this instead of
- * exceptions for *expected* failure modes: parser rejections, missing entries,
- * hash mismatches, etc. Exceptions are reserved for genuinely-unexpected
- * conditions (programmer errors, I/O the OS itself refused). This lets
- * validation rules return `Result<Issue[], never>` — they always produce a
- * report, never throw.
+ * We use this instead of exceptions for *expected* failure modes: parser
+ * rejections, missing entries, hash mismatches, etc. Exceptions are
+ * reserved for genuinely-unexpected conditions (programmer errors,
+ * I/O the OS itself refused). This lets validation rules return
+ * `Result<Issue[], never>` — they always produce a report, never throw.
  */
 
 export type Result<T, E> = { ok: true; value: T } | { ok: false; error: E };

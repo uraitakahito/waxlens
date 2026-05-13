@@ -1,14 +1,17 @@
 /**
  * Rule: fuzzy/valid-json
  *
- * `fuzzy.json` is optional per the WACZ spec but emitted by browserhive
- * unconditionally. When present it MUST be valid JSON whose top-level
- * is an object with a `rules` array — replay tools rely on this shape
- * to apply cache-buster strip rules at lookup time. Anything else is
- * silently ignored, which is the "info" severity case here: not a
- * replay-breaking bug, just a producer quirk worth flagging.
+ * `fuzzy.json` is optional per the WACZ spec. When present it MUST be
+ * valid JSON whose top level is an object with a `rules` array —
+ * replay tools rely on this shape to apply cache-buster strip rules at
+ * lookup time. Anything else is silently ignored, which is the "info"
+ * severity case here: not a replay-breaking bug, just a producer quirk
+ * worth flagging.
  *
- * Source: browserhive/src/storage/wacz/fuzzy.ts.
+ * Spec: WACZ 1.1 §fuzzy.json (optional, `{ "rules": [...] }` shape).
+ * Reference producer: browserhive emits an empty `{ "rules": [] }`
+ *       unconditionally; pywb / wacz-creator emit when fuzzy match
+ *       rules are configured.
  */
 import { ok } from "../../result.js";
 import type { Issue, ValidationRule } from "../types.js";

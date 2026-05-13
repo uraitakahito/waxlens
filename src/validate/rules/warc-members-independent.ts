@@ -5,8 +5,11 @@
  * concatenating the members yields a valid `.warc.gz` per the WARC spec
  * and CDXJ offsets can seek to a single record without decoding the rest.
  *
- * Source: browserhive/src/storage/warc/writer.ts:1-15 (the producer
- * comment explains the independent-gzip-member invariant directly).
+ * Spec: WARC 1.1 §A.1 ("Record at a time gzip" — every record is a
+ *       self-contained gzip member; the file is the concatenation of
+ *       those members).
+ * Reference producer: browserhive/src/storage/warc/writer.ts:1-15
+ *       documents the invariant directly in code comments.
  *
  * Verification: walk the iterator with `loose: false` and let
  * `gunzipSync` reject any slice that isn't a self-contained gzip member.

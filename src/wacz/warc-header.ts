@@ -17,7 +17,7 @@
  * terminator if it needs the exact `Content-Length` bytes).
  *
  * Header parsing is intentionally permissive: we don't fold continuation
- * lines (WARC records browserhive emits don't use them), we don't
+ * lines (rare in practice for WARC producers we've seen), we don't
  * normalise header-name casing (the spec is case-insensitive but tools
  * — including ours — rely on the canonical mixed-case spellings), and
  * we accept any `Key: Value` shape including empty values.

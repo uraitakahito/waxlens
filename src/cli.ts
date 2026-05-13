@@ -33,17 +33,15 @@
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { Command } from "commander";
+import { Command, InvalidArgumentError } from "commander";
 import { renderJson } from "./render/json.js";
 import { renderPlain } from "./render/plain.js";
-import { runValidation } from "./validate/engine.js";
+import { DEFAULT_PROFILE, runValidation } from "./validate/engine.js";
 import { M1_RULES } from "./validate/rules/index.js";
-import type { Report } from "./validate/types.js";
+import type { Report, RuleProfile } from "./validate/types.js";
+import { ALL_PROFILES } from "./validate/types.js";
 import { WaczReader } from "./wacz/reader.js";
 
-// package.json#version is the source of truth — we read it at runtime so
-// the bin never drifts from the published version. Relative to `dist/cli.js`,
-// the manifest is one directory up (the package root).
 const here = dirname(fileURLToPath(import.meta.url));
 const manifestPath = join(here, "..", "package.json");
 const manifest = JSON.parse(readFileSync(manifestPath, "utf-8")) as { version: string };
@@ -52,12 +50,18 @@ interface CliOptions {
   json: boolean;
   color: boolean;
   tui: boolean;
+  profile: RuleProfile;
 }
+
+const parseProfile = (raw: string): RuleProfile => {
+  if ((ALL_PROFILES as readonly string[]).includes(raw)) return raw as RuleProfile;
+  throw new InvalidArgumentError(`Unknown profile "${raw}". Valid: ${ALL_PROFILES.join(", ")}.`);
+};
 
 const program = new Command();
 program
   .name("waxlens")
-  .description("TUI validator for WACZ archives produced by BrowserHive")
+  .description("TUI validator for WACZ archives")
   .version(manifest.version)
   .argument("<file>", "Path to the .wacz file to validate")
   .option("--json", "Emit a JSON report to stdout instead of the plain text view", false)
@@ -67,6 +71,12 @@ program
   .option(
     "--no-tui",
     "Force plain output even when stdout is a TTY (the default chooses based on isTTY)",
+  )
+  .option(
+    "--profile <name>",
+    `Rule profile (${ALL_PROFILES.join(" | ")}). Defaults to "${DEFAULT_PROFILE}".`,
+    parseProfile,
+    DEFAULT_PROFILE,
   )
   .action(async (filePath: string, options: CliOptions) => {
     const exitCode = await runCli(filePath, options);
@@ -92,6 +102,7 @@ async function runCli(filePath: string, opts: CliOptions): Promise<number> {
       file: filePath,
       waxlensVersion: manifest.version,
       rules: M1_RULES,
+      profile: opts.profile,
     });
     // runValidation's Result<Report, never> can only be the ok branch —
     // narrow with the same idiom used in `engine.ts`.

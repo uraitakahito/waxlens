@@ -7,7 +7,6 @@
  * tracks the v7 factory shape, so we declaration-merge the class API on
  * top of it for the surface this codebase consumes.
  *
- * Same shape browserhive uses (see browserhive/src/types/archiver.d.ts).
  * Drop this file once `@types/archiver@^8` lands upstream.
  */
 declare module "archiver" {
