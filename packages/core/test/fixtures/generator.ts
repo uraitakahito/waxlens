@@ -379,7 +379,9 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
 
   const zip = new ZipArchive({ zlib: { level: 6 } });
   const finished = new Promise<void>((resolveFinished, rejectFinished) => {
-    collector.on("finish", () => resolveFinished());
+    collector.on("finish", () => {
+      resolveFinished();
+    });
     collector.on("error", rejectFinished);
     zip.on("error", rejectFinished);
     zip.on("warning", rejectFinished);

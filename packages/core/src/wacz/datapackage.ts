@@ -7,7 +7,7 @@
  * 「ここでこの key が無い」という precise な diagnosis を出せる —
  * zod が最初に key を見逃した時点で parse 全体を fail させるのを
  * 避けたい。実際に enforce するのは "JSON object である" こと。
- * `passthrough()` で extra field を保持しているのは、producer が
+ * `.loose()` で extra field を保持しているのは、producer が
  * `mainPageURL`、`software` などや producer 固有の key を
  * 普通に emit するため。
  *
@@ -35,7 +35,7 @@ export const DatapackageResourceSchema = z
     hash: z.unknown().optional(),
     bytes: z.unknown().optional(),
   })
-  .passthrough();
+  .loose();
 
 export const DatapackageSchema = z
   .object({
@@ -52,7 +52,7 @@ export const DatapackageSchema = z
     title: z.unknown().optional(),
     resources: z.array(DatapackageResourceSchema).optional(),
   })
-  .passthrough();
+  .loose();
 
 export type DatapackageResource = z.infer<typeof DatapackageResourceSchema>;
 export type Datapackage = z.infer<typeof DatapackageSchema>;

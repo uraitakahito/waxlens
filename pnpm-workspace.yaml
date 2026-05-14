@@ -13,3 +13,6 @@ preferWorkspacePackages: true
 allowBuilds:
   esbuild: true
   fsevents: true
+  # eslint-plugin-import-x が TypeScript resolver 経由で読み込む Rust-backed
+  # path resolver。native bindings の link が必要なので build script を許可。
+  unrs-resolver: true
