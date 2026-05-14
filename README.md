@@ -33,12 +33,12 @@ pnpm build
 # dist/ を最新に
 pnpm build
 # waxlens-validate
-pnpm --filter @waxlens/core link --global
+pnpm --dir packages/core add -g .
 # waxlens
-pnpm --filter @waxlens/tui link --global
+pnpm --dir packages/tui add -g .
 ```
 
-元に戻すときは `pnpm uninstall --global @waxlens/core @waxlens/tui`。
+元に戻すときは `pnpm remove -g @waxlens/core @waxlens/tui`。
 
 ### 新しい rule を追加する
 
