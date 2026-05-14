@@ -9,10 +9,15 @@
  * machine-readable JSON が欲しい場合は `waxlens-validate` を直接
  * 使う — そのコントラクトを enforce するために 2 つに分かれている。
  *
- * Exit code は `waxlens-validate` と同じ:
+ * Exit code は `waxlens-validate` と同じ (`exitCodeFor` が単一情報源):
  *   0 — validation 成功 (error severity の issue なし)
  *   1 — validation 失敗 (error severity の issue が 1 件以上)
  *   2 — operational な失敗 (ファイルが開けない等)
+ *
+ * 副作用の責務分担:
+ *   - `runCli`   outcome を組み立てるだけ; render はしない
+ *   - `dispatch` TUI / plain / stderr の発火と await をここで集約
+ *   - action     最後に `process.exitCode = exitCodeFor(outcome)` で締める
  */
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -22,8 +27,10 @@ import {
   ALL_PROFILES,
   DEFAULT_PROFILE,
   M1_RULES,
+  exitCodeFor,
   runValidation,
   WaczReader,
+  type CliOutcome,
   type Report,
   type RuleProfile,
 } from "@waxlens/core";
@@ -62,27 +69,58 @@ program
     DEFAULT_PROFILE,
   )
   .action(async (filePath: string, options: CliOptions) => {
+    const outcome = await runCli(filePath, options);
+    await dispatch(outcome, options);
     // `process.exit(N)` ではなく `process.exitCode` をセット。Ink の
     // `instance.waitUntilExit()` は `useApp().exit()` を待つ自然な経路で、
     // ここで強制終了すると raw-mode TTY が ANSI escape を残すなど後始末
     // を踏み外しうる。`runCli` が reader を `finally` で閉じ、TUI 経路は
     // `waitUntilExit` を await しているので、callback が return すれば
     // event loop は自然に drain して Node が `exitCode` で終了する。
-    process.exitCode = await runCli(filePath, options);
+    process.exitCode = exitCodeFor(outcome);
   });
 
 await program.parseAsync(process.argv);
 
-async function runCli(filePath: string, opts: CliOptions): Promise<number> {
+/**
+ * outcome に従って副作用 (TUI render / plain stdout / stderr) を発火
+ * する。`runTui` は async (Ink の `waitUntilExit` を待つ) なので、
+ * この関数自身も async にして、TUI 終了前に exit code がセットされる
+ * 競合を避ける。
+ *
+ * `engineFailed` は `Result<Report, never>` から narrowing のためだけに
+ * 生まれる variant で、論理的には到達不能。万一来たら silent で抜けて
+ * exit code 2 になる — 現状の挙動と同じ。
+ */
+async function dispatch(outcome: CliOutcome, opts: CliOptions): Promise<void> {
+  switch (outcome.kind) {
+    case "valid":
+    case "invalid":
+      if (shouldUseTui(opts)) {
+        await runTui(outcome.report);
+      } else {
+        process.stdout.write(renderPlain(outcome.report, { color: opts.color }));
+      }
+      return;
+    case "openFailed": {
+      const message =
+        outcome.cause instanceof Error ? outcome.cause.message : String(outcome.cause);
+      process.stderr.write(`waxlens: cannot open "${outcome.filePath}": ${message}\n`);
+      return;
+    }
+    case "engineFailed":
+      return;
+  }
+}
+
+async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome> {
   const absolutePath = resolve(filePath);
 
   let reader: WaczReader;
   try {
     reader = await WaczReader.open(absolutePath);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    process.stderr.write(`waxlens: cannot open "${filePath}": ${message}\n`);
-    return 2;
+  } catch (cause) {
+    return { kind: "openFailed", filePath, cause };
   }
 
   try {
@@ -92,16 +130,10 @@ async function runCli(filePath: string, opts: CliOptions): Promise<number> {
       rules: M1_RULES,
       profile: opts.profile,
     });
-    if (!result.ok) return 2;
+    if (!result.ok) return { kind: "engineFailed" };
     const report = result.value;
 
-    if (shouldUseTui(opts)) {
-      await runTui(report);
-    } else {
-      process.stdout.write(renderPlain(report, { color: opts.color }));
-    }
-
-    return report.valid ? 0 : 1;
+    return report.valid ? { kind: "valid", report } : { kind: "invalid", report };
   } finally {
     await reader.close();
   }

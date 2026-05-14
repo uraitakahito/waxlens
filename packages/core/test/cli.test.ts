@@ -6,11 +6,13 @@
  *   - exit code     — valid なら 0、invalid なら 1、operational な失敗なら 2
  *   - JSON shape    — snapshot ベース。非決定的な field は scrub する
  *
- * CLI module を直接 import するのではなく spawn にしている理由: CLI
- * は `process.exit` で終わるので、test runner ごと kill されてしまう。
- * 加えて、spawn 経路は shebang / bin script の配線も検証することに
- * なり、CI の pack-smoke ワークフローと同じ assertion を走らせて
- * いる — ここで失敗すれば、同じ根本原因を指してくれる。
+ * CLI module を直接 import するのではなく spawn にしている理由:
+ * shebang / bin script の配線 (`#!/usr/bin/env node`、`chmod +x`、
+ * `package.json#bin`) を含めて end-to-end に検証したいため。これは
+ * CI の pack-smoke ワークフローと同じ assertion を走らせていて、
+ * ここで失敗すれば同じ根本原因を指してくれる。in-process import
+ * では module 副作用 (commander の `parseAsync`、`process.exitCode`
+ * 経由の終了) が test runner と相互作用するのも避けたい。
  */
 import { execFile } from "node:child_process";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
