@@ -33,9 +33,12 @@ publish 前の workspace package を任意のディレクトリから bin 名で
 叩きたいときは `pnpm link --global` を使う:
 
 ```sh
-pnpm build                                        # dist/ を最新に
-pnpm --filter @waxlens/core link --global         # waxlens-validate
-pnpm --filter @waxlens/tui link --global          # waxlens
+# dist/ を最新に
+pnpm build
+# waxlens-validate
+pnpm --filter @waxlens/core link --global
+# waxlens
+pnpm --filter @waxlens/tui link --global
 ```
 
 これで `waxlens-validate file.wacz` / `waxlens file.wacz` がどこから
