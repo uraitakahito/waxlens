@@ -27,13 +27,6 @@ pnpm check
 pnpm build
 ```
 
-package ごとのコマンドは `--filter` (略記: `-F`) 経由:
-
-```sh
-pnpm --filter @waxlens/core check
-pnpm --filter @waxlens/tui test:watch
-```
-
 ### `waxlens-validate` / `waxlens` を system-wide で呼ぶ
 
 publish 前の workspace package を任意のディレクトリから bin 名で
