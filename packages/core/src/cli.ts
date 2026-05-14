@@ -115,8 +115,6 @@ async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome> {
       rules: DEFAULT_RULES,
       profile: opts.profile,
     });
-    // `Result<Report, never>` は ok 分岐しか取りえないが、strict mode
-    // では narrowing check が必要。
     if (!result.ok) return { kind: "engineFailed" };
     const report = result.value;
 
