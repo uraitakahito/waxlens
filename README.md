@@ -27,30 +27,25 @@ pnpm check
 pnpm build
 ```
 
-package ごとのコマンドは `--filter` (略記: `-F`) 経由:
-
-```sh
-pnpm --filter @waxlens/core check
-pnpm --filter @waxlens/tui test:watch
-```
-
 ### `waxlens-validate` / `waxlens` を system-wide で呼ぶ
 
-publish 前の workspace package を任意のディレクトリから bin 名で
-叩きたいときは `pnpm link --global` を使う:
-
 ```sh
-pnpm build                                        # dist/ を最新に
-pnpm --filter @waxlens/core link --global         # waxlens-validate
-pnpm --filter @waxlens/tui link --global          # waxlens
+# dist/ を最新に
+pnpm build
+# waxlens-validate
+pnpm --dir packages/core add -g .
+# waxlens
+pnpm --dir packages/tui add -g .
 ```
 
-これで `waxlens-validate file.wacz` / `waxlens file.wacz` がどこから
-でも叩ける。元に戻すときは `pnpm uninstall --global @waxlens/core
-@waxlens/tui`。
+登録後は monorepo の外でも waxlens 直下でも、bin 名だけで呼べる:
 
-(publish 後にエンドユーザが入れる方法は `pnpm add -g @waxlens/core`
-あるいは `pnpm add -g @waxlens/tui`。)
+```sh
+waxlens-validate path/to/archive.wacz
+waxlens path/to/archive.wacz
+```
+
+元に戻すときは `pnpm remove -g @waxlens/core @waxlens/tui`。
 
 ### 新しい rule を追加する
 
