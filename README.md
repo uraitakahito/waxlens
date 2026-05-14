@@ -29,9 +29,6 @@ pnpm build
 
 ### `waxlens-validate` / `waxlens` を system-wide で呼ぶ
 
-publish 前の workspace package を任意のディレクトリから bin 名で
-叩きたいときは `pnpm link --global` を使う:
-
 ```sh
 # dist/ を最新に
 pnpm build
@@ -41,12 +38,7 @@ pnpm --filter @waxlens/core link --global
 pnpm --filter @waxlens/tui link --global
 ```
 
-これで `waxlens-validate file.wacz` / `waxlens file.wacz` がどこから
-でも叩ける。元に戻すときは `pnpm uninstall --global @waxlens/core
-@waxlens/tui`。
-
-(publish 後にエンドユーザが入れる方法は `pnpm add -g @waxlens/core`
-あるいは `pnpm add -g @waxlens/tui`。)
+元に戻すときは `pnpm uninstall --global @waxlens/core @waxlens/tui`。
 
 ### 新しい rule を追加する
 
