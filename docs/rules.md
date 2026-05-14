@@ -207,7 +207,7 @@ replay-breaking なバグではなく informational。
    名 (kebab-case) と一致する `ValidationRule` object を export する。
 2. WACZ spec / wabac.js / browserhive のうち rule の根拠になるものへの
    参照と、severity の根拠を doc コメントに含める。
-3. `src/validate/rules/index.ts` の `ALL_RULES` に rule を追加する。
+3. `src/validate/rules/index.ts` の `DEFAULT_RULES` に rule を追加する。
 4. `test/fixtures/generator.ts` に fixture バリアントを足し、
    `test/validate.test.ts` で happy path と破損パターンの両方を
    exercise する test を書く。

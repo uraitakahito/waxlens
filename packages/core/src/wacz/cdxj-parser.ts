@@ -53,9 +53,9 @@ const MAX_RAW_LINE_LEN = 200;
 /**
  * CDXJ ドキュメントを parse する。結果は常に両方の array を持つ —
  * 呼び出し側が `errors` の存在を validation 失敗とみなすか、それとも
- * informational として扱うかを決める。(M1 の CDXJ 系 rule は parse
- * 済み entry の `filename` field だけを見るので、行単位の parse
- * エラーは short-circuit せず `errors` array に積む。)
+ * informational として扱うかを決める。CDXJ 系 rule は parse 済み
+ * entry の field を見るため、行単位の parse エラーで short-circuit
+ * せず `errors` array に積む方が rule 側で診断を組み立てやすい。
  */
 export const parseCdxj = (text: string): CdxjParseResult => {
   const entries: CdxjEntry[] = [];

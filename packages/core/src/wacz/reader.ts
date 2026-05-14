@@ -47,9 +47,6 @@ export class WaczReader {
     const zip = await openZip(path);
     const entries = new Map<string, Entry>();
     for await (const entry of zip) {
-      // yauzl の Entry は `filename` (zip 内パス) を公開する。
-      // ディレクトリ entry は `/` で終わる。気にする呼び出し側のために
-      // map に入れたままにするが、M1 の rule は file entry しか見ない。
       entries.set(entry.filename, entry);
     }
     return new WaczReader(zip, entries);

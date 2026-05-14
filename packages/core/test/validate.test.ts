@@ -3,7 +3,7 @@
  *
  * 各テストは fixture generator で WACZ をオンザフライで作る (チェック
  * イン済みのバイナリ blob ではなく、ここで encode する spec を "good"
- * baseline が追えるように)。一時ファイルに書いて M1 rule セットを当てる。
+ * baseline が追えるように)。一時ファイルに書いて `DEFAULT_RULES` を当てる。
  * assert は *issue rule 名* に対して行う — メッセージの正確な文言は
  * renderer の責務で、`cli.test.ts` の CLI snapshot test が cover する。
  */
@@ -12,7 +12,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runValidation } from "../src/validate/engine.js";
-import { M1_RULES } from "../src/validate/rules/index.js";
+import { DEFAULT_RULES } from "../src/validate/rules/index.js";
 import type { Report, RuleProfile } from "../src/validate/types.js";
 import { WaczReader } from "../src/wacz/reader.js";
 import { buildWacz, type FixtureOptions } from "./fixtures/generator.js";
@@ -31,7 +31,7 @@ const runAgainstFixture = async (
     const result = await runValidation(reader, {
       file: path,
       waxlensVersion: "0.0.0",
-      rules: M1_RULES,
+      rules: DEFAULT_RULES,
       profile,
     });
     if (!result.ok) throw new Error("runValidation returned err — unreachable");
@@ -57,7 +57,7 @@ describe("validation engine — happy path", () => {
     expect(report.valid).toBe(true);
     expect(report.summary.failed).toBe(0);
     expect(report.summary.warnings).toBe(0);
-    expect(report.summary.passed).toBe(M1_RULES.length);
+    expect(report.summary.passed).toBe(DEFAULT_RULES.length);
     expect(report.issues).toEqual([]);
   });
 });
@@ -206,7 +206,7 @@ describe("validation engine — corrupted variants", () => {
     expect(ruleNames(report)).toContain("datapackage/profile-required");
   });
 
-  // -- M3 rule coverage -----------------------------------------------
+  // -- WARC / cross-layer rule coverage -------------------------------
 
   it("DEFLATE-stored warc → warc/storage-store warns", async () => {
     const report = await runAgainstFixture(tmpDir, "deflate-warc.wacz", {

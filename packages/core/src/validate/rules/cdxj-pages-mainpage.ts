@@ -9,8 +9,8 @@
  *      レコードがある (無いと replay engine は何も出せない)
  *
  * どちらかの gap でも、WACZ の "構造" を壊さずに replay landing page を
- * silent に壊す — M1 以前の rule では全 pass してしまう。これはまさに
- * waxlens が捕まえるべき latent な corruption。
+ * silent に壊す — 他の構造 check だけでは全 pass してしまうため、
+ * waxlens が個別に捕まえるべき latent な corruption。
  *
  * Severity は `warning`: その WACZ は他 URL に対する部分的な replay
  * (index に登録されている URL への deep-link) には使える可能性が
