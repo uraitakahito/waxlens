@@ -8,15 +8,26 @@
  * bin にあり、そちらがこの package を library としてインポートして
  * 消費する。
  *
- * Exit codes:
+ * Exit codes (`exitCodeFor` が単一情報源):
  *   0 — validation 成功 (error 重大度の issue なし)
  *   1 — validation 失敗 (error 重大度の issue が 1 件以上)
  *   2 — operational な失敗 (ファイルが開けない等)
+ *
+ * 副作用の責務分担:
+ *   - `runCli`  outcome を組み立てるだけ (純粋関数寄り; reader の
+ *                close は `finally` で行う I/O のみ)
+ *   - action    stderr / stdout / `process.exitCode` をここで集約
+ *
+ * これによって "exit code は何番" を CLI コードに散らさず
+ * `exitCodeFor` の switch だけが知る。bin 名 prefix
+ * (`waxlens-validate:`) も `runCli` ではなくこの bin の action 内に
+ * 留まる — `@waxlens/tui` の bin が `waxlens:` を使う設計と対称。
  */
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Command, InvalidArgumentError } from "commander";
+import { exitCodeFor, type CliOutcome } from "./cli-outcome.js";
 import { renderJson } from "./render/json.js";
 import { DEFAULT_PROFILE, runValidation } from "./validate/engine.js";
 import { M1_RULES } from "./validate/rules/index.js";
@@ -50,22 +61,51 @@ program
     DEFAULT_PROFILE,
   )
   .action(async (filePath: string, options: CliOptions) => {
-    const exitCode = await runCli(filePath, options);
-    process.exit(exitCode);
+    const outcome = await runCli(filePath, options);
+    dispatch(outcome);
+    // `process.exit(N)` ではなく `process.exitCode` をセットすることで、
+    // stdout の同期 flush と `parseAsync` の Promise の clean な resolve
+    // を保証しつつ、Node が event loop drain で自然終了するときに正しい
+    // exit code を返す。`runCli` は `reader.close()` を `finally` で
+    // await しているので、外側に lingering handle は残らない。
+    process.exitCode = exitCodeFor(outcome);
   });
 
 await program.parseAsync(process.argv);
 
-async function runCli(filePath: string, opts: CliOptions): Promise<number> {
+/**
+ * outcome に従って副作用 (stdout / stderr) を発火する。exit code は
+ * 呼び出し側で `exitCodeFor` を使うので、ここでは触らない。
+ *
+ * `engineFailed` は `Result<Report, never>` から narrowing のためだけに
+ * 生まれる variant で、論理的には到達不能。万一来たら silent (stderr
+ * 出さない) のまま exit code 2 になる — 現状の挙動と同じ。
+ */
+function dispatch(outcome: CliOutcome): void {
+  switch (outcome.kind) {
+    case "valid":
+    case "invalid":
+      process.stdout.write(renderJson(outcome.report));
+      return;
+    case "openFailed": {
+      const message =
+        outcome.cause instanceof Error ? outcome.cause.message : String(outcome.cause);
+      process.stderr.write(`waxlens-validate: cannot open "${outcome.filePath}": ${message}\n`);
+      return;
+    }
+    case "engineFailed":
+      return;
+  }
+}
+
+async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome> {
   const absolutePath = resolve(filePath);
 
   let reader: WaczReader;
   try {
     reader = await WaczReader.open(absolutePath);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    process.stderr.write(`waxlens-validate: cannot open "${filePath}": ${message}\n`);
-    return 2;
+  } catch (cause) {
+    return { kind: "openFailed", filePath, cause };
   }
 
   try {
@@ -77,12 +117,10 @@ async function runCli(filePath: string, opts: CliOptions): Promise<number> {
     });
     // `Result<Report, never>` は ok 分岐しか取りえないが、strict mode
     // では narrowing check が必要。
-    if (!result.ok) return 2;
+    if (!result.ok) return { kind: "engineFailed" };
     const report = result.value;
 
-    process.stdout.write(renderJson(report));
-
-    return report.valid ? 0 : 1;
+    return report.valid ? { kind: "valid", report } : { kind: "invalid", report };
   } finally {
     await reader.close();
   }
