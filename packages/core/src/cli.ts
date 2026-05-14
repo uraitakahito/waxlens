@@ -50,8 +50,12 @@ program
     DEFAULT_PROFILE,
   )
   .action(async (filePath: string, options: CliOptions) => {
-    const exitCode = await runCli(filePath, options);
-    process.exit(exitCode);
+    // `process.exit(N)` ではなく `process.exitCode` をセットすることで、
+    // stdout の同期 flush と `parseAsync` の Promise の clean な resolve
+    // を保証しつつ、Node が event loop drain で自然終了するときに正しい
+    // exit code を返す。`runCli` は `reader.close()` を `finally` で
+    // await しているので、外側に lingering handle は残らない。
+    process.exitCode = await runCli(filePath, options);
   });
 
 await program.parseAsync(process.argv);

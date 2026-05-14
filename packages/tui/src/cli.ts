@@ -62,8 +62,13 @@ program
     DEFAULT_PROFILE,
   )
   .action(async (filePath: string, options: CliOptions) => {
-    const exitCode = await runCli(filePath, options);
-    process.exit(exitCode);
+    // `process.exit(N)` ではなく `process.exitCode` をセット。Ink の
+    // `instance.waitUntilExit()` は `useApp().exit()` を待つ自然な経路で、
+    // ここで強制終了すると raw-mode TTY が ANSI escape を残すなど後始末
+    // を踏み外しうる。`runCli` が reader を `finally` で閉じ、TUI 経路は
+    // `waitUntilExit` を await しているので、callback が return すれば
+    // event loop は自然に drain して Node が `exitCode` で終了する。
+    process.exitCode = await runCli(filePath, options);
   });
 
 await program.parseAsync(process.argv);
