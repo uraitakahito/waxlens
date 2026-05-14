@@ -4,16 +4,21 @@ name: pack-smoke
 # end-to-end, WITHOUT actually publishing anything. For each
 # workspace (@waxlens/core, @waxlens/tui):
 #
-#   1. `npm pack` produces a tarball with `dist/cli.js` executable
+#   1. `pnpm pack` produces a tarball with `dist/cli.js` executable
 #   2. `npx <tarball> --version` runs from a directory with no project state
-#   3. `npm publish --dry-run` reports a clean publish plan (no auth, no
+#   3. `pnpm publish --dry-run` reports a clean publish plan (no auth, no
 #      registry traffic — purely a local validation that `files` /
 #      `bin` / `prepublishOnly` would behave correctly if we DID push)
 #
 # Catches packaging regressions (missing `bin`, lost shebang, excluded
 # files, broken postbuild chmod, `files` field drift, missing
 # `@waxlens/core` workspace dep when @waxlens/tui is consumed via npx)
-# that `npm run check` alone cannot see.
+# that `pnpm check` alone cannot see.
+#
+# Why `npx` and not `pnpm dlx` for the consumer simulation: most end
+# users will reach for `npx <tarball>` since npm ships with Node;
+# matching that path in CI keeps the smoke test honest about what
+# consumers actually experience.
 
 on:
   push:
@@ -25,18 +30,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
-      - run: npm run build
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
 
       - name: Pack @waxlens/core
         id: pack-core
         working-directory: packages/core
         run: |
-          tarball=$(npm pack --silent)
+          tarball=$(pnpm pack --silent | tail -n 1)
           echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
           echo "Packed: $tarball"
 
@@ -44,7 +50,7 @@ jobs:
         id: pack-tui
         working-directory: packages/tui
         run: |
-          tarball=$(npm pack --silent)
+          tarball=$(pnpm pack --silent | tail -n 1)
           echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
           echo "Packed: $tarball"
 
@@ -63,24 +69,28 @@ jobs:
           mkdir -p /tmp/waxlens-smoke-tui
           cp "${GITHUB_WORKSPACE}/packages/tui/${{ steps.pack-tui.outputs.tarball }}" /tmp/waxlens-smoke-tui/
           cd /tmp/waxlens-smoke-tui
-          # The tui tarball declares `@waxlens/core: "*"` as a runtime
-          # dep; npx resolves that against the public registry. Until
-          # @waxlens/core is published, this step will pull whatever
-          # the registry returns (probably 404). We allow this step to
-          # fail-soft for now and revisit when the publish-ready
-          # workflow becomes a real release pipeline.
+          # The tui tarball declares `@waxlens/core` as a runtime dep.
+          # pnpm rewrites `workspace:*` to a concrete version range at
+          # pack time, so the published manifest no longer carries the
+          # `workspace:` protocol — npx resolves the dep against the
+          # public registry. Until @waxlens/core is published, this step
+          # will pull whatever the registry returns (probably 404). We
+          # allow it to fail-soft for now and revisit when the
+          # publish-ready workflow becomes a real release pipeline.
           npx --yes "./${{ steps.pack-tui.outputs.tarball }}" --version || \
             echo "::warning::@waxlens/tui smoke skipped — @waxlens/core not yet on the registry"
 
       - name: Publish dry-run (both workspaces)
-        # `npm publish --dry-run` writes nothing to the registry and
+        # `pnpm publish --dry-run` writes nothing to the registry and
         # makes no network requests beyond resolving the package name.
         # It runs `prepublishOnly` (check + build) up-front, so this
         # step doubles as a final integration test of the release
-        # gate. If you ever genuinely want to publish, replace this
-        # with a separate, manually-triggered workflow that requires
-        # the NPM_TOKEN secret — never automate `npm publish` from a
-        # `push` / `pull_request` trigger.
+        # gate. `--no-git-checks` skips pnpm's default refusal to
+        # publish from a branch / dirty tree — a dry-run wants to run
+        # regardless of working-tree state. If you ever genuinely want
+        # to publish, replace this with a separate, manually-triggered
+        # workflow that requires the NPM_TOKEN secret — never automate
+        # `pnpm publish` from a `push` / `pull_request` trigger.
         run: |
-          npm publish --dry-run -w @waxlens/core
-          npm publish --dry-run -w @waxlens/tui
+          pnpm publish --dry-run --no-git-checks --filter @waxlens/core
+          pnpm publish --dry-run --no-git-checks --filter @waxlens/tui

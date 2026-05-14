@@ -23,20 +23,22 @@ check 用 profile (`browserhive` など) も任意で選べる。
 
 ## 開発
 
-npm-workspaces monorepo。ほとんどの操作は root から走らせる:
+pnpm-workspaces monorepo。`packageManager` field で pnpm のバージョンを
+pin しているので、corepack 経由で自動取得される:
 
 ```sh
-nvm use                 # Node 24.15.0, see .nvmrc
-npm ci                  # installs all workspace deps + creates symlinks
-npm run check           # npm audit + format:check + each workspace's check
-npm run build           # builds both packages
+nvm use                                # Node 24.15.0, see .nvmrc
+corepack enable                        # pnpm shim を有効化 (初回のみ)
+pnpm install --frozen-lockfile         # installs all workspace deps + creates symlinks
+pnpm check                             # pnpm audit + format:check + each workspace's check
+pnpm build                             # builds both packages
 ```
 
-package ごとのコマンドは `--workspace` 経由:
+package ごとのコマンドは `--filter` (略記: `-F`) 経由:
 
 ```sh
-npm run check -w @waxlens/core
-npm run test:watch -w @waxlens/tui
+pnpm --filter @waxlens/core check
+pnpm --filter @waxlens/tui test:watch
 ```
 
 新しい rule を追加したい場合は
