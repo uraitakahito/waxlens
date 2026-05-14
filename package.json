@@ -20,8 +20,18 @@
     "lint": "pnpm -r lint",
     "check": "pnpm audit --audit-level=moderate && pnpm --filter @waxlens/core check && pnpm --filter @waxlens/tui check"
   },
+  "//@types/node": [
+    "Root-level eslint.config.js uses `// @ts-check` plus `import.meta.dirname`",
+    "(Node 20.11+). The `dirname` field lives in @types/node's ImportMeta",
+    "interface augmentation — without it the VSCode TS LSP reports `Property",
+    "'dirname' does not exist on type 'ImportMeta'`. pnpm's default hoisting is",
+    "per-workspace, so @types/node already declared in packages/*/package.json",
+    "is NOT visible from the monorepo root; it must be a direct devDependency",
+    "here so a symlink lands at <root>/node_modules/@types/node."
+  ],
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/node": "^25.7.0",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import-x": "^4.16.2",
     "typescript-eslint": "^8.59.2"
