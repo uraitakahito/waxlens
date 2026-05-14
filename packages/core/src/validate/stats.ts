@@ -26,8 +26,10 @@ export const computeStats = async (wacz: WaczReader): Promise<ReportStats | unde
     if (!warcBuf) return undefined;
 
     let count = 0;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    for (const _ of iterateWarcMembers(warcBuf, { loose: true })) count += 1;
+    for (const _member of iterateWarcMembers(warcBuf, { loose: true })) {
+      void _member;
+      count += 1;
+    }
 
     const cdxjBuf = await wacz.readEntry(CDXJ_ENTRY);
     const hosts = new Set<string>();

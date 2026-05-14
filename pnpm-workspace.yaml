@@ -1,2 +1,18 @@
 packages:
   - "packages/*"
+
+# Workspace dep を可能な限り symlink で解決する (もと .npmrc)。
+# package.json の "@waxlens/core": "workspace:*" を満たす際、
+# registry ではなく workspace 内 package を最優先で繋ぐ。
+linkWorkspacePackages: deep
+preferWorkspacePackages: true
+
+# pnpm 11 は strictDepBuilds=true がデフォルトで、未許可の lifecycle script を持つ
+# dep があると install 自体が hard-fail する。vitest 経由で esbuild が platform
+# binary の postinstall、macOS では fsevents が node-gyp の build を要求する。
+allowBuilds:
+  esbuild: true
+  fsevents: true
+  # eslint-plugin-import-x が TypeScript resolver 経由で読み込む Rust-backed
+  # path resolver。native bindings の link が必要なので build script を許可。
+  unrs-resolver: true

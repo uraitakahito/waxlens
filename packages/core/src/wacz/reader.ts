@@ -71,8 +71,8 @@ export class WaczReader {
     return {
       name: entry.filename,
       compressionMethod: entry.compressionMethod,
-      compressedSize: Number(entry.compressedSize),
-      uncompressedSize: Number(entry.uncompressedSize),
+      compressedSize: entry.compressedSize,
+      uncompressedSize: entry.uncompressedSize,
     };
   }
 

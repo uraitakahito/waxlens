@@ -148,7 +148,7 @@ function shouldUseTui(opts: CliOptions): boolean {
   // 必要) し stdin から読む (navigation のために raw-mode の
   // keystroke が必要)。どちらかでも TTY で無いと interactive surface
   // が壊れるので、plain text に fallback する。
-  return Boolean(process.stdout.isTTY) && Boolean(process.stdin.isTTY);
+  return process.stdout.isTTY && process.stdin.isTTY;
 }
 
 async function runTui(report: Report): Promise<void> {

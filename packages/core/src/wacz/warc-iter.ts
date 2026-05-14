@@ -115,16 +115,16 @@ const findMemberStarts = (bytes: Buffer): number[] => {
 
 export class WarcMemberDecodeError extends Error {
   override readonly name = "WarcMemberDecodeError";
+  readonly offset: number;
+  readonly length: number;
   // `Error` 自身は optional な `cause` (ES2022) を持つ。`override`
   // を付けて narrow した (常に存在する) 型で再宣言することで、
   // throw 側が型付きアクセスを失わずに元の失敗を attach できる。
   override readonly cause: unknown;
-  constructor(
-    readonly offset: number,
-    readonly length: number,
-    cause: unknown,
-  ) {
+  constructor(offset: number, length: number, cause: unknown) {
     super(`Failed to decode gzip member at offset ${String(offset)} (length ${String(length)})`);
+    this.offset = offset;
+    this.length = length;
     this.cause = cause;
   }
 }

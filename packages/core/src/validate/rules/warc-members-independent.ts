@@ -39,8 +39,8 @@ export const warcMembersIndependentRule: ValidationRule = {
 
     try {
       let memberCount = 0;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      for (const _ of iterateWarcMembers(bytes, { loose: false })) {
+      for (const _member of iterateWarcMembers(bytes, { loose: false })) {
+        void _member;
         memberCount += 1;
       }
       if (memberCount === 0) {
