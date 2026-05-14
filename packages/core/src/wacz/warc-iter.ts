@@ -18,10 +18,9 @@
  * の check は「すべての slice がきれいに展開できる」と言い換えられる。
  *
  * iterator は `WarcMember { offset, length, gzipped, raw }` を yield
- * するので、downstream の rule は CDXJ offset をクロスチェックしたり、
- * `raw` から WARC header を parse したりできる。M1 では CDXJ 境界
- * rule のために `offset` / `length` だけを使い (これも実装は M3 まで
- * 遅れる)、iterator 自体は reader 層を一度に完成させるためここに作る。
+ * するので、downstream の rule は CDXJ offset をクロスチェックしたり
+ * (`cdxj/warc-offsets`)、`raw` から WARC header を parse して
+ * payload digest を再計算したり (`warc/payload-digest`) できる。
  */
 import { gunzipSync } from "node:zlib";
 

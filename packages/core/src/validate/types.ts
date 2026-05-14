@@ -6,9 +6,9 @@
  * しか消費しないので、新しい rule を加える際は `ValidationRule` を
  * export して registry に追加するだけでよく、他の層に変更は要らない。
  *
- * wire format (`Report`) は `--json` が出力するもの、また `tasks/todo.md`
- * が M1-stable schema として pin しているもの。future-proofing のための
- * note:
+ * wire format (`Report`) は `--json` が出力するもので、`docs/json-schema.md`
+ * が公開 schema として pin している (0.x line 中安定)。future-proofing
+ * のための note:
  *   - `waxlensVersion` によって downstream consumer が schema の drift
  *     を検出できる。
  *   - `summary.durationMs` を最初から入れることで、CI dashboard が
@@ -66,7 +66,7 @@ export interface IssueLocation {
 export interface Issue {
   /**
    * Stable rule identifier in `<area>/<short-name>` form. Used by the
-   * future `--rule` filter (M3) and by humans grepping logs. Never
+   * future `--rule` filter and by humans grepping logs. Never
    * localised; never reformatted across versions.
    */
   rule: string;

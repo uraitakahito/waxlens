@@ -8,10 +8,8 @@
  * ツールは multi-page archive のために多数の entry をサポートする。
  *
  * `datapackage.ts` と同じ思想: ここは緩く parse して、semantics は
- * validation rule に任せる。M1 にはまだ pages-jsonl 系の rule は
- * 無いが (rule #9 "pages.mainPageURL ↔ CDXJ integrity" は M3 で
- * 着地)、parser を先に用意しておくことで後続 rule が churn なく
- * 組み立てられる。
+ * validation rule に任せる。pages-jsonl の field を見る rule
+ * (`cdxj/pages-mainpage` 等) はこの parser を経由する。
  */
 
 export interface PagesJsonlHeader {

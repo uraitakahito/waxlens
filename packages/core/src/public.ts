@@ -10,7 +10,7 @@
  */
 export { WaczReader } from "./wacz/reader.js";
 export { DEFAULT_PROFILE, runValidation } from "./validate/engine.js";
-export { ALL_RULES, M1_RULES } from "./validate/rules/index.js";
+export { DEFAULT_RULES } from "./validate/rules/index.js";
 export { renderJson } from "./render/json.js";
 export type {
   Issue,

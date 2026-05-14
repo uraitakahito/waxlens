@@ -62,14 +62,14 @@ rule 単位の profile 別 severity matrix は
 ## ライブラリとしての使い方
 
 ```ts
-import { runValidation, WaczReader, M1_RULES } from "@waxlens/core";
+import { runValidation, WaczReader, DEFAULT_RULES } from "@waxlens/core";
 
 const reader = await WaczReader.open("/path/to/file.wacz");
 try {
   const result = await runValidation(reader, {
     file: "/path/to/file.wacz",
     waxlensVersion: "0.0.0",
-    rules: M1_RULES,
+    rules: DEFAULT_RULES,
     profile: "spec",
   });
   if (result.ok) console.log(JSON.stringify(result.value, null, 2));

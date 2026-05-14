@@ -24,7 +24,7 @@
  *
  * `filename === "data.warc.gz"` の entry だけが対象 — 他の filename は
  * WACZ が同梱しない別ファイルを指していて、`archive/` プレフィックスの
- * ミスは別 rule (filename-archive-relative、M1) が既に cover している。
+ * ミスは `cdxj/filename-archive-relative` rule が既に cover している。
  */
 import { ok } from "../../result.js";
 import { parseCdxj } from "../../wacz/cdxj-parser.js";

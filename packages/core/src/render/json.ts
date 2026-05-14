@@ -2,9 +2,8 @@
  * JSON renderer。
  *
  * engine が生成する `Report` をそのまま出力する — field の並べ替えも、
- * `Report` が宣言していない派生 field の追加もしない。shape の
- * ドキュメントは `tasks/todo.md` で M1-stable schema として書かれていて、
- * M4 で `docs/json-schema.md` に格上げされる予定。
+ * `Report` が宣言していない派生 field の追加もしない。wire shape は
+ * `docs/json-schema.md` が pin している (0.x line 中安定)。
  *
  * 安定したシリアライゼーション: 2 スペースインデント。snapshot test では
  * 決定性が重要だが、engine は rule 登録順で issue を出力し、ここでは

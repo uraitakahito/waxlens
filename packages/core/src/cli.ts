@@ -30,7 +30,7 @@ import { Command, InvalidArgumentError } from "commander";
 import { exitCodeFor, type CliOutcome } from "./cli-outcome.js";
 import { renderJson } from "./render/json.js";
 import { DEFAULT_PROFILE, runValidation } from "./validate/engine.js";
-import { M1_RULES } from "./validate/rules/index.js";
+import { DEFAULT_RULES } from "./validate/rules/index.js";
 import type { RuleProfile } from "./validate/types.js";
 import { ALL_PROFILES } from "./validate/types.js";
 import { WaczReader } from "./wacz/reader.js";
@@ -112,7 +112,7 @@ async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome> {
     const result = await runValidation(reader, {
       file: filePath,
       waxlensVersion: manifest.version,
-      rules: M1_RULES,
+      rules: DEFAULT_RULES,
       profile: opts.profile,
     });
     // `Result<Report, never>` は ok 分岐しか取りえないが、strict mode

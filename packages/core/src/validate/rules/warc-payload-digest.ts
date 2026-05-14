@@ -103,8 +103,8 @@ export const warcPayloadDigestRule: ValidationRule = {
             payloadBytes: payload.byteLength,
             // payload 先頭 256 bytes の hex dump — operator が record
             // の運ぶはずのリソース (HTML? image? 全ゼロ pad?) として
-            // 妥当に見えるかを目視確認できる。M3 計画では "hex
-            // viewer" と呼ばれているもの。
+            // 妥当に見えるかを目視確認できる。TUI 側の hex viewer が
+            // この field を消費する。
             hexPreview: formatHexLines(payload),
           },
         });

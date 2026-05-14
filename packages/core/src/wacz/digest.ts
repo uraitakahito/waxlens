@@ -20,9 +20,9 @@ export const sha256Hex = (bytes: Buffer): string =>
 
 /**
  * 与えた bytes に対する `sha256:<base32>` — WARC-Payload-Digest
- * フォーマット (RFC 4648 base32、padding なし、uppercase)。M3 では
- * まだ使われていないが、hex バージョンの近くに置いて両者が同期する
- * ようにしておく。
+ * フォーマット (RFC 4648 base32、padding なし、uppercase)。
+ * `warc/payload-digest` rule が使う。hex バージョンの近くに置いて
+ * 両者の encoding が同期するようにしておく。
  */
 export const sha256Base32 = (bytes: Buffer): string => {
   const digest = createHash("sha256").update(bytes).digest();

@@ -26,7 +26,7 @@ import { Command, InvalidArgumentError } from "commander";
 import {
   ALL_PROFILES,
   DEFAULT_PROFILE,
-  M1_RULES,
+  DEFAULT_RULES,
   exitCodeFor,
   runValidation,
   WaczReader,
@@ -127,7 +127,7 @@ async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome> {
     const result = await runValidation(reader, {
       file: filePath,
       waxlensVersion: manifest.version,
-      rules: M1_RULES,
+      rules: DEFAULT_RULES,
       profile: opts.profile,
     });
     if (!result.ok) return { kind: "engineFailed" };

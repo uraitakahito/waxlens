@@ -95,9 +95,8 @@ describe("tui rendering", () => {
     await new Promise((resolve) => setTimeout(resolve, 20));
 
     // 最初の issue の details は `{ expected: "data-package" }` —
-    // diff view 経由で render される (`expected` が存在するので。
-    // ペアの `actual` が無くても、行は generic JSON view に流れる;
-    // M3 dispatch は両方を要求する)。
+    // diff view は `expected` と `actual` の両方を要求するので、
+    // ペアの `actual` が無い場合は generic JSON view に流れる。
     // dispatch の判断に依存しないよう、ここでは JSON-tail として
     // render される `expected` の存在を assert する。
     expect(lastFrame() ?? "").toContain("data-package");
