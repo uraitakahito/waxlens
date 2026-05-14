@@ -1,11 +1,6 @@
 # waxlens
 
-**waxlens** の monorepo —
-[WACZ](https://specs.webrecorder.net/wacz/1.0.0/) archive 用の
-producer 非依存な validator。rule は WACZ spec と
-[wabac.js](https://github.com/webrecorder/wabac.js) replay engine の
-実際の loader 挙動から導出されており、producer 固有のより厳しい
-check 用 profile (`browserhive` など) も任意で選べる。
+[WACZ](https://specs.webrecorder.net/wacz/1.0.0/) archive 用のproducer 非依存な validator。
 
 このプロジェクトは 2 つの package として提供される:
 
@@ -23,15 +18,13 @@ check 用 profile (`browserhive` など) も任意で選べる。
 
 ## 開発
 
-pnpm-workspaces monorepo。`packageManager` field で pnpm のバージョンを
-pin しているので、corepack 経由で自動取得される:
-
 ```sh
-nvm use                                # Node 24.15.0, see .nvmrc
-corepack enable                        # pnpm shim を有効化 (初回のみ)
-pnpm install --frozen-lockfile         # installs all workspace deps + creates symlinks
-pnpm check                             # pnpm audit + format:check + each workspace's check
-pnpm build                             # builds both packages
+# installs all workspace deps + creates symlinks
+pnpm install --frozen-lockfile
+# pnpm audit + format:check + each workspace's check
+pnpm check
+# builds both packages
+pnpm build
 ```
 
 package ごとのコマンドは `--filter` (略記: `-F`) 経由:
