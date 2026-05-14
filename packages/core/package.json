@@ -25,8 +25,8 @@
     "test:watch": "vitest",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "check": "npm run typecheck && npm run lint && npm run build && npm test",
-    "prepublishOnly": "npm run check && npm run build"
+    "check": "pnpm typecheck && pnpm lint && pnpm build && pnpm test",
+    "prepublishOnly": "pnpm check && pnpm build"
   },
   "dependencies": {
     "commander": "^14.0.3",
@@ -35,7 +35,11 @@
   },
   "devDependencies": {
     "@types/archiver": "^7.0.0",
+    "@types/node": "^25.6.2",
     "@types/yauzl-promise": "^4.0.1",
-    "archiver": "^8.0.0"
+    "archiver": "^8.0.0",
+    "eslint": "^10.3.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.5"
   }
 }

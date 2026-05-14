@@ -35,7 +35,7 @@ interface RunResult {
 /**
  * ビルド済み CLI を実行する。`dist/cli.js` は `node` 経由で起動して
  * いるので、この test の session で chmod が走っているかどうかに
- * 依存しない (test スイートが test 走行前に `npm run build` 自体を
+ * 依存しない (test スイートが test 走行前に `pnpm build` 自体を
  * 駆動する)。
  */
 const runCli = async (args: string[]): Promise<RunResult> => {
