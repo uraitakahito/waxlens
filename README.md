@@ -41,7 +41,26 @@ pnpm --filter @waxlens/core check
 pnpm --filter @waxlens/tui test:watch
 ```
 
-新しい rule を追加したい場合は
+### `waxlens-validate` / `waxlens` を system-wide で呼ぶ
+
+publish 前の workspace package を任意のディレクトリから bin 名で
+叩きたいときは `pnpm link --global` を使う:
+
+```sh
+pnpm build                                        # dist/ を最新に
+pnpm --filter @waxlens/core link --global         # waxlens-validate
+pnpm --filter @waxlens/tui link --global          # waxlens
+```
+
+これで `waxlens-validate file.wacz` / `waxlens file.wacz` がどこから
+でも叩ける。元に戻すときは `pnpm uninstall --global @waxlens/core
+@waxlens/tui`。
+
+(publish 後にエンドユーザが入れる方法は `pnpm add -g @waxlens/core`
+あるいは `pnpm add -g @waxlens/tui`。)
+
+### 新しい rule を追加する
+
 [`docs/rules.md` → "新しい rule を追加する"](docs/rules.md) を参照。
 
 ## License
