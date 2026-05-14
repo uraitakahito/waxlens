@@ -1,13 +1,12 @@
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";
-import prettier from "eslint-config-prettier";
 
 /**
  * Shared flat-config factory. Each workspace's `eslint.config.js`
  * calls `makeConfig(import.meta.dirname)` so `projectService` picks
  * up the workspace's own `tsconfig.json`. The factory bakes in
- * everything else (rule sets, ignores, prettier override) so the
- * per-workspace file is a single-line re-export.
+ * everything else (rule sets, ignores) so the per-workspace file is
+ * a single-line re-export.
  */
 export function makeConfig(workspaceDir) {
   return tseslint.config(
@@ -37,10 +36,6 @@ export function makeConfig(workspaceDir) {
         "@typescript-eslint/no-non-null-assertion": "off",
       },
     },
-    // `prettier` must come last so its `eslint-config-prettier`
-    // rule-disabling layer overrides anything the rule sets above
-    // would otherwise enforce that conflicts with formatter output.
-    prettier,
   );
 }
 

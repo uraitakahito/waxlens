@@ -21,7 +21,7 @@
 ```sh
 # installs all workspace deps + creates symlinks
 pnpm install --frozen-lockfile
-# pnpm audit + format:check + each workspace's check
+# pnpm audit + each workspace's check
 pnpm check
 # builds both packages
 pnpm build
