@@ -1,10 +1,7 @@
 # @waxlens/core
 
-WACZ validation engine。machine-readable な JSON report を stdout に
-出力する。rule は WACZ spec と
-[wabac.js](https://github.com/webrecorder/wabac.js) replay engine の
-実際の loader 挙動から導出されており、既知 producer に対する
-より厳しい check 用に producer 固有 profile も任意で選べる。
+WACZ validation engine。machine-readable な JSON report を stdout に出力する。rule は WACZ spec と [wabac.js](https://github.com/webrecorder/wabac.js) replay engine の
+実際の loader 挙動から導出されており、既知 producer に対するより厳しい check 用に producer 固有 profile も任意で選べる。
 
 この engine の上で動く interactive な terminal UI が必要なら
 [`@waxlens/tui`](https://github.com/uraitakahito/waxlens/tree/main/packages/tui)
@@ -12,11 +9,11 @@ WACZ validation engine。machine-readable な JSON report を stdout に
 
 ## CLI: `waxlens-validate`
 
-```
-waxlens-validate <file>                    validate the WACZ; emit JSON to stdout
-waxlens-validate <file> --profile <name>   spec (default) | browserhive | lenient
-waxlens-validate --version
-waxlens-validate --help
+```sh
+# validate the WACZ; emit JSON to stdout
+waxlens-validate <file>
+# spec (default) | browserhive | lenient
+waxlens-validate <file> --profile <name>
 ```
 
 ### Exit codes

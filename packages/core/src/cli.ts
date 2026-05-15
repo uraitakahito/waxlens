@@ -2,26 +2,12 @@
 /**
  * `waxlens-validate` — validation engine の CLI。
  *
- * machine-readable な surface のみ: 単一の positional `<file>`、rule
- * profile selector、stdout への JSON 出力。human-readable な
- * rendering (色、expandable な詳細) は `@waxlens/tui` の `waxlens`
- * bin にあり、そちらがこの package を library としてインポートして
- * 消費する。
+ * machine-readable な出力のみ
  *
- * Exit codes (`exitCodeFor` が単一情報源):
+ * Exit codes:
  *   0 — validation 成功 (error 重大度の issue なし)
  *   1 — validation 失敗 (error 重大度の issue が 1 件以上)
  *   2 — operational な失敗 (ファイルが開けない等)
- *
- * 副作用の責務分担:
- *   - `runCli`  outcome を組み立てるだけ (純粋関数寄り; reader の
- *                close は `finally` で行う I/O のみ)
- *   - action    stderr / stdout / `process.exitCode` をここで集約
- *
- * これによって "exit code は何番" を CLI コードに散らさず
- * `exitCodeFor` の switch だけが知る。bin 名 prefix
- * (`waxlens-validate:`) も `runCli` ではなくこの bin の action 内に
- * 留まる — `@waxlens/tui` の bin が `waxlens:` を使う設計と対称。
  */
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
