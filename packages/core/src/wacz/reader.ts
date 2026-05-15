@@ -1,18 +1,7 @@
 /**
  * WaczReader
  *
- * `yauzl-promise` の薄いラッパで、WACZ に合わせた accessor を提供する:
- *   - `entryNames()` — zip entry path のリスト
- *   - `readEntry(name)` — entry の全 Buffer (eager)
- *   - `getEntryMeta(name)` — { compressionMethod, compressedSize, uncompressedSize }。
- *     例えば `archive/data.warc.gz` が STORE (method 0) であることを rule で
- *     assert できる
- *
- * yauzl-promise の裏側は callback ベースで、`.entries()` は async
- * iterator を返す。`open()` のタイミングで一度 iterate して name →
- * entry map を作る。実世界の WACZ archive は entry が数十個程度なので、
- * メモリコスト (1 entry につき 1 レコード) は無視できる範囲で、map
- * によって validation rule に O(1) lookup を提供できる。
+ * WACZ に合わせた accessor を提供する。
  *
  * reader は `close()` が呼ばれるまで zip handle を開きっぱなしにする
  * — rule runner はこれを `finally` で行うので、validation 失敗で fd
