@@ -9,11 +9,11 @@ WACZ validation engine。machine-readable な JSON report を stdout に出力�
 
 ## CLI: `waxlens-validate`
 
-```
-waxlens-validate <file>                    validate the WACZ; emit JSON to stdout
-waxlens-validate <file> --profile <name>   spec (default) | browserhive | lenient
-waxlens-validate --version
-waxlens-validate --help
+```sh
+# validate the WACZ; emit JSON to stdout
+waxlens-validate <file>
+# spec (default) | browserhive | lenient
+waxlens-validate <file> --profile <name>
 ```
 
 ### Exit codes
