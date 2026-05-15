@@ -41,8 +41,8 @@ pnpm --dir packages/tui add -g .
 登録後は monorepo の外でも waxlens 直下でも、bin 名だけで呼べる:
 
 ```sh
-waxlens-validate path/to/archive.wacz
-waxlens path/to/archive.wacz
+waxlens-validate samples/wikipedia.wacz
+waxlens samples/wikipedia.wacz
 ```
 
 元に戻すときは `pnpm remove -g @waxlens/core @waxlens/tui`。
