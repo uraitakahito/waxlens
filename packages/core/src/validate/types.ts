@@ -37,9 +37,9 @@ export type Severity = "error" | "warning" | "info";
  *   降格させる。legacy archive をトリアージしていて "replay 破損"
  *   系の hard error だけを見たいときに便利。
  */
-export type RuleProfile = "spec" | "browserhive" | "lenient";
+export const ALL_PROFILES = ["spec", "browserhive", "lenient"] as const;
 
-export const ALL_PROFILES: readonly RuleProfile[] = ["spec", "browserhive", "lenient"];
+export type RuleProfile = (typeof ALL_PROFILES)[number];
 
 /**
  * 各 rule が profile にどう反応するか。`severityByProfile` を使うと、
