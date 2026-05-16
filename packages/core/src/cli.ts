@@ -10,7 +10,7 @@
  *   2 — operational な失敗 (ファイルが開けない等)
  */
 import { readFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Command, InvalidArgumentError } from "commander";
 import { exitCodeFor, type CliOutcome } from "./cli-outcome.js";
@@ -18,8 +18,11 @@ import { renderJson } from "./render/json.js";
 import { DEFAULT_PROFILE, runValidation } from "./validate/engine.js";
 import { DEFAULT_RULES } from "./validate/rules/index.js";
 import type { RuleProfile } from "./validate/types.js";
-import { ALL_PROFILES } from "./validate/types.js";
+import { ALL_PROFILES, parseS3Uri } from "./validate/types.js";
 import { WaczReader } from "./wacz/reader.js";
+
+/** scheme dispatch helper — `s3://` のみ remote として扱う。 */
+const isS3Uri = (input: string): boolean => input.startsWith("s3://");
 
 const here = dirname(fileURLToPath(import.meta.url));
 const manifestPath = join(here, "..", "package.json");
@@ -35,11 +38,11 @@ const parseProfile = (raw: string): RuleProfile => {
 };
 
 async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome> {
-  const absolutePath = resolve(filePath);
-
   let reader: WaczReader;
   try {
-    reader = await WaczReader.open(absolutePath);
+    reader = isS3Uri(filePath)
+      ? await WaczReader.openFromS3(parseS3Uri(filePath))
+      : await WaczReader.open(filePath);
   } catch (cause) {
     return { kind: "openFailed", filePath, cause };
   }
@@ -64,7 +67,10 @@ program
   .name("waxlens-validate")
   .description("WACZ validator — emits a machine-readable JSON report to stdout")
   .version(manifest.version)
-  .argument("<file>", "Path to the .wacz file to validate")
+  .argument(
+    "<source>",
+    "Local path or s3://bucket/key URI of the .wacz to validate",
+  )
   .option(
     "--profile <name>",
     `Rule profile (${ALL_PROFILES.join(" | ")}). Defaults to "${DEFAULT_PROFILE}".`,
