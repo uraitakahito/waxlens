@@ -34,6 +34,32 @@ const parseProfile = (raw: string): RuleProfile => {
   throw new InvalidArgumentError(`Unknown profile "${raw}". Valid: ${ALL_PROFILES.join(", ")}.`);
 };
 
+async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome> {
+  const absolutePath = resolve(filePath);
+
+  let reader: WaczReader;
+  try {
+    reader = await WaczReader.open(absolutePath);
+  } catch (cause) {
+    return { kind: "openFailed", filePath, cause };
+  }
+
+  try {
+    const result = await runValidation(reader, {
+      file: filePath,
+      waxlensVersion: manifest.version,
+      rules: DEFAULT_RULES,
+      profile: opts.profile,
+    });
+    if (!result.ok) return { kind: "engineFailed" };
+    const report = result.value;
+
+    return report.valid ? { kind: "valid", report } : { kind: "invalid", report };
+  } finally {
+    await reader.close();
+  }
+}
+
 const program = new Command();
 program
   .name("waxlens-validate")
@@ -91,31 +117,5 @@ function dispatch(outcome: CliOutcome): void {
     }
     case "engineFailed":
       return;
-  }
-}
-
-async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome> {
-  const absolutePath = resolve(filePath);
-
-  let reader: WaczReader;
-  try {
-    reader = await WaczReader.open(absolutePath);
-  } catch (cause) {
-    return { kind: "openFailed", filePath, cause };
-  }
-
-  try {
-    const result = await runValidation(reader, {
-      file: filePath,
-      waxlensVersion: manifest.version,
-      rules: DEFAULT_RULES,
-      profile: opts.profile,
-    });
-    if (!result.ok) return { kind: "engineFailed" };
-    const report = result.value;
-
-    return report.valid ? { kind: "valid", report } : { kind: "invalid", report };
-  } finally {
-    await reader.close();
   }
 }
