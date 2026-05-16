@@ -27,6 +27,41 @@ pnpm check
 pnpm build
 ```
 
+### Docker Compose stack (bundled SeaweedFS)
+
+`waxlens-validate s3://...` を試したい場合は、bundled SeaweedFS を含む
+compose stack を使う。**chromium-server や BrowserHive は含まない** ので、
+waxlens 単体で完結する (loose coupling)。
+
+```sh
+./setup.sh
+docker compose -f compose.dev.yaml up -d --build
+docker compose -f compose.dev.yaml exec waxlens bash
+# 以下 container 内で:
+pnpm install && pnpm --filter @waxlens/core build
+aws --endpoint-url http://seaweedfs:8333 s3 cp samples/wikipedia.wacz s3://waxlens/wikipedia.wacz
+./packages/core/dist/cli.js s3://waxlens/wikipedia.wacz
+```
+
+Prod stack は one-shot validation 用 (waxlens 自身は `--profile run` で
+明示的に走らせる):
+
+```sh
+docker compose -f compose.prod.yaml up -d
+# host から sidecar AWS CLI で WACZ を upload:
+docker run --rm --network waxlens-network \
+  -v $(pwd)/samples:/samples:ro \
+  -e AWS_ACCESS_KEY_ID=waxlens -e AWS_SECRET_ACCESS_KEY=waxlens \
+  -e AWS_REGION=us-east-1 -e AWS_ENDPOINT_URL_S3=http://seaweedfs:8333 \
+  amazon/aws-cli s3 cp /samples/wikipedia.wacz s3://waxlens/wikipedia.wacz
+# 1 回 validate:
+docker compose -f compose.prod.yaml --profile run run --rm waxlens s3://waxlens/wikipedia.wacz
+docker compose -f compose.prod.yaml down
+```
+
+bundled SeaweedFS 専用の構成で、AWS / R2 / 他の S3 互換 service への
+切り替えは現状想定していない。
+
 ### `waxlens-validate` / `waxlens` を system-wide で呼ぶ
 
 ```sh
