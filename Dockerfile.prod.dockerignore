@@ -1,0 +1,19 @@
+.git
+.github
+node_modules
+**/node_modules
+dist
+**/dist
+coverage
+**/coverage
+*.log
+.env
+.env.*
+~
+.DS_Store
+
+# Dev artifacts only
+Dockerfile.dev
+Dockerfile.dev.dockerignore
+compose.dev.yaml
+samples

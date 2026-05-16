@@ -1,0 +1,67 @@
+# Dockerfile.prod — waxlens production / one-shot image
+#
+# multi-stage:
+#   1. builder  — full source / pnpm install / pnpm build / `pnpm deploy --prod`
+#                 で @waxlens/core を production deps だけにまとめる
+#   2. runtime  — slim Node に builder の deploy 結果だけコピー
+#
+# ENTRYPOINT は `waxlens-validate` (JSON 出力)。compose.prod.yaml の
+# `--profile run` で one-shot 起動し、引数として `<source>` を渡す:
+#   docker compose -f compose.prod.yaml --profile run run --rm waxlens s3://waxlens/foo.wacz
+#
+# TUI (`waxlens` bin) を使いたい場合は entrypoint を override する。
+# このイメージには TUI bin は同梱しない (deploy 対象を @waxlens/core
+# だけに絞っている)。
+
+# ---------------------------------------------------------------------------
+# Stage 1: builder
+# ---------------------------------------------------------------------------
+FROM node:24-bookworm-slim AS builder
+
+RUN corepack enable && corepack prepare pnpm@11.1.2 --activate
+
+WORKDIR /build
+
+# lockfile-driven install のために manifest だけ先に COPY する。これで
+# `pnpm install` レイヤが source change で invalidate されにくくなる。
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY packages/core/package.json packages/core/
+COPY packages/tui/package.json packages/tui/
+
+RUN pnpm install --frozen-lockfile
+
+# source を流し込んで core だけ build (tui の build / test は prod image
+# に不要)。
+COPY . .
+RUN pnpm --filter @waxlens/core build
+
+# runtime に持っていく姿 — `pnpm deploy --prod` は名前付きの dependency
+# graph を 1 ディレクトリに集約する。`@waxlens/core` の prod deps のみ
+# 含み、dev / workspace symlink は剥がされる。
+#
+# `--legacy`: pnpm v10+ では deploy のデフォルトが
+# `inject-workspace-packages=true` を要求するようになった。@waxlens/core
+# は他の workspace package に依存していないので、symlink vs injection の
+# 差はここでは出ない — legacy mode で十分。
+RUN pnpm --filter @waxlens/core deploy --prod --legacy /deploy/core
+
+# ---------------------------------------------------------------------------
+# Stage 2: runtime
+# ---------------------------------------------------------------------------
+FROM node:24-bookworm-slim AS runtime
+
+WORKDIR /app
+
+# builder からは deploy 結果だけを持ってくる — pnpm の symlink farm も
+# .pnpm キャッシュも含まない slim な node_modules になっている。
+COPY --from=builder /deploy/core /app
+
+USER node
+ENV NODE_ENV=production
+
+# `pnpm deploy` は deploy 対象自身の bin symlink (node_modules/.bin/...) を
+# 作らない — `waxlens-validate` という名前は host 側 install でしか使わない
+# 名前なので、container 内では node 経由で cli.js を直叩きする方が筋。
+# 引数 (`<source>` + `--profile` 等) は呼び出し側で供給する:
+#   docker compose -f compose.prod.yaml --profile run run --rm waxlens s3://bucket/key.wacz
+ENTRYPOINT ["node", "/app/dist/cli.js"]
