@@ -54,6 +54,16 @@ program
     // を保証しつつ、Node が event loop drain で自然終了するときに正しい
     // exit code を返す。`runCli` は `reader.close()` を `finally` で
     // await しているので、外側に lingering handle は残らない。
+    //
+    // 反面、event loop が drain しないと process は hang する (例: stdout
+    // pipe を読まない consumer)。waxlens は timer / socket / watcher を
+    // 持たず fd も finally で閉じるので drain 阻害経路は stdout のみで、
+    // pathological consumer による hang は `process.exit(N)` に切り替え
+    // ても output が truncate するだけで防げない — loud な hang の方が
+    // silent truncation より望ましいので safety net は入れない。将来
+    // timer / network / 子プロセスを伴う依存を足すときは
+    // `setTimeout(...).unref()` 形式の hard-exit を検討する (cf.
+    // `browserhive/bin/server.ts:HARD_EXIT_TIMEOUT_MS`)。
     process.exitCode = exitCodeFor(outcome);
   });
 
