@@ -40,11 +40,21 @@ RUN apt-get update -qq && \
 RUN corepack enable && corepack prepare pnpm@11.1.2 --activate
 
 # host との UID/GID 一致 — bind mount した /app への write 権を保つ。
-# node:24-bookworm-slim には既に `node` (uid=1000) ユーザが居るので
-# 必要なら rename + uid/gid 変更で揃える。host も uid=1000 なら no-op。
-RUN if [ "$(id -u node)" != "${user_id}" ]; then usermod -u ${user_id} node; fi && \
-    if [ "$(id -g node)" != "${group_id}" ]; then groupmod -g ${group_id} node; fi
+# node:24-bookworm-slim には既に `node` (uid=1000) ユーザが居る。host の
+# uid/gid と同じなら no-op、違えば renumber する。
+#
+# `-o` (non-unique): macOS host の GID=20 (staff) は Debian 側で
+# `dialout` group の GID と衝突するので、unique 制約を外して衝突許容。
+# container 内で同じ GID を 2 group が共有しても害は無い。
+RUN if [ "$(id -u node)" != "${user_id}" ]; then usermod -o -u ${user_id} node; fi && \
+    if [ "$(id -g node)" != "${group_id}" ]; then groupmod -o -g ${group_id} node; fi
 
-USER node
+# Entrypoint で named volume の chown + runuser -u node drop を行う。
+# 詳細は docker-entrypoint.sh のヘッダ参照。`runuser` は util-linux 同梱で
+# debian:bookworm-slim に標準で入っている。
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 WORKDIR /app
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["bash"]
