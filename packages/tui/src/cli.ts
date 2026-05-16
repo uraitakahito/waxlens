@@ -20,7 +20,7 @@
  *   - action     最後に `process.exitCode = exitCodeFor(outcome)` で締める
  */
 import { readFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Command, InvalidArgumentError } from "commander";
 import {
@@ -28,6 +28,7 @@ import {
   DEFAULT_PROFILE,
   DEFAULT_RULES,
   exitCodeFor,
+  parseS3Uri,
   runValidation,
   WaczReader,
   type CliOutcome,
@@ -35,6 +36,9 @@ import {
   type RuleProfile,
 } from "@waxlens/core";
 import { renderPlain } from "./render/plain.js";
+
+/** scheme dispatch helper — `s3://` のみ remote として扱う。 */
+const isS3Uri = (input: string): boolean => input.startsWith("s3://");
 
 const here = dirname(fileURLToPath(import.meta.url));
 const manifestPath = join(here, "..", "package.json");
@@ -56,7 +60,10 @@ program
   .name("waxlens")
   .description("Interactive TUI for WACZ validation (use waxlens-validate for JSON output)")
   .version(manifest.version)
-  .argument("<file>", "Path to the .wacz file to validate")
+  .argument(
+    "<source>",
+    "Local path or s3://bucket/key URI of the .wacz to validate",
+  )
   .option("--no-color", "Disable ANSI colour escapes in plain output")
   .option(
     "--no-tui",
@@ -114,18 +121,17 @@ async function dispatch(outcome: CliOutcome, opts: CliOptions): Promise<void> {
 }
 
 async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome> {
-  const absolutePath = resolve(filePath);
-
   let reader: WaczReader;
   try {
-    reader = await WaczReader.open(absolutePath);
+    reader = isS3Uri(filePath)
+      ? await WaczReader.openFromS3(parseS3Uri(filePath))
+      : await WaczReader.open(filePath);
   } catch (cause) {
     return { kind: "openFailed", filePath, cause };
   }
 
   try {
     const result = await runValidation(reader, {
-      file: filePath,
       waxlensVersion: manifest.version,
       rules: DEFAULT_RULES,
       profile: opts.profile,

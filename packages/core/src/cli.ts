@@ -10,7 +10,7 @@
  *   2 — operational な失敗 (ファイルが開けない等)
  */
 import { readFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Command, InvalidArgumentError } from "commander";
 import { exitCodeFor, type CliOutcome } from "./cli-outcome.js";
@@ -18,8 +18,11 @@ import { renderJson } from "./render/json.js";
 import { DEFAULT_PROFILE, runValidation } from "./validate/engine.js";
 import { DEFAULT_RULES } from "./validate/rules/index.js";
 import type { RuleProfile } from "./validate/types.js";
-import { ALL_PROFILES } from "./validate/types.js";
+import { ALL_PROFILES, parseS3Uri } from "./validate/types.js";
 import { WaczReader } from "./wacz/reader.js";
+
+/** scheme dispatch helper — `s3://` のみ remote として扱う。 */
+const isS3Uri = (input: string): boolean => input.startsWith("s3://");
 
 const here = dirname(fileURLToPath(import.meta.url));
 const manifestPath = join(here, "..", "package.json");
@@ -34,12 +37,40 @@ const parseProfile = (raw: string): RuleProfile => {
   throw new InvalidArgumentError(`Unknown profile "${raw}". Valid: ${ALL_PROFILES.join(", ")}.`);
 };
 
+async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome> {
+  let reader: WaczReader;
+  try {
+    reader = isS3Uri(filePath)
+      ? await WaczReader.openFromS3(parseS3Uri(filePath))
+      : await WaczReader.open(filePath);
+  } catch (cause) {
+    return { kind: "openFailed", filePath, cause };
+  }
+
+  try {
+    const result = await runValidation(reader, {
+      waxlensVersion: manifest.version,
+      rules: DEFAULT_RULES,
+      profile: opts.profile,
+    });
+    if (!result.ok) return { kind: "engineFailed" };
+    const report = result.value;
+
+    return report.valid ? { kind: "valid", report } : { kind: "invalid", report };
+  } finally {
+    await reader.close();
+  }
+}
+
 const program = new Command();
 program
   .name("waxlens-validate")
   .description("WACZ validator — emits a machine-readable JSON report to stdout")
   .version(manifest.version)
-  .argument("<file>", "Path to the .wacz file to validate")
+  .argument(
+    "<source>",
+    "Local path or s3://bucket/key URI of the .wacz to validate",
+  )
   .option(
     "--profile <name>",
     `Rule profile (${ALL_PROFILES.join(" | ")}). Defaults to "${DEFAULT_PROFILE}".`,
@@ -54,6 +85,16 @@ program
     // を保証しつつ、Node が event loop drain で自然終了するときに正しい
     // exit code を返す。`runCli` は `reader.close()` を `finally` で
     // await しているので、外側に lingering handle は残らない。
+    //
+    // 反面、event loop が drain しないと process は hang する (例: stdout
+    // pipe を読まない consumer)。waxlens は timer / socket / watcher を
+    // 持たず fd も finally で閉じるので drain 阻害経路は stdout のみで、
+    // pathological consumer による hang は `process.exit(N)` に切り替え
+    // ても output が truncate するだけで防げない — loud な hang の方が
+    // silent truncation より望ましいので safety net は入れない。将来
+    // timer / network / 子プロセスを伴う依存を足すときは
+    // `setTimeout(...).unref()` 形式の hard-exit を検討する (cf.
+    // `browserhive/bin/server.ts:HARD_EXIT_TIMEOUT_MS`)。
     process.exitCode = exitCodeFor(outcome);
   });
 
@@ -81,31 +122,5 @@ function dispatch(outcome: CliOutcome): void {
     }
     case "engineFailed":
       return;
-  }
-}
-
-async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome> {
-  const absolutePath = resolve(filePath);
-
-  let reader: WaczReader;
-  try {
-    reader = await WaczReader.open(absolutePath);
-  } catch (cause) {
-    return { kind: "openFailed", filePath, cause };
-  }
-
-  try {
-    const result = await runValidation(reader, {
-      file: filePath,
-      waxlensVersion: manifest.version,
-      rules: DEFAULT_RULES,
-      profile: opts.profile,
-    });
-    if (!result.ok) return { kind: "engineFailed" };
-    const report = result.value;
-
-    return report.valid ? { kind: "valid", report } : { kind: "invalid", report };
-  } finally {
-    await reader.close();
   }
 }

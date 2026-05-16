@@ -1,24 +1,34 @@
 /**
  * WaczReader
  *
- * `yauzl-promise` の薄いラッパで、WACZ に合わせた accessor を提供する:
- *   - `entryNames()` — zip entry path のリスト
- *   - `readEntry(name)` — entry の全 Buffer (eager)
- *   - `getEntryMeta(name)` — { compressionMethod, compressedSize, uncompressedSize }。
- *     例えば `archive/data.warc.gz` が STORE (method 0) であることを rule で
- *     assert できる
- *
- * yauzl-promise の裏側は callback ベースで、`.entries()` は async
- * iterator を返す。`open()` のタイミングで一度 iterate して name →
- * entry map を作る。実世界の WACZ archive は entry が数十個程度なので、
- * メモリコスト (1 entry につき 1 レコード) は無視できる範囲で、map
- * によって validation rule に O(1) lookup を提供できる。
+ * WACZ に合わせた accessor を提供する。
  *
  * reader は `close()` が呼ばれるまで zip handle を開きっぱなしにする
  * — rule runner はこれを `finally` で行うので、validation 失敗で fd
  * を漏らさない。
+ *
+ * `source` field は「この reader を開いた origin」を保持する。
+ * `runValidation` は `Report.source` をここから取るので、caller は
+ * runValidation に source を別途渡す必要がない (single source of truth)。
  */
-import { open as openZip, type Entry, type ZipFile } from "yauzl-promise";
+import { resolve as resolvePath } from "node:path";
+import {
+  fromReader,
+  open as openZip,
+  type Entry,
+  type ZipFile,
+} from "yauzl-promise";
+import {
+  HeadObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
+import {
+  asAbsolutePath,
+  s3UriToBucketKey,
+  type ReportSource,
+  type S3Uri,
+} from "../validate/types.js";
+import { S3RangeReader } from "./s3-range-reader.js";
 
 /**
  * zip spec (PKWARE APPNOTE.TXT §4.4.5) の compression method 番号。
@@ -35,21 +45,57 @@ export interface ZipEntryMeta {
 }
 
 export class WaczReader {
+  readonly source: ReportSource;
   private readonly zip: ZipFile;
   private readonly entries: Map<string, Entry>;
 
-  private constructor(zip: ZipFile, entries: Map<string, Entry>) {
+  private constructor(zip: ZipFile, entries: Map<string, Entry>, source: ReportSource) {
     this.zip = zip;
     this.entries = entries;
+    this.source = source;
   }
 
+  /**
+   * ローカル file を開く。relative path も受け付け、`path.resolve()` で
+   * 絶対パスに canonicalize してから `source` に乗せる。
+   */
   static async open(path: string): Promise<WaczReader> {
-    const zip = await openZip(path);
+    const absolute = asAbsolutePath(resolvePath(path));
+    const zip = await openZip(absolute);
     const entries = new Map<string, Entry>();
     for await (const entry of zip) {
       entries.set(entry.filename, entry);
     }
-    return new WaczReader(zip, entries);
+    return new WaczReader(zip, entries, { kind: "file", path: absolute });
+  }
+
+  /**
+   * S3 上の WACZ を range GET で開く。`client` が省略された場合は
+   * default credential chain (env / shared config / IAM role) で
+   * `S3Client` を構築する。Caller が region / endpoint / credential を
+   * 細かく制御したい場合は事前に構築した `S3Client` を渡せばよい。
+   *
+   * `HeadObjectCommand` を 1 回先に発行して `ContentLength` を取る —
+   * yauzl-promise の `fromReader` は total size を引数で要求するため、
+   * S3 側に明示的に問い合わせる必要がある。
+   */
+  static async openFromS3(uri: S3Uri, client?: S3Client): Promise<WaczReader> {
+    const c = client ?? new S3Client({});
+    const { bucket, key } = s3UriToBucketKey(uri);
+    const head = await c.send(
+      new HeadObjectCommand({ Bucket: bucket, Key: key }),
+    );
+    const size = head.ContentLength;
+    if (size === undefined) {
+      throw new Error(`S3 HeadObject returned no ContentLength for ${uri}`);
+    }
+    const rangeReader = new S3RangeReader(c, bucket, key);
+    const zip = await fromReader(rangeReader, size);
+    const entries = new Map<string, Entry>();
+    for await (const entry of zip) {
+      entries.set(entry.filename, entry);
+    }
+    return new WaczReader(zip, entries, { kind: "s3", uri });
   }
 
   entryNames(): string[] {

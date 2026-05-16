@@ -109,13 +109,17 @@ const formatBytes = (n: number): string => {
   return `${(n / 1024 / 1024 / 1024).toFixed(1)} GB`;
 };
 
-const Header: FC<{ report: Report }> = ({ report }) => (
-  <Box>
-    <Text bold>waxlens</Text>
-    <Text dimColor> {report.waxlensVersion} </Text>
-    <Text> {report.file}</Text>
-  </Box>
-);
+const Header: FC<{ report: Report }> = ({ report }) => {
+  const sourceLabel =
+    report.source.kind === "file" ? report.source.path : report.source.uri;
+  return (
+    <Box>
+      <Text bold>waxlens</Text>
+      <Text dimColor> {report.waxlensVersion} </Text>
+      <Text> {sourceLabel}</Text>
+    </Box>
+  );
+};
 
 const IssueRow: FC<{ issue: Issue; focused: boolean; expanded: boolean }> = ({
   issue,
