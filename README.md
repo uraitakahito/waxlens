@@ -41,8 +41,13 @@ pnpm --dir packages/tui add -g .
 登録後は monorepo の外でも waxlens 直下でも、bin 名だけで呼べる:
 
 ```sh
+# Local file
 waxlens-validate samples/wikipedia.wacz
 waxlens samples/wikipedia.wacz
+
+# S3 (AWS credential chain で解決)
+waxlens-validate s3://my-bucket/captures/abc.wacz
+waxlens s3://my-bucket/captures/abc.wacz
 ```
 
 元に戻すときは `pnpm remove -g @waxlens/core @waxlens/tui`。

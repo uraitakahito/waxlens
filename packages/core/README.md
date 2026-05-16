@@ -10,10 +10,12 @@ WACZ validation engine。machine-readable な JSON report を stdout に出力�
 ## CLI: `waxlens-validate`
 
 ```sh
-# validate the WACZ; emit JSON to stdout
-waxlens-validate <file>
+# Local file
+waxlens-validate <path>
+# S3 (AWS credentials は default credential chain — env / shared config / IAM role)
+waxlens-validate s3://<bucket>/<key>.wacz
 # spec (default) | browserhive | lenient
-waxlens-validate <file> --profile <name>
+waxlens-validate <source> --profile <name>
 ```
 
 ### Exit codes
@@ -36,7 +38,7 @@ stdout には `WaxlensReport` が出力される。full schema は
 {
   "waxlensVersion": "0.0.0",
   "profile": "spec",
-  "file": "/tmp/good.wacz",
+  "source": { "kind": "file", "path": "/tmp/good.wacz" },
   "valid": true,
   "summary": { "passed": 12, "failed": 0, "warnings": 0, "info": 0, "durationMs": 12 },
   "issues": [],
@@ -59,12 +61,19 @@ rule 単位の profile 別 severity matrix は
 ## ライブラリとしての使い方
 
 ```ts
-import { runValidation, WaczReader, DEFAULT_RULES } from "@waxlens/core";
+import {
+  runValidation,
+  WaczReader,
+  DEFAULT_RULES,
+  parseS3Uri,
+} from "@waxlens/core";
 
+// Local file
 const reader = await WaczReader.open("/path/to/file.wacz");
+// または S3
+// const reader = await WaczReader.openFromS3(parseS3Uri("s3://bucket/key.wacz"));
 try {
   const result = await runValidation(reader, {
-    file: "/path/to/file.wacz",
     waxlensVersion: "0.0.0",
     rules: DEFAULT_RULES,
     profile: "spec",
@@ -74,6 +83,9 @@ try {
   await reader.close();
 }
 ```
+
+`WaczReader.source` が `Report.source` の唯一の入力経路。`runValidation`
+は reader から自動で取るので caller が path を二度渡す必要はない。
 
 default export shape (`@waxlens/tui` が消費するもの一式) は
 `src/public.ts` にある。
