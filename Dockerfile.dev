@@ -1,0 +1,50 @@
+# Dockerfile.dev — waxlens development container
+#
+# 開発者の iterative ループを支える単一目的の image。production には
+# 使わない (Dockerfile.prod を参照)。bundled SeaweedFS と組み合わせる
+# 想定だが、container 自体は SeaweedFS を含まない (compose レベルで
+# 別 service として bring up する)。
+#
+# Build:
+#   docker compose -f compose.dev.yaml build
+#
+# Run:
+#   docker compose -f compose.dev.yaml up -d
+#   docker compose -f compose.dev.yaml exec waxlens bash
+#
+# UID/GID は build arg で渡される (compose の `args:` から host の
+# `id -u` / `id -g` が ./setup.sh 経由で .env に書かれている)。これに
+# よって bind mount した /app の write 権が host 側 user と一致する。
+
+FROM node:24-bookworm-slim
+
+ARG user_id
+ARG group_id
+ARG TZ=UTC
+ENV TZ="$TZ"
+ENV DEBIAN_FRONTEND=noninteractive
+ENV LANG=C.UTF-8
+
+# 開発に必要な OS パッケージのみ:
+#   - ca-certificates / curl  : pnpm install / network fetch
+#   - git                     : 開発 checkout / submodule なし
+#   - awscli                  : SeaweedFS bucket への WACZ upload (compose e2e)
+RUN apt-get update -qq && \
+    apt-get install -y -qq --no-install-recommends \
+        ca-certificates curl git awscli && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# pnpm — corepack 同梱 (Node 24 で stable)。version は monorepo root の
+# package.json#packageManager に揃える。
+RUN corepack enable && corepack prepare pnpm@11.1.2 --activate
+
+# host との UID/GID 一致 — bind mount した /app への write 権を保つ。
+# node:24-bookworm-slim には既に `node` (uid=1000) ユーザが居るので
+# 必要なら rename + uid/gid 変更で揃える。host も uid=1000 なら no-op。
+RUN if [ "$(id -u node)" != "${user_id}" ]; then usermod -u ${user_id} node; fi && \
+    if [ "$(id -g node)" != "${group_id}" ]; then groupmod -g ${group_id} node; fi
+
+USER node
+WORKDIR /app
+CMD ["bash"]
