@@ -1,0 +1,92 @@
+services:
+  # waxlens one-shot validation runner.
+  #
+  # `profiles: [run]` のため `docker compose up` だけでは起動せず、明示
+  # 的に `--profile run run --rm waxlens <source>` で 1 回走らせて exit
+  # する形を取る。<source> は local path を bind mount してもよいし、
+  # 同じ stack の SeaweedFS に upload された `s3://waxlens/...` URI を
+  # 渡してもよい。
+  #
+  # Usage:
+  #   docker compose -f compose.prod.yaml up -d                # SeaweedFS だけ起動
+  #   # bucket に WACZ を upload (host から AWS CLI で)
+  #   AWS_ACCESS_KEY_ID=waxlens AWS_SECRET_ACCESS_KEY=waxlens \
+  #     aws --endpoint-url http://localhost:8333 s3 cp foo.wacz s3://waxlens/foo.wacz
+  #   docker compose -f compose.prod.yaml --profile run run --rm waxlens s3://waxlens/foo.wacz
+  #   docker compose -f compose.prod.yaml down                  # 後片付け
+  #
+  # ENTRYPOINT (= `node /app/dist/cli.js`) は Dockerfile.prod 側で固定
+  # しているので、ここで `command` を省略すれば追加引数だけが渡る。
+  waxlens:
+    profiles: [run]
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    image: waxlens:prod
+    container_name: waxlens-prod
+    init: true
+    environment:
+      - AWS_ENDPOINT_URL_S3=http://seaweedfs:8333
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_ACCESS_KEY_ID=${WAXLENS_S3_ACCESS_KEY_ID:-waxlens}
+      - AWS_SECRET_ACCESS_KEY=${WAXLENS_S3_SECRET_ACCESS_KEY:-waxlens}
+      - WAXLENS_S3_FORCE_PATH_STYLE=${WAXLENS_S3_FORCE_PATH_STYLE:-true}
+    networks:
+      - waxlens-network
+    depends_on:
+      seaweedfs-init:
+        condition: service_completed_successfully
+
+  # SeaweedFS — bundled S3-compatible artifact store. dev stack と違って
+  # port は host に publish せず、network 内部のみで使う想定。host から
+  # WACZ を upload したい場合は `ports:` を local override で追加するか、
+  # `docker compose run` で AWS CLI container を一発走らせる。
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.23
+    container_name: waxlens-seaweedfs-prod
+    init: true
+    entrypoint: ["/etc/seaweedfs/entrypoint.sh"]
+    environment:
+      - WAXLENS_S3_ACCESS_KEY_ID=${WAXLENS_S3_ACCESS_KEY_ID:-waxlens}
+      - WAXLENS_S3_SECRET_ACCESS_KEY=${WAXLENS_S3_SECRET_ACCESS_KEY:-waxlens}
+    expose:
+      - "8333"
+      - "8888"
+      - "9333"
+    volumes:
+      - ./etc/seaweedfs:/etc/seaweedfs:ro
+      - seaweedfs-data:/data
+    networks:
+      - waxlens-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:9333/cluster/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 5s
+    restart: unless-stopped
+
+  # One-shot init: create the `waxlens` bucket. The retry / verify
+  # logic lives in etc/seaweedfs/init-bucket.sh.
+  seaweedfs-init:
+    image: chrislusf/seaweedfs:4.23
+    container_name: waxlens-seaweedfs-init-prod
+    depends_on:
+      seaweedfs:
+        condition: service_healthy
+    volumes:
+      - ./etc/seaweedfs:/etc/seaweedfs:ro
+    networks:
+      - waxlens-network
+    entrypoint:
+      - "/etc/seaweedfs/init-bucket.sh"
+      - "${WAXLENS_S3_BUCKET:-waxlens}"
+      - "seaweedfs:9333"
+
+volumes:
+  seaweedfs-data:
+    name: waxlens-seaweedfs-prod-data
+
+networks:
+  waxlens-network:
+    name: waxlens-network
