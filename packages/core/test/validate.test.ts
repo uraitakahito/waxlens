@@ -29,7 +29,6 @@ const runAgainstFixture = async (
   const reader = await WaczReader.open(path);
   try {
     const result = await runValidation(reader, {
-      file: path,
       waxlensVersion: "0.0.0",
       rules: DEFAULT_RULES,
       profile,

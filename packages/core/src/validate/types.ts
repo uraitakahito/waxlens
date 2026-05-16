@@ -17,6 +17,7 @@
  *     dump などを付ける。renderer は rule ごとに整形し、JSON schema
  *     としては "serialise 可能なら何でも"。
  */
+import { isAbsolute } from "node:path";
 import type { Result } from "../result.js";
 import type { WaczReader } from "../wacz/reader.js";
 
@@ -126,11 +127,54 @@ export interface ReportStats {
   hosts: string[];
 }
 
+/**
+ * 検証対象 WACZ の identity。`Report.source` および `WaczReader.source`
+ * の wire format。
+ *
+ * `kind: "file"` は絶対パス、`kind: "s3"` は `s3://bucket/key` URI を
+ * 表す。Brand 型 `AbsolutePath` / `S3Uri` を経由しないと構築できない
+ * ので、relative path や malformed URI を Report に embed することは
+ * compile / runtime のどちらでも防げる。
+ */
+declare const AbsolutePathBrand: unique symbol;
+export type AbsolutePath = string & { readonly [AbsolutePathBrand]: true };
+
+export const asAbsolutePath = (raw: string): AbsolutePath => {
+  if (!isAbsolute(raw)) {
+    throw new TypeError(`Expected absolute path, got: ${raw}`);
+  }
+  return raw as AbsolutePath;
+};
+
+declare const S3UriBrand: unique symbol;
+export type S3Uri = string & { readonly [S3UriBrand]: true };
+
+const S3_URI_RE = /^s3:\/\/([^/]+)\/(.+)$/;
+
+export const parseS3Uri = (raw: string): S3Uri => {
+  if (!S3_URI_RE.test(raw)) {
+    throw new TypeError(`Invalid s3:// URI: ${raw}`);
+  }
+  return raw as S3Uri;
+};
+
+export const s3UriToBucketKey = (uri: S3Uri): { bucket: string; key: string } => {
+  const m = S3_URI_RE.exec(uri);
+  // parseS3Uri を通過しているので必ず match する。
+  if (!m?.[1] || !m[2]) throw new Error("unreachable: malformed S3Uri reached s3UriToBucketKey");
+  return { bucket: m[1], key: m[2] };
+};
+
+export type ReportSource =
+  | { kind: "file"; path: AbsolutePath }
+  | { kind: "s3"; uri: S3Uri };
+
 export interface Report {
   waxlensVersion: string;
   /** Rule profile used to evaluate the report. See {@link RuleProfile}. */
   profile: RuleProfile;
-  file: string;
+  /** Identity of the validated WACZ. See {@link ReportSource}. */
+  source: ReportSource;
   /** `true` iff `summary.failed === 0`. Cached so the JSON consumer doesn't recompute. */
   valid: boolean;
   summary: ReportSummary;

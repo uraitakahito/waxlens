@@ -46,7 +46,6 @@ async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome> {
 
   try {
     const result = await runValidation(reader, {
-      file: filePath,
       waxlensVersion: manifest.version,
       rules: DEFAULT_RULES,
       profile: opts.profile,

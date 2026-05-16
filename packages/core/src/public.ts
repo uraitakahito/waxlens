@@ -13,17 +13,25 @@ export { DEFAULT_PROFILE, runValidation } from "./validate/engine.js";
 export { DEFAULT_RULES } from "./validate/rules/index.js";
 export { renderJson } from "./render/json.js";
 export type {
+  AbsolutePath,
   Issue,
   IssueLocation,
   Report,
+  ReportSource,
   ReportStats,
   ReportSummary,
   RuleApplicability,
   RuleProfile,
+  S3Uri,
   Severity,
   ValidationRule,
 } from "./validate/types.js";
-export { ALL_PROFILES } from "./validate/types.js";
+export {
+  ALL_PROFILES,
+  asAbsolutePath,
+  parseS3Uri,
+  s3UriToBucketKey,
+} from "./validate/types.js";
 // CLI outcome は @waxlens/tui の bin (`waxlens`) が core の bin
 // (`waxlens-validate`) と同じ exit-code mapping を再利用するために
 // public surface に置く。純型 + 純関数なので runtime コストは無く、

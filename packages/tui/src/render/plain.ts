@@ -46,7 +46,8 @@ export const renderPlain = (report: Report, opts: PlainRenderOptions): string =>
   const c = opts.color ? pc : noColor;
   const lines: string[] = [];
 
-  lines.push(`${c.bold("waxlens")} ${c.dim(report.waxlensVersion)}  ${report.file}`);
+  const sourceLabel = report.source.kind === "file" ? report.source.path : report.source.uri;
+  lines.push(`${c.bold("waxlens")} ${c.dim(report.waxlensVersion)}  ${sourceLabel}`);
   lines.push("");
 
   // issue を rule で bucket して、各 rule を 1 度だけ表示できるよう

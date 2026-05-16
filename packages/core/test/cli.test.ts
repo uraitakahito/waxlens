@@ -74,7 +74,12 @@ const writeFixture = async (
  */
 const stabiliseJson = (text: string): unknown => {
   const parsed = JSON.parse(text) as Record<string, unknown>;
-  if (typeof parsed["file"] === "string") parsed["file"] = "<tmp>/fixture.wacz";
+  const source = parsed["source"] as
+    | { kind?: string; path?: string; uri?: string }
+    | undefined;
+  if (source?.kind === "file" && typeof source.path === "string") {
+    source.path = "<tmp>/fixture.wacz";
+  }
   const summary = parsed["summary"] as Record<string, unknown> | undefined;
   if (summary && typeof summary["durationMs"] === "number") {
     summary["durationMs"] = 0;

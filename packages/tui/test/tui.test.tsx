@@ -21,13 +21,13 @@
  */
 import { render } from "ink-testing-library";
 import { describe, expect, it } from "vitest";
-import type { Report } from "@waxlens/core";
+import type { AbsolutePath, Report } from "@waxlens/core";
 import { App } from "../src/app.js";
 
 const makeReport = (overrides: Partial<Report> = {}): Report => ({
   waxlensVersion: "0.0.0",
   profile: "spec",
-  file: "/tmp/fixture.wacz",
+  source: { kind: "file", path: "/tmp/fixture.wacz" as AbsolutePath },
   valid: false,
   summary: { passed: 3, failed: 2, warnings: 0, info: 0, durationMs: 12 },
   issues: [

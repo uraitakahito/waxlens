@@ -6,8 +6,14 @@
  * reader は `close()` が呼ばれるまで zip handle を開きっぱなしにする
  * — rule runner はこれを `finally` で行うので、validation 失敗で fd
  * を漏らさない。
+ *
+ * `source` field は「この reader を開いた origin」を保持する。
+ * `runValidation` は `Report.source` をここから取るので、caller は
+ * runValidation に source を別途渡す必要がない (single source of truth)。
  */
+import { resolve as resolvePath } from "node:path";
 import { open as openZip, type Entry, type ZipFile } from "yauzl-promise";
+import { asAbsolutePath, type ReportSource } from "../validate/types.js";
 
 /**
  * zip spec (PKWARE APPNOTE.TXT §4.4.5) の compression method 番号。
@@ -24,21 +30,28 @@ export interface ZipEntryMeta {
 }
 
 export class WaczReader {
+  readonly source: ReportSource;
   private readonly zip: ZipFile;
   private readonly entries: Map<string, Entry>;
 
-  private constructor(zip: ZipFile, entries: Map<string, Entry>) {
+  private constructor(zip: ZipFile, entries: Map<string, Entry>, source: ReportSource) {
     this.zip = zip;
     this.entries = entries;
+    this.source = source;
   }
 
+  /**
+   * ローカル file を開く。relative path も受け付け、`path.resolve()` で
+   * 絶対パスに canonicalize してから `source` に乗せる。
+   */
   static async open(path: string): Promise<WaczReader> {
-    const zip = await openZip(path);
+    const absolute = asAbsolutePath(resolvePath(path));
+    const zip = await openZip(absolute);
     const entries = new Map<string, Entry>();
     for await (const entry of zip) {
       entries.set(entry.filename, entry);
     }
-    return new WaczReader(zip, entries);
+    return new WaczReader(zip, entries, { kind: "file", path: absolute });
   }
 
   entryNames(): string[] {

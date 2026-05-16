@@ -39,7 +39,6 @@ import type {
 } from "./types.js";
 
 export interface RunOptions {
-  file: string;
   waxlensVersion: string;
   rules: readonly ValidationRule[];
   /** Profile selector. Defaults to `"spec"`. */
@@ -83,7 +82,7 @@ export const runValidation = async (
   const report: Report = {
     waxlensVersion: opts.waxlensVersion,
     profile,
-    file: opts.file,
+    source: wacz.source,
     valid: summary.failed === 0,
     summary,
     issues,
