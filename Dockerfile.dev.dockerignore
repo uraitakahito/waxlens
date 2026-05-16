@@ -1,0 +1,19 @@
+# dev image は実際には /app に source を bind mount するので、build context
+# に source 自体を入れる必要はない (Dockerfile が apt install + corepack
+# しかしないため)。それでも `.git` / `node_modules` / `dist` のような
+# heavy で derivable な物を context から外しておくと、`docker compose build`
+# の hash 比較と context tarball 転送が高速になる。
+
+.git
+.github
+node_modules
+**/node_modules
+dist
+**/dist
+coverage
+**/coverage
+*.log
+.env
+.env.*
+~
+.DS_Store

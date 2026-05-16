@@ -54,6 +54,17 @@ stdout には `WaxlensReport` が出力される。full schema は
 | `browserhive`       | BrowserHive capture を検証する。producer-strict な check を有効化。                 |
 | `lenient`           | legacy archive をトリアージしたい。"replay が壊れる" 系の hard error だけが欲しい。 |
 
+### 環境変数
+
+| Env                                                          | 用途                                                                                              |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_REGION` | SDK 標準 — credentials / region。SDK の default chain がそのまま読む。                            |
+| `AWS_ENDPOINT_URL_S3`                                        | SDK 標準 (v3.395+) — bundled SeaweedFS のような非 AWS endpoint を向くときに。                     |
+| `WAXLENS_S3_FORCE_PATH_STYLE`                                | `"true"` のときだけ `forcePathStyle: true` を立てる。SeaweedFS / MinIO 等の path-style addressing 用。 |
+
+bundled SeaweedFS の compose stack は repo root の `compose.{dev,prod}.yaml`
+を参照。
+
 rule 単位の profile 別 severity matrix は
 [`docs/rules.md`](https://github.com/uraitakahito/waxlens/blob/main/docs/rules.md)
 を参照。

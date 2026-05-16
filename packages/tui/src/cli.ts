@@ -25,6 +25,7 @@ import { fileURLToPath } from "node:url";
 import { Command, InvalidArgumentError } from "commander";
 import {
   ALL_PROFILES,
+  buildS3ClientFromEnv,
   DEFAULT_PROFILE,
   DEFAULT_RULES,
   exitCodeFor,
@@ -124,7 +125,7 @@ async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome> {
   let reader: WaczReader;
   try {
     reader = isS3Uri(filePath)
-      ? await WaczReader.openFromS3(parseS3Uri(filePath))
+      ? await WaczReader.openFromS3(parseS3Uri(filePath), buildS3ClientFromEnv())
       : await WaczReader.open(filePath);
   } catch (cause) {
     return { kind: "openFailed", filePath, cause };

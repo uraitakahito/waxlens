@@ -1,0 +1,109 @@
+services:
+  # waxlens development shell — source code bind-mounted at /app
+  waxlens:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      args:
+        user_id: ${USER_ID}
+        group_id: ${GROUP_ID}
+        TZ: ${TZ:-Asia/Tokyo}
+    container_name: waxlens-container
+    init: true
+    volumes:
+      - .:/app
+      # host の node_modules (typically darwin-* binaries) が bind mount
+      # 経由で /app に透過するのを named volume で shadow する。container
+      # 内では Linux 用の binary を持つ独自 node_modules を持ち、host 側に
+      # 副作用を出さない。pnpm の workspace 構造に合わせて root + 各
+      # package の 3 箇所をマスク (pnpm 11 の hoisting は root .pnpm 中心
+      # だが、packages/*/node_modules も symlink ツリーを持つ)。
+      - waxlens-node-modules:/app/node_modules
+      - waxlens-core-node-modules:/app/packages/core/node_modules
+      - waxlens-tui-node-modules:/app/packages/tui/node_modules
+    environment:
+      - TERM=${TERM}
+      # Bundled SeaweedFS は AWS 互換 endpoint。SDK v3.395+ は
+      # `AWS_ENDPOINT_URL_S3` を default chain で読むのでコード変更なしで
+      # 向き先を切り替えられる。`AWS_REGION` は SDK が要求するが SeaweedFS
+      # は値を無視する。
+      - AWS_ENDPOINT_URL_S3=http://seaweedfs:8333
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=${WAXLENS_S3_ACCESS_KEY_ID:-waxlens}
+      - AWS_SECRET_ACCESS_KEY=${WAXLENS_S3_SECRET_ACCESS_KEY:-waxlens}
+      # SeaweedFS は bucket subdomain (virtual-hosted-style) の wildcard
+      # DNS を持たないので path-style addressing を opt-in する。
+      - WAXLENS_S3_FORCE_PATH_STYLE=true
+    networks:
+      - waxlens-network
+    depends_on:
+      seaweedfs-init:
+        condition: service_completed_successfully
+    tty: true
+    stdin_open: true
+
+  # SeaweedFS — S3-compatible artifact store (Apache 2.0, actively
+  # maintained). `weed server` starts master, volume, filer, and s3 in
+  # one process via etc/seaweedfs/entrypoint.sh, which renders the s3
+  # identity config from WAXLENS_S3_ACCESS_KEY_ID /
+  # WAXLENS_S3_SECRET_ACCESS_KEY at startup.
+  #
+  # Ports:
+  #   - 8333  S3 API
+  #   - 8888  Filer UI — open http://localhost:8888/buckets/waxlens/
+  #           in a browser to inspect uploaded WACZ files.
+  #   - 9333  Master HTTP (cluster status, debug)
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.23
+    container_name: waxlens-seaweedfs
+    init: true
+    entrypoint: ["/etc/seaweedfs/entrypoint.sh"]
+    environment:
+      - WAXLENS_S3_ACCESS_KEY_ID=${WAXLENS_S3_ACCESS_KEY_ID:-waxlens}
+      - WAXLENS_S3_SECRET_ACCESS_KEY=${WAXLENS_S3_SECRET_ACCESS_KEY:-waxlens}
+    ports:
+      - "8333:8333"
+      - "8888:8888"
+      - "9333:9333"
+    volumes:
+      - ./etc/seaweedfs:/etc/seaweedfs:ro
+      - seaweedfs-data:/data
+    networks:
+      - waxlens-network
+    healthcheck:
+      # SeaweedFS binds to IPv4 only; `localhost` resolves to `::1` first
+      # in the container and fails with "connection refused", so probe
+      # 127.0.0.1 explicitly.
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:9333/cluster/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 5s
+
+  # One-shot init: create the `waxlens` bucket. The retry / verify
+  # logic lives in etc/seaweedfs/init-bucket.sh.
+  seaweedfs-init:
+    image: chrislusf/seaweedfs:4.23
+    container_name: waxlens-seaweedfs-init
+    depends_on:
+      seaweedfs:
+        condition: service_healthy
+    volumes:
+      - ./etc/seaweedfs:/etc/seaweedfs:ro
+    networks:
+      - waxlens-network
+    entrypoint: ["/etc/seaweedfs/init-bucket.sh", "waxlens", "seaweedfs:9333"]
+
+volumes:
+  seaweedfs-data:
+    name: waxlens-seaweedfs-data
+  waxlens-node-modules:
+    name: waxlens-node-modules
+  waxlens-core-node-modules:
+    name: waxlens-core-node-modules
+  waxlens-tui-node-modules:
+    name: waxlens-tui-node-modules
+
+networks:
+  waxlens-network:
+    name: waxlens-network
