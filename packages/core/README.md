@@ -100,7 +100,3 @@ try {
 
 default export shape (`@waxlens/tui` が消費するもの一式) は
 `src/public.ts` にある。
-
-## License
-
-[Unlicense](https://github.com/uraitakahito/waxlens/blob/main/LICENSE).
