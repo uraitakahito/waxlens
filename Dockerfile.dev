@@ -1,10 +1,5 @@
 # Dockerfile.dev — waxlens development container
 #
-# 開発者の iterative ループを支える単一目的の image。production には
-# 使わない (Dockerfile.prod を参照)。bundled SeaweedFS と組み合わせる
-# 想定だが、container 自体は SeaweedFS を含まない (compose レベルで
-# 別 service として bring up する)。
-#
 # Build:
 #   docker compose -f compose.dev.yaml build
 #
