@@ -55,10 +55,6 @@ export class WaczReader {
     this.source = source;
   }
 
-  /**
-   * ローカル file を開く。relative path も受け付け、`path.resolve()` で
-   * 絶対パスに canonicalize してから `source` に乗せる。
-   */
   static async open(path: string): Promise<WaczReader> {
     const absolute = asAbsolutePath(resolvePath(path));
     const zip = await openZip(absolute);
