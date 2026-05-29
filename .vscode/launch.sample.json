@@ -18,6 +18,25 @@
         "<node_internals>/**",
         "**/node_modules/**"
       ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "A: waxlens TUI plain (built dist)",
+      "preLaunchTask": "pnpm: build @waxlens/tui",
+      "program": "${workspaceFolder}/packages/tui/dist/cli.js",
+      "args": ["${input:waczPath}", "--no-tui"],
+      "cwd": "${workspaceFolder}",
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceFolder}/packages/tui/dist/**/*.js",
+        "${workspaceFolder}/packages/core/dist/**/*.js"
+      ],
+      "console": "integratedTerminal",
+      "skipFiles": [
+        "<node_internals>/**",
+        "**/node_modules/**"
+      ]
     }
   ],
   "inputs": [
