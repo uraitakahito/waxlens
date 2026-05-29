@@ -27,7 +27,36 @@ pnpm check
 pnpm build
 ```
 
-### Docker Compose stack (bundled SeaweedFS)
+### `waxlens-validate` / `waxlens` を system-wide で呼ぶ
+
+```sh
+# dist/ を最新に
+pnpm build
+# waxlens-validate
+pnpm --dir packages/core add -g .
+# waxlens
+pnpm --dir packages/tui add -g .
+```
+
+登録後は monorepo の外でも waxlens 直下でも、bin 名だけで呼べる:
+
+```sh
+# Local file
+waxlens-validate samples/wikipedia.wacz
+waxlens samples/wikipedia.wacz
+
+# S3 (AWS credential chain で解決)
+waxlens-validate s3://my-bucket/captures/abc.wacz
+waxlens s3://my-bucket/captures/abc.wacz
+```
+
+元に戻すときは `pnpm remove -g @waxlens/core @waxlens/tui`。
+
+### 新しい rule を追加する
+
+[`docs/rules.md` → "新しい rule を追加する"](docs/rules.md) を参照。
+
+## Docker Compose stack (bundled SeaweedFS)
 
 `waxlens-validate s3://...` を試したい場合は、bundled SeaweedFS を含む
 compose stack を使う。**chromium-server や BrowserHive は含まない** ので、
@@ -62,34 +91,6 @@ docker compose -f compose.prod.yaml down
 bundled SeaweedFS 専用の構成で、AWS / R2 / 他の S3 互換 service への
 切り替えは現状想定していない。
 
-### `waxlens-validate` / `waxlens` を system-wide で呼ぶ
-
-```sh
-# dist/ を最新に
-pnpm build
-# waxlens-validate
-pnpm --dir packages/core add -g .
-# waxlens
-pnpm --dir packages/tui add -g .
-```
-
-登録後は monorepo の外でも waxlens 直下でも、bin 名だけで呼べる:
-
-```sh
-# Local file
-waxlens-validate samples/wikipedia.wacz
-waxlens samples/wikipedia.wacz
-
-# S3 (AWS credential chain で解決)
-waxlens-validate s3://my-bucket/captures/abc.wacz
-waxlens s3://my-bucket/captures/abc.wacz
-```
-
-元に戻すときは `pnpm remove -g @waxlens/core @waxlens/tui`。
-
-### 新しい rule を追加する
-
-[`docs/rules.md` → "新しい rule を追加する"](docs/rules.md) を参照。
 
 ## License
 
