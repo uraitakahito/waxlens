@@ -54,8 +54,6 @@ export const runValidation = async (
   const startedAt = Date.now();
   const profile: RuleProfile = opts.profile ?? DEFAULT_PROFILE;
 
-  // 実行前に `excludeProfiles` で rule をフィルタしておく。skip 対象の
-  // rule は zip entry の読み込みすら走らせない。
   const activeRules = opts.rules.filter(
     (rule) => !rule.applicability?.excludeProfiles?.includes(profile),
   );
