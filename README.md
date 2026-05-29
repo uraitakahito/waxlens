@@ -16,6 +16,17 @@
 - [`docs/json-schema.md`](docs/json-schema.md) — `WaxlensReport`
   (`--json` 出力) の wire format
 
+package 個別の詳細:
+
+- [`packages/core/README.md`](packages/core/README.md) —
+  `waxlens-validate` CLI の使い方 (local / `s3://`)、exit code、
+  profile (`spec` / `browserhive` / `lenient`)、環境変数、
+  library としての import 例
+- [`packages/tui/README.md`](packages/tui/README.md) —
+  `waxlens` CLI のフラグ、TUI モードのキーバインド、
+  plain-text fallback の挙動、Webrecorder 公開 example archive での
+  動作確認手順
+
 ## 開発
 
 ```sh
