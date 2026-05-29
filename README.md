@@ -67,27 +67,6 @@ waxlens s3://my-bucket/captures/abc.wacz
 
 [`docs/rules.md` → "新しい rule を追加する"](docs/rules.md) を参照。
 
-### VSCode で step-debug する
-
-`.vscode/launch.sample.json` と `.vscode/tasks.sample.json` が
-build → node → debugger の chain を組んだ template。
-clone 直後に各自 materialize する:
-
-```sh
-cp .vscode/launch.sample.json .vscode/launch.json
-cp .vscode/tasks.sample.json  .vscode/tasks.json
-```
-
-あとは `packages/*/src/` の TS 側に breakpoint を貼って `F5`、
-起動構成 (`A: waxlens-validate (built dist)` または
-`A: waxlens TUI plain (built dist)`) を選び、prompt に WACZ
-path / `s3://` URI を入れる。`pnpm --filter` build が走った後に
-`node` が `dist/cli.js` を起動し、sourcemap 経由で TS 側の
-breakpoint で停まる。
-
-サンプル WACZ の入手は [`packages/core/README.md`](packages/core/README.md)
-の "## CLI: waxlens-validate" 節を参照。
-
 ## Docker Compose stack (bundled SeaweedFS)
 
 `waxlens-validate s3://...` を試したい場合は、bundled SeaweedFS を含む
