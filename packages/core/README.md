@@ -8,6 +8,20 @@ WACZ validation engine。machine-readable な JSON report を stdout に出力�
 
 ## CLI: `waxlens-validate`
 
+サンプル WACZ で試したい場合は Webrecorder 公開の
+[`webrecorder/example-webarchive`](https://github.com/webrecorder/example-webarchive)
+から小さい archive を取得できる:
+
+```sh
+mkdir -p /tmp/waxlens-demo
+curl -sL \
+  https://raw.githubusercontent.com/webrecorder/example-webarchive/main/items/wikipedia/archive.wacz \
+  -o /tmp/waxlens-demo/wikipedia.wacz
+```
+
+以降の例の `<path>` はこの `/tmp/waxlens-demo/wikipedia.wacz` に
+読み替えると動かせる:
+
 ```sh
 # Local file
 waxlens-validate <path>
