@@ -49,55 +49,56 @@ export type RuleProfile = (typeof ALL_PROFILES)[number];
  * — ある producer の慣習を離れると意味を持たない check で使う)。
  */
 export interface RuleApplicability {
-  /** Per-profile severity override. Omitted profile falls back to `ValidationRule.severity`. */
+  /** profile 別の severity override。指定なしの profile は `ValidationRule.severity` に fallback する。 */
   severityByProfile?: Partial<Record<RuleProfile, Severity>>;
-  /** Profiles where the rule is skipped entirely (no issues emitted). */
+  /** その profile で rule を完全に skip する (issue を 1 件も出さない)。 */
   excludeProfiles?: readonly RuleProfile[];
 }
 
 export interface IssueLocation {
-  /** zip entry name where the problem was found, when applicable. */
+  /** 問題が見つかった zip entry 名 (該当する場合)。 */
   entry?: string;
-  /** 1-based line number inside a text entry (CDXJ, pages.jsonl). */
+  /** text entry (CDXJ、pages.jsonl) 内の 1-based 行番号。 */
   line?: number;
-  /** Byte offset inside a binary entry (WARC). */
+  /** binary entry (WARC) 内の byte offset。 */
   offset?: number;
 }
 
 export interface Issue {
   /**
-   * Stable rule identifier in `<area>/<short-name>` form. Used by the
-   * future `--rule` filter and by humans grepping logs. Never
-   * localised; never reformatted across versions.
+   * `<area>/<short-name>` 形式の安定した rule identifier。 将来の
+   * `--rule` filter や log を grep する人が使う。localise しない;
+   * version 間で書式を変えない。
    */
   rule: string;
   severity: Severity;
-  /** One-line human summary. The renderer may colour by severity. */
+  /** 1 行の human-readable な要約。renderer は severity に応じて色付けしてもよい。 */
   message: string;
   location?: IssueLocation;
   /**
-   * Structured payload the renderer can expand on demand. Keep
-   * JSON-serialisable (numbers, strings, plain objects, arrays). The TUI
-   * (M2+) renders this for the "expand" key; the JSON renderer round-trips.
+   * renderer が必要に応じて expand できる structured payload。
+   * JSON-serialisable に保つ (number、string、plain object、array)。
+   * TUI (M2+) は "expand" キーでこれを描画し、JSON renderer は
+   * そのまま round-trip する。
    */
   details?: unknown;
 }
 
 export interface ValidationRule {
-  /** Same value that ends up in `Issue.rule`. */
+  /** `Issue.rule` に入るのと同じ値。 */
   name: string;
-  /** One-sentence rationale. Surfaced by `--help` and docs/rules.md. */
+  /** 1 文での rationale。`--help` と docs/rules.md に出る。 */
   description: string;
   /**
-   * Baseline severity, used when no profile-specific override applies.
-   * The engine still routes this through profile logic: a rule with
-   * baseline `error` can be demoted to `warning` under the `lenient`
-   * profile via `applicability.severityByProfile`.
+   * baseline の severity。profile 固有の override が無いときに使う。
+   * profile 固有の override が無くても engine は profile logic を通すので、
+   * baseline `error` の rule は `lenient` profile 下で
+   * `applicability.severityByProfile` 経由で `warning` に降格しうる。
    */
   severity: Severity;
   /**
-   * Per-profile overrides. Omitted = the rule applies in every profile
-   * at its baseline severity.
+   * profile 別の override。省略時は、rule が全 profile で baseline
+   * severity のまま適用される。
    */
   applicability?: RuleApplicability;
   run: (wacz: WaczReader) => Promise<Result<Issue[], never>>;
@@ -119,11 +120,11 @@ export interface ReportSummary {
  * ために report を block することはしない。
  */
 export interface ReportStats {
-  /** Number of independent gzip members the WARC iterator yielded. */
+  /** WARC iterator が yield した独立 gzip member 数。 */
   warcRecordCount: number;
-  /** Byte length of `archive/data.warc.gz` (zip-uncompressed). */
+  /** `archive/data.warc.gz` の byte 長 (zip 解凍後)。 */
   warcArchiveBytes: number;
-  /** Distinct hosts mentioned in CDXJ entries' `url` field. */
+  /** CDXJ entry の `url` field に現れる distinct な host。 */
   hosts: string[];
 }
 
@@ -171,14 +172,14 @@ export type ReportSource =
 
 export interface Report {
   waxlensVersion: string;
-  /** Rule profile used to evaluate the report. See {@link RuleProfile}. */
+  /** report を評価する際に使った rule profile。{@link RuleProfile} を参照。 */
   profile: RuleProfile;
-  /** Identity of the validated WACZ. See {@link ReportSource}. */
+  /** validate された WACZ の identity。{@link ReportSource} を参照。 */
   source: ReportSource;
-  /** `true` iff `summary.failed === 0`. Cached so the JSON consumer doesn't recompute. */
+  /** `summary.failed === 0` のときだけ `true`。JSON consumer が再計算しなくていいように cache してある。 */
   valid: boolean;
   summary: ReportSummary;
   issues: Issue[];
-  /** Best-effort metadata — see {@link ReportStats}. */
+  /** best-effort な metadata — {@link ReportStats} を参照。 */
   stats?: ReportStats;
 }
