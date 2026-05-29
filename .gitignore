@@ -149,3 +149,6 @@ vite.config.ts.timestamp-*
 # These are large, third-party-hosted blobs we don't want to commit; the README
 # documents how to fetch them on demand.
 samples/
+
+.vscode/*
+!.vscode/*.sample.json

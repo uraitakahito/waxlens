@@ -1,0 +1,85 @@
+{
+  "recommendations": [
+    //
+    // AWS
+    //
+    // https://marketplace.visualstudio.com/items?itemName=AmazonWebServices.aws-toolkit-vscode
+    "AmazonWebServices.aws-toolkit-vscode",
+
+    //
+    // Git & GitHub
+    //
+    // https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens
+    "eamodio.gitlens",
+    // https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat
+    "GitHub.copilot-chat",
+    // https://marketplace.visualstudio.com/items?itemName=GitHub.vscode-github-actions
+    "GitHub.vscode-github-actions",
+
+    //
+    // JSON
+    //
+    // https://marketplace.visualstudio.com/items?itemName=remcohaszing.schemastore
+    "remcohaszing.schemastore",
+
+    //
+    // Mermaid
+    //
+    // https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid
+    "bierner.markdown-mermaid",
+    // https://marketplace.visualstudio.com/items?itemName=bpruitt-goddard.mermaid-markdown-syntax-highlighting
+    "bpruitt-goddard.mermaid-markdown-syntax-highlighting",
+
+    //
+    // YAML
+    //
+    // https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml
+    "redhat.vscode-yaml",
+
+    //
+    // HTML
+    //
+    // https://marketplace.visualstudio.com/items?itemName=anteprimorac.html-end-tag-labels
+    "anteprimorac.html-end-tag-labels",
+    // https://marketplace.visualstudio.com/items?itemName=formulahendry.auto-rename-tag
+    "formulahendry.auto-rename-tag",
+
+    //
+    // OpenFGA
+    //
+    // https://marketplace.visualstudio.com/items?itemName=openfga.openfga-vscode
+    "openfga.openfga-vscode",
+
+    //
+    // Linter & Formatter
+    //
+    // https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint
+    "dbaeumer.vscode-eslint",
+    // https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode
+    "esbenp.prettier-vscode",
+    // https://marketplace.visualstudio.com/items?itemName=exiasr.hadolint
+    "exiasr.hadolint",
+
+    //
+    // TypeScript
+    //
+    // https://marketplace.visualstudio.com/items?itemName=yoavbls.pretty-ts-errors
+    "yoavbls.pretty-ts-errors",
+
+    //
+    // Others
+    //
+    // https://marketplace.visualstudio.com/items?itemName=dbankier.vscode-quick-select
+    "dbankier.vscode-quick-select",
+    // https://marketplace.visualstudio.com/items?itemName=GitHub.vscode-pull-request-github
+    "GitHub.vscode-pull-request-github",
+    // https://marketplace.visualstudio.com/items?itemName=orsenkucher.vscode-graphql
+    "orsenkucher.vscode-graphql",
+    // https://marketplace.visualstudio.com/items?itemName=statelyai.stately-vscode
+    "statelyai.stately-vscode",
+    // https://marketplace.visualstudio.com/items?itemName=timonwong.shellcheck
+    "timonwong.shellcheck",
+    // https://marketplace.visualstudio.com/items?itemName=usernamehw.errorlens
+    "usernamehw.errorlens",
+  ]
+}
