@@ -1,13 +1,26 @@
 # @waxlens/core
 
-WACZ validation engine。machine-readable な JSON report を stdout に出力する。rule は WACZ spec と [wabac.js](https://github.com/webrecorder/wabac.js) replay engine の
-実際の loader 挙動から導出されており、既知 producer に対するより厳しい check 用に producer 固有 profile も任意で選べる。
+WACZ validation engine。machine-readable な JSON report を stdout に出力する。rule は WACZ spec と [wabac.js](https://github.com/webrecorder/wabac.js) replay engine の実際の loader 挙動から導出されており、既知 producer に対するより厳しい check 用に producer 固有 profile も任意で選べる。
 
 この engine の上で動く interactive な terminal UI が必要なら
 [`@waxlens/tui`](https://github.com/uraitakahito/waxlens/tree/main/packages/tui)
 を使う。
 
 ## CLI: `waxlens-validate`
+
+サンプル WACZ で試したい場合は Webrecorder 公開の
+[`webrecorder/example-webarchive`](https://github.com/webrecorder/example-webarchive)
+から小さい archive を取得できる:
+
+```sh
+mkdir -p /tmp/waxlens-demo
+curl -sL \
+  https://raw.githubusercontent.com/webrecorder/example-webarchive/main/items/wikipedia/archive.wacz \
+  -o /tmp/waxlens-demo/wikipedia.wacz
+```
+
+以降の例の `<path>` はこの `/tmp/waxlens-demo/wikipedia.wacz` に
+読み替えると動かせる:
 
 ```sh
 # Local file
