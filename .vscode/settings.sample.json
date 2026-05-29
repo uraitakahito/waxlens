@@ -1,0 +1,101 @@
+// Settings file locations
+// Depending on your platform, the user settings file is located here:
+//   Windows %APPDATA%\Code\User\settings.json
+//   macOS $HOME/Library/Application\ Support/Code/User/settings.json
+//   Linux $HOME/.config/Code/User/settings.json
+{
+  //
+  // Basic Editing
+  //
+  // https://code.visualstudio.com/docs/editor/codebasics#_how-do-i-turn-on-word-wrap
+  "editor.wordWrap": "on",
+
+  //
+  // JSON/JSONC
+  //
+  "[json]": {
+    "editor.detectIndentation": true,
+    "editor.formatOnPaste": false,
+    "editor.formatOnSave": false,
+    "editor.formatOnType": false
+  },
+  "[jsonc]": {
+    "editor.detectIndentation": true,
+    "editor.formatOnPaste": false,
+    "editor.formatOnSave": false,
+    "editor.formatOnType": false
+  },
+
+  // Use the workspace-installed TypeScript for IntelliSense.
+  // https://code.visualstudio.com/docs/typescript/typescript-compiling#_using-newer-typescript-versions
+  "js/ts.tsdk.path": "./node_modules/typescript/lib",
+
+  // https://code.visualstudio.com/docs/typescript/typescript-editing
+  "js/ts.implementationsCodeLens.enabled": true,
+  "js/ts.referencesCodeLens.enabled": true,
+  "js/ts.suggest.autoImports": true,
+
+  //
+  // ESLint
+  //
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+  // https://stackoverflow.com/a/71884347
+  "eslint.format.enable": true,
+
+  "[javascript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+    "editor.formatOnSave": true
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+    "editor.formatOnSave": true
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+    "editor.formatOnSave": true
+  },
+
+  //
+  // AWS Toolkit
+  //
+  // ---------------------------------------------------------------------------
+  // YAML (redhat.vscode-yaml) を SAM / CloudFormation テンプレート向けに設定
+  // ---------------------------------------------------------------------------
+
+  // CloudFormation の組み込み関数ショートハンド (!Sub / !Ref / !GetAtt 等) を
+  // YAML パーサに「既知のタグ」として登録する。
+  // 未登録だと "Unresolved tag: !Sub" のような警告が出る。
+  // 同名タグでもスカラー値と配列値で別物扱いされるため、配列形式を使う関数は
+  // "!Xxx" と "!Xxx sequence" の両方を登録する。
+  "yaml.customTags": [
+    "!And", "!And sequence",
+    "!If", "!If sequence",
+    "!Not", "!Not sequence",
+    "!Equals", "!Equals sequence",
+    "!Or", "!Or sequence",
+    "!FindInMap", "!FindInMap sequence",
+    "!Base64", "!Cidr",
+    "!Ref", "!Sub", "!Sub sequence",
+    "!GetAtt", "!GetAZs",
+    "!ImportValue", "!ImportValue sequence",
+    "!Select", "!Select sequence",
+    "!Split", "!Split sequence",
+    "!Join", "!Join sequence",
+    "!Transform"
+  ],
+
+  // template.yaml / template.yml に SAM 公式スキーマを紐付ける。
+  // これにより AWS::Serverless::Function 配下の Runtime / Handler / CodeUri など
+  // のプロパティが補完・型検証される。
+  "yaml.schemas": {
+    "https://raw.githubusercontent.com/aws/serverless-application-model/main/samtranslator/schema/schema.json": [
+      "template.yaml",
+      "template.yml"
+    ]
+  }
+}

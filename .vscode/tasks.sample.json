@@ -1,0 +1,29 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "pnpm: build @waxlens/core",
+      "type": "shell",
+      "command": "pnpm --filter @waxlens/core build",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": ["$tsc"],
+      "presentation": {
+        "reveal": "silent",
+        "clear": true,
+        "close": true
+      }
+    },
+    {
+      "label": "pnpm: build @waxlens/tui",
+      "type": "shell",
+      "command": "pnpm --filter @waxlens/tui build",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": ["$tsc"],
+      "presentation": {
+        "reveal": "silent",
+        "clear": true,
+        "close": true
+      }
+    }
+  ]
+}
