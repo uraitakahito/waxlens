@@ -29,6 +29,7 @@ import {
   DEFAULT_PROFILE,
   DEFAULT_RULES,
   exitCodeFor,
+  formatParseSourceError,
   parseReportSource,
   runValidation,
   WaczReader,
@@ -119,10 +120,20 @@ async function dispatch(outcome: CliOutcome, opts: CliOptions): Promise<void> {
 }
 
 async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome> {
+  const sourceResult = parseReportSource(filePath);
+  if (!sourceResult.ok) {
+    return {
+      kind: "openFailed",
+      filePath,
+      cause: new Error(formatParseSourceError(sourceResult.error)),
+    };
+  }
+
   let reader: WaczReader;
   try {
-    const source = parseReportSource(filePath);
-    reader = await WaczReader.open(source, { s3Client: buildS3ClientFromEnv() });
+    reader = await WaczReader.open(sourceResult.value, {
+      s3Client: buildS3ClientFromEnv(),
+    });
   } catch (cause) {
     return { kind: "openFailed", filePath, cause };
   }

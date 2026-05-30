@@ -17,6 +17,7 @@ export type {
   AbsolutePath,
   Issue,
   IssueLocation,
+  ParseSourceError,
   Report,
   ReportSource,
   ReportStats,
@@ -29,6 +30,7 @@ export type {
 } from "./validate/types.js";
 export {
   ALL_PROFILES,
+  formatParseSourceError,
   parseAbsolutePath,
   parseReportSource,
   parseS3Uri,
