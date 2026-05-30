@@ -151,13 +151,6 @@ export type ParseSourceError =
   | { kind: "invalid-s3-uri"; raw: string }
   | { kind: "not-absolute-path"; raw: string };
 
-/**
- * raw な string を絶対 path に正規化してから `AbsolutePath` brand 型に
- * 持ち上げる。 `resolvePath` (node:path の resolve) は任意 string を
- * 必ず絶対 path に変換するので、 通常入力で err variant は実質
- * 発生しない (resolvePath が想定外の戻り値を返した場合のみ発火する
- * safety net)。 しかし型 level の不変条件として残す。
- */
 export const parseAbsolutePath = (
   raw: string,
 ): Result<AbsolutePath, ParseSourceError> => {
