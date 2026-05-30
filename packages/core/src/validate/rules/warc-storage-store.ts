@@ -26,7 +26,7 @@
  */
 import { ok } from "../../result.js";
 import { ZIP_COMPRESSION_STORE } from "../../wacz/reader.js";
-import type { Issue, ValidationRule } from "../types.js";
+import type { Issue, ValidationRule } from "../domain.js";
 
 const WARC_ENTRY = "archive/data.warc.gz";
 

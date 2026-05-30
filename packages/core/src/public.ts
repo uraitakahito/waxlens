@@ -27,7 +27,7 @@ export type {
   S3Uri,
   Severity,
   ValidationRule,
-} from "./validate/types.js";
+} from "./validate/domain.js";
 export {
   ALL_PROFILES,
   formatParseSourceError,
@@ -35,7 +35,7 @@ export {
   parseReportSource,
   parseS3Uri,
   s3UriToBucketKey,
-} from "./validate/types.js";
+} from "./validate/domain.js";
 // CLI outcome は @waxlens/tui の bin (`waxlens`) が core の bin
 // (`waxlens-validate`) と同じ exit-code mapping を再利用するために
 // public surface に置く。純型 + 純関数なので runtime コストは無く、

@@ -14,7 +14,7 @@
  *       設定されているときに emit する。
  */
 import { ok } from "../../result.js";
-import type { Issue, ValidationRule } from "../types.js";
+import type { Issue, ValidationRule } from "../domain.js";
 
 const FUZZY_ENTRY = "fuzzy.json";
 

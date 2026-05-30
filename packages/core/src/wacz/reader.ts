@@ -24,7 +24,7 @@ import {
 import {
   s3UriToBucketKey,
   type ReportSource,
-} from "../validate/types.js";
+} from "../validate/domain.js";
 import { S3RangeReader } from "./s3-range-reader.js";
 
 /**

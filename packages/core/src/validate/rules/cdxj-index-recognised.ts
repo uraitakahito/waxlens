@@ -29,7 +29,7 @@
  * index は producer に依存せず replay-breaking なバグだから。
  */
 import { ok } from "../../result.js";
-import type { Issue, ValidationRule } from "../types.js";
+import type { Issue, ValidationRule } from "../domain.js";
 
 const INDEXES_PREFIX = "indexes/";
 const ACCEPTED_SUFFIXES = [".cdx", ".cdxj", ".idx"] as const;

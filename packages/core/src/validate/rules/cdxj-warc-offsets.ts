@@ -34,7 +34,7 @@ import {
   iterateWarcMembers,
   type WarcMember,
 } from "../../wacz/warc-iter.js";
-import type { Issue, ValidationRule } from "../types.js";
+import type { Issue, ValidationRule } from "../domain.js";
 
 const CDXJ_ENTRY = "indexes/index.cdxj";
 const WARC_ENTRY = "archive/data.warc.gz";

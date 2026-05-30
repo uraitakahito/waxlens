@@ -19,7 +19,7 @@
  * outcome を組み立てるだけにする。これによって bin 名 prefix の差
  * (`waxlens-validate:` vs `waxlens:`) が共有モジュールに漏れない。
  */
-import type { Report } from "./validate/types.js";
+import type { Report } from "./validate/domain.js";
 
 export type CliOutcome =
   | { kind: "valid"; report: Report }

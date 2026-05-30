@@ -17,12 +17,12 @@ import { exitCodeFor, type CliOutcome } from "./cli-outcome.js";
 import { renderJson } from "./render/json.js";
 import { DEFAULT_PROFILE, runValidation } from "./validate/engine.js";
 import { DEFAULT_RULES } from "./validate/rules/index.js";
-import type { RuleProfile } from "./validate/types.js";
+import type { RuleProfile } from "./validate/domain.js";
 import {
   ALL_PROFILES,
   formatParseSourceError,
   parseReportSource,
-} from "./validate/types.js";
+} from "./validate/domain.js";
 import { buildS3ClientFromEnv } from "./wacz/s3-client-factory.js";
 import { WaczReader } from "./wacz/reader.js";
 

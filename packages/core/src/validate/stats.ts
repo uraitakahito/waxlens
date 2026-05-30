@@ -15,7 +15,7 @@
 import { parseCdxj } from "../wacz/cdxj-parser.js";
 import type { WaczReader } from "../wacz/reader.js";
 import { iterateWarcMembers } from "../wacz/warc-iter.js";
-import type { ReportStats } from "./types.js";
+import type { ReportStats } from "./domain.js";
 
 const WARC_ENTRY = "archive/data.warc.gz";
 const CDXJ_ENTRY = "indexes/index.cdxj";

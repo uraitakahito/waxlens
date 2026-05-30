@@ -9,6 +9,6 @@
  * 決定性が重要だが、engine は rule 登録順で issue を出力し、ここでは
  * 単純な `JSON.stringify` を使うので、バイト単位で再現可能。
  */
-import type { Report } from "../validate/types.js";
+import type { Report } from "../validate/domain.js";
 
 export const renderJson = (report: Report): string => `${JSON.stringify(report, null, 2)}\n`;

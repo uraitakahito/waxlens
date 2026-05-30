@@ -23,7 +23,7 @@ import { mockClient } from "aws-sdk-client-mock";
 import { beforeEach, describe, expect, it } from "vitest";
 import { runValidation } from "../src/validate/engine.js";
 import { DEFAULT_RULES } from "../src/validate/rules/index.js";
-import { parseS3Uri } from "../src/validate/types.js";
+import { parseS3Uri } from "../src/validate/domain.js";
 import { WaczReader } from "../src/wacz/reader.js";
 import { buildWacz } from "./fixtures/generator.js";
 

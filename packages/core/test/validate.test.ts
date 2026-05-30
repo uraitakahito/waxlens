@@ -17,7 +17,7 @@ import {
   parseReportSource,
   type Report,
   type RuleProfile,
-} from "../src/validate/types.js";
+} from "../src/validate/domain.js";
 import { WaczReader } from "../src/wacz/reader.js";
 import { buildWacz, type FixtureOptions } from "./fixtures/generator.js";
 

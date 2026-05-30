@@ -23,7 +23,7 @@
  */
 import { ok } from "../../result.js";
 import { WarcMemberDecodeError, iterateWarcMembers } from "../../wacz/warc-iter.js";
-import type { Issue, ValidationRule } from "../types.js";
+import type { Issue, ValidationRule } from "../domain.js";
 
 const WARC_ENTRY = "archive/data.warc.gz";
 

@@ -1,5 +1,5 @@
 /**
- * `validate/types.ts` の brand 型 / parser 群のテスト。
+ * `validate/domain.ts` の brand 型 / parser 群のテスト。
  *
  * 既存 brand 型 (`parseAbsolutePath` / `parseS3Uri`) は他テストで間接的に
  * 経由していたが、 集約 helper である `parseReportSource` の追加に
@@ -8,7 +8,7 @@
  * を assertion でカバーする。
  */
 import { describe, expect, it } from "vitest";
-import { parseReportSource } from "../src/validate/types.js";
+import { parseReportSource } from "../src/validate/domain.js";
 
 describe("parseReportSource", () => {
   it("absolute file path → ok({ kind: 'file', path はそのまま })", () => {
