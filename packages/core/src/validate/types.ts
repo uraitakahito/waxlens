@@ -18,7 +18,7 @@
  *     としては "serialise 可能なら何でも"。
  */
 import { isAbsolute, resolve as resolvePath } from "node:path";
-import type { Result } from "../result.js";
+import { err, ok, type Result } from "../result.js";
 import type { WaczReader } from "../wacz/reader.js";
 
 export type Severity = "error" | "warning" | "info";
@@ -141,18 +141,31 @@ declare const AbsolutePathBrand: unique symbol;
 export type AbsolutePath = string & { readonly [AbsolutePathBrand]: true };
 
 /**
+ * parseReportSource / parseAbsolutePath / parseS3Uri が err variant
+ * として返す失敗の集合。 caller (cli.ts) は kind で switch して
+ * 種別ごとに message を組み立てる。 新しい transport (例: HTTP) を
+ * 加えるときは ここに variant を 1 つ追加し、 formatParseSourceError
+ * の switch が網羅性 chk で未対応に倒れる仕組みを利用する。
+ */
+export type ParseSourceError =
+  | { kind: "invalid-s3-uri"; raw: string }
+  | { kind: "not-absolute-path"; raw: string };
+
+/**
  * raw な string を絶対 path に正規化してから `AbsolutePath` brand 型に
  * 持ち上げる。 `resolvePath` (node:path の resolve) は任意 string を
- * 必ず絶対 path に変換するので、 通常入力に対する `isAbsolute` check は
- * "absolute" 不変条件を 1 関数の中で完結させるための safety net として
- * 機能する (resolvePath が想定外の戻り値を返した場合のみ発火する)。
+ * 必ず絶対 path に変換するので、 通常入力で err variant は実質
+ * 発生しない (resolvePath が想定外の戻り値を返した場合のみ発火する
+ * safety net)。 しかし型 level の不変条件として残す。
  */
-export const parseAbsolutePath = (raw: string): AbsolutePath => {
+export const parseAbsolutePath = (
+  raw: string,
+): Result<AbsolutePath, ParseSourceError> => {
   const absolute = resolvePath(raw);
   if (!isAbsolute(absolute)) {
-    throw new TypeError(`Expected absolute path, got: ${raw}`);
+    return err({ kind: "not-absolute-path", raw });
   }
-  return absolute as AbsolutePath;
+  return ok(absolute as AbsolutePath);
 };
 
 declare const S3UriBrand: unique symbol;
@@ -160,11 +173,11 @@ export type S3Uri = string & { readonly [S3UriBrand]: true };
 
 const S3_URI_RE = /^s3:\/\/([^/]+)\/(.+)$/;
 
-export const parseS3Uri = (raw: string): S3Uri => {
+export const parseS3Uri = (raw: string): Result<S3Uri, ParseSourceError> => {
   if (!S3_URI_RE.test(raw)) {
-    throw new TypeError(`Invalid s3:// URI: ${raw}`);
+    return err({ kind: "invalid-s3-uri", raw });
   }
-  return raw as S3Uri;
+  return ok(raw as S3Uri);
 };
 
 export const s3UriToBucketKey = (uri: S3Uri): { bucket: string; key: string } => {
@@ -181,16 +194,38 @@ export type ReportSource =
 /**
  * raw な string (CLI argv / config 値) を `ReportSource` に正規化する。
  * `s3://` で始まれば s3 transport、 そうでなければ file transport
- * として扱う。 brand 型 (`parseAbsolutePath` / `parseS3Uri`) を経由する
- * ので、 malformed な入力はここで `TypeError` に変換される。 caller
- * 側で transport 別の分岐を持つ必要が無くなる (single source of
- * normalisation)。
+ * として扱う。 brand 型 (`parseAbsolutePath` / `parseS3Uri`) を経由
+ * するので、 malformed な入力はここで `err({ kind: ... })` として
+ * 返る (throw しない)。 caller 側で transport 別の分岐を持つ必要が
+ * 無くなる (single source of normalisation)。 失敗種別ごとに message
+ * を組み立てたいときは `formatParseSourceError` を使う。
  */
-export const parseReportSource = (raw: string): ReportSource => {
+export const parseReportSource = (
+  raw: string,
+): Result<ReportSource, ParseSourceError> => {
   if (raw.startsWith("s3://")) {
-    return { kind: "s3", uri: parseS3Uri(raw) };
+    const u = parseS3Uri(raw);
+    if (!u.ok) return u;
+    return ok({ kind: "s3", uri: u.value });
   }
-  return { kind: "file", path: parseAbsolutePath(raw) };
+  const p = parseAbsolutePath(raw);
+  if (!p.ok) return p;
+  return ok({ kind: "file", path: p.value });
+};
+
+/**
+ * `ParseSourceError` を 1 行 message に変換する。 cli.ts (core / tui
+ * 両方) が `CliOutcome.openFailed` の cause 用に呼ぶ。 switch が
+ * exhaustive chk を発火するので、 `ParseSourceError` union に variant
+ * を加えると ここで compile error が出て対応漏れを catch できる。
+ */
+export const formatParseSourceError = (e: ParseSourceError): string => {
+  switch (e.kind) {
+    case "invalid-s3-uri":
+      return `invalid s3:// URI: ${e.raw}`;
+    case "not-absolute-path":
+      return `expected absolute path, got: ${e.raw}`;
+  }
 };
 
 export interface Report {

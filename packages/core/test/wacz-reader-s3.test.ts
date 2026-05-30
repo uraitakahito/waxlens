@@ -58,7 +58,9 @@ describe("WaczReader.open (s3 transport)", () => {
       };
     });
 
-    const uri = parseS3Uri("s3://test-bucket/fixture.wacz");
+    const uriResult = parseS3Uri("s3://test-bucket/fixture.wacz");
+    if (!uriResult.ok) throw new Error("unreachable: test input is well-formed");
+    const uri = uriResult.value;
     const client = new S3Client({ region: "us-east-1" });
     const reader = await WaczReader.open({ kind: "s3", uri }, { s3Client: client });
     try {
@@ -84,14 +86,21 @@ describe("WaczReader.open (s3 transport)", () => {
     expect(s3Mock.commandCalls(GetObjectCommand).length).toBeGreaterThan(0);
   });
 
-  it("throws TypeError on malformed S3 URI before any network call", () => {
-    expect(() => parseS3Uri("not-an-s3-uri")).toThrow(TypeError);
+  it("returns err on malformed S3 URI before any network call", () => {
+    const r = parseS3Uri("not-an-s3-uri");
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.error.kind).toBe("invalid-s3-uri");
+      expect(r.error.raw).toBe("not-an-s3-uri");
+    }
     expect(s3Mock.calls().length).toBe(0);
   });
 
   it("propagates the error when S3 HeadObject lacks ContentLength", async () => {
-    s3Mock.on(HeadObjectCommand).resolves({});  // ContentLength なし
-    const uri = parseS3Uri("s3://test-bucket/bad.wacz");
+    s3Mock.on(HeadObjectCommand).resolves({}); // ContentLength なし
+    const uriResult = parseS3Uri("s3://test-bucket/bad.wacz");
+    if (!uriResult.ok) throw new Error("unreachable: test input is well-formed");
+    const uri = uriResult.value;
     const client = new S3Client({ region: "us-east-1" });
     await expect(
       WaczReader.open({ kind: "s3", uri }, { s3Client: client }),

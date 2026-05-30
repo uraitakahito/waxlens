@@ -18,7 +18,11 @@ import { renderJson } from "./render/json.js";
 import { DEFAULT_PROFILE, runValidation } from "./validate/engine.js";
 import { DEFAULT_RULES } from "./validate/rules/index.js";
 import type { RuleProfile } from "./validate/types.js";
-import { ALL_PROFILES, parseReportSource } from "./validate/types.js";
+import {
+  ALL_PROFILES,
+  formatParseSourceError,
+  parseReportSource,
+} from "./validate/types.js";
 import { buildS3ClientFromEnv } from "./wacz/s3-client-factory.js";
 import { WaczReader } from "./wacz/reader.js";
 
@@ -36,10 +40,20 @@ const parseProfile = (raw: string): RuleProfile => {
 };
 
 async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome> {
+  const sourceResult = parseReportSource(filePath);
+  if (!sourceResult.ok) {
+    return {
+      kind: "openFailed",
+      filePath,
+      cause: new Error(formatParseSourceError(sourceResult.error)),
+    };
+  }
+
   let reader: WaczReader;
   try {
-    const source = parseReportSource(filePath);
-    reader = await WaczReader.open(source, { s3Client: buildS3ClientFromEnv() });
+    reader = await WaczReader.open(sourceResult.value, {
+      s3Client: buildS3ClientFromEnv(),
+    });
   } catch (cause) {
     return { kind: "openFailed", filePath, cause };
   }

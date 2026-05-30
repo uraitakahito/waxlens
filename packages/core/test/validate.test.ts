@@ -30,7 +30,9 @@ const runAgainstFixture = async (
   const { bytes } = await buildWacz(options);
   const path = join(tmpDir, filename);
   await writeFile(path, bytes);
-  const reader = await WaczReader.open(parseReportSource(path));
+  const sourceResult = parseReportSource(path);
+  if (!sourceResult.ok) throw new Error("unreachable: test input is well-formed");
+  const reader = await WaczReader.open(sourceResult.value);
   try {
     const result = await runValidation(reader, {
       waxlensVersion: "0.0.0",
