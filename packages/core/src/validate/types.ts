@@ -191,15 +191,6 @@ export type ReportSource =
   | { kind: "file"; path: AbsolutePath }
   | { kind: "s3"; uri: S3Uri };
 
-/**
- * raw な string (CLI argv / config 値) を `ReportSource` に正規化する。
- * `s3://` で始まれば s3 transport、 そうでなければ file transport
- * として扱う。 brand 型 (`parseAbsolutePath` / `parseS3Uri`) を経由
- * するので、 malformed な入力はここで `err({ kind: ... })` として
- * 返る (throw しない)。 caller 側で transport 別の分岐を持つ必要が
- * 無くなる (single source of normalisation)。 失敗種別ごとに message
- * を組み立てたいときは `formatParseSourceError` を使う。
- */
 export const parseReportSource = (
   raw: string,
 ): Result<ReportSource, ParseSourceError> => {
