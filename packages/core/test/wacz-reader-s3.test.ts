@@ -1,5 +1,5 @@
 /**
- * `WaczReader.openFromS3` の end-to-end テスト。
+ * `WaczReader.open` (s3 transport) の end-to-end テスト。
  *
  * aws-sdk-client-mock で S3 を mock し、`buildWacz()` で生成した完全
  * な WACZ buffer を kosher な S3 object として serve する。
@@ -31,7 +31,7 @@ const s3Mock = mockClient(S3Client);
 
 const RANGE_RE = /^bytes=(\d+)-(\d+)$/;
 
-describe("WaczReader.openFromS3", () => {
+describe("WaczReader.open (s3 transport)", () => {
   beforeEach(() => {
     s3Mock.reset();
   });
@@ -60,7 +60,7 @@ describe("WaczReader.openFromS3", () => {
 
     const uri = parseS3Uri("s3://test-bucket/fixture.wacz");
     const client = new S3Client({ region: "us-east-1" });
-    const reader = await WaczReader.openFromS3(uri, client);
+    const reader = await WaczReader.open({ kind: "s3", uri }, { s3Client: client });
     try {
       expect(reader.source).toEqual({ kind: "s3", uri });
 
@@ -93,8 +93,8 @@ describe("WaczReader.openFromS3", () => {
     s3Mock.on(HeadObjectCommand).resolves({});  // ContentLength なし
     const uri = parseS3Uri("s3://test-bucket/bad.wacz");
     const client = new S3Client({ region: "us-east-1" });
-    await expect(WaczReader.openFromS3(uri, client)).rejects.toThrow(
-      /no ContentLength/,
-    );
+    await expect(
+      WaczReader.open({ kind: "s3", uri }, { s3Client: client }),
+    ).rejects.toThrow(/no ContentLength/);
   });
 });

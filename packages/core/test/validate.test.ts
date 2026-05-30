@@ -13,7 +13,11 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runValidation } from "../src/validate/engine.js";
 import { DEFAULT_RULES } from "../src/validate/rules/index.js";
-import type { Report, RuleProfile } from "../src/validate/types.js";
+import {
+  parseReportSource,
+  type Report,
+  type RuleProfile,
+} from "../src/validate/types.js";
 import { WaczReader } from "../src/wacz/reader.js";
 import { buildWacz, type FixtureOptions } from "./fixtures/generator.js";
 
@@ -26,7 +30,7 @@ const runAgainstFixture = async (
   const { bytes } = await buildWacz(options);
   const path = join(tmpDir, filename);
   await writeFile(path, bytes);
-  const reader = await WaczReader.open(path);
+  const reader = await WaczReader.open(parseReportSource(path));
   try {
     const result = await runValidation(reader, {
       waxlensVersion: "0.0.0",
