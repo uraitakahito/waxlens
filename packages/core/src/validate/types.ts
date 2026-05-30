@@ -17,7 +17,7 @@
  *     dump などを付ける。renderer は rule ごとに整形し、JSON schema
  *     としては "serialise 可能なら何でも"。
  */
-import { isAbsolute } from "node:path";
+import { isAbsolute, resolve as resolvePath } from "node:path";
 import type { Result } from "../result.js";
 import type { WaczReader } from "../wacz/reader.js";
 
@@ -169,6 +169,21 @@ export const s3UriToBucketKey = (uri: S3Uri): { bucket: string; key: string } =>
 export type ReportSource =
   | { kind: "file"; path: AbsolutePath }
   | { kind: "s3"; uri: S3Uri };
+
+/**
+ * raw な string (CLI argv / config 値) を `ReportSource` に正規化する。
+ * `s3://` で始まれば s3 transport、 そうでなければ file transport
+ * として扱う。 brand 型 (`asAbsolutePath` / `parseS3Uri`) を経由する
+ * ので、 malformed な入力はここで `TypeError` に変換される。 caller
+ * 側で transport 別の分岐を持つ必要が無くなる (single source of
+ * normalisation)。
+ */
+export const parseReportSource = (raw: string): ReportSource => {
+  if (raw.startsWith("s3://")) {
+    return { kind: "s3", uri: parseS3Uri(raw) };
+  }
+  return { kind: "file", path: asAbsolutePath(resolvePath(raw)) };
+};
 
 export interface Report {
   waxlensVersion: string;
