@@ -36,7 +36,7 @@ import type {
   RuleProfile,
   Severity,
   ValidationRule,
-} from "./types.js";
+} from "./domain.js";
 
 export interface RunOptions {
   waxlensVersion: string;

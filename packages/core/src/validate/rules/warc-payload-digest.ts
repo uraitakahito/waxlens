@@ -30,7 +30,7 @@ import { formatHexLines } from "../../render/hex.js";
 import { sha256Base32 } from "../../wacz/digest.js";
 import { getHeader, httpEntityBody, parseWarcRecord } from "../../wacz/warc-header.js";
 import { iterateWarcMembers } from "../../wacz/warc-iter.js";
-import type { Issue, ValidationRule } from "../types.js";
+import type { Issue, ValidationRule } from "../domain.js";
 
 const WARC_ENTRY = "archive/data.warc.gz";
 

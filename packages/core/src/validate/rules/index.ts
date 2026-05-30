@@ -9,7 +9,7 @@
  * 順に issue を辿るので、意味的にまとまった rule (datapackage/*、
  * cdxj/*、warc/*) を並べておくと読みやすい。
  */
-import type { ValidationRule } from "../types.js";
+import type { ValidationRule } from "../domain.js";
 import { cdxjFilenameRule } from "./cdxj-filename.js";
 import { cdxjIndexRecognisedRule } from "./cdxj-index-recognised.js";
 import { cdxjNonGzippedRule } from "./cdxj-non-gzipped.js";

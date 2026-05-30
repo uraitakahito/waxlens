@@ -15,7 +15,7 @@
  */
 import { ok } from "../../result.js";
 import { parseDatapackage } from "../../wacz/datapackage.js";
-import type { Issue, ValidationRule } from "../types.js";
+import type { Issue, ValidationRule } from "../domain.js";
 
 const DATAPACKAGE_ENTRY = "datapackage.json";
 const EXPECTED_PROFILE = "data-package";

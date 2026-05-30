@@ -21,7 +21,7 @@ import { ok } from "../../result.js";
 import { parseCdxj } from "../../wacz/cdxj-parser.js";
 import { parseDatapackage } from "../../wacz/datapackage.js";
 import { parsePagesJsonl } from "../../wacz/pages.js";
-import type { Issue, ValidationRule } from "../types.js";
+import type { Issue, ValidationRule } from "../domain.js";
 
 const DATAPACKAGE_ENTRY = "datapackage.json";
 const PAGES_ENTRY = "pages/pages.jsonl";

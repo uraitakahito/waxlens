@@ -27,7 +27,7 @@
  */
 import { ok } from "../../result.js";
 import { parseCdxj } from "../../wacz/cdxj-parser.js";
-import type { Issue, ValidationRule } from "../types.js";
+import type { Issue, ValidationRule } from "../domain.js";
 
 const CDXJ_ENTRY = "indexes/index.cdxj";
 

@@ -32,7 +32,7 @@
  *      (名前は正しいが content が gzip 済み)。これも producer バグ。
  */
 import { ok } from "../../result.js";
-import type { Issue, ValidationRule } from "../types.js";
+import type { Issue, ValidationRule } from "../domain.js";
 
 const EXPECTED_CDXJ = "indexes/index.cdxj";
 
