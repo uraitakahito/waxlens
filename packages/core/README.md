@@ -89,13 +89,15 @@ import {
   runValidation,
   WaczReader,
   DEFAULT_RULES,
-  parseS3Uri,
+  parseReportSource,
 } from "@waxlens/core";
 
-// Local file
-const reader = await WaczReader.open("/path/to/file.wacz");
-// または S3
-// const reader = await WaczReader.openFromS3(parseS3Uri("s3://bucket/key.wacz"));
+// Local file でも s3:// URI でも、`parseReportSource` が transport を
+// 判定して `ReportSource` を返す。`WaczReader.open` は `source.kind`
+// で内部 dispatch するので caller は分岐を持たなくてよい。
+const source = parseReportSource("/path/to/file.wacz");
+// または: parseReportSource("s3://bucket/key.wacz");
+const reader = await WaczReader.open(source);
 try {
   const result = await runValidation(reader, {
     waxlensVersion: "0.0.0",
@@ -110,6 +112,8 @@ try {
 
 `WaczReader.source` が `Report.source` の唯一の入力経路。`runValidation`
 は reader から自動で取るので caller が path を二度渡す必要はない。
+custom な `S3Client` を渡したい場合は
+`WaczReader.open(source, { s3Client: myClient })`。
 
 default export shape (`@waxlens/tui` が消費するもの一式) は
 `src/public.ts` にある。

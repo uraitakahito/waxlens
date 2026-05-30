@@ -11,7 +11,6 @@
  * `runValidation` は `Report.source` をここから取るので、caller は
  * runValidation に source を別途渡す必要がない (single source of truth)。
  */
-import { resolve as resolvePath } from "node:path";
 import {
   fromReader,
   open as openZip,
@@ -23,12 +22,18 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import {
-  asAbsolutePath,
   s3UriToBucketKey,
   type ReportSource,
-  type S3Uri,
 } from "../validate/types.js";
 import { S3RangeReader } from "./s3-range-reader.js";
+
+/**
+ * `WaczReader.open` の任意 option。 s3 transport 時の `S3Client`
+ * 注入のみが現状の用途。 file transport 時には無視される。
+ */
+export interface WaczOpenOptions {
+  s3Client?: S3Client;
+}
 
 /**
  * zip spec (PKWARE APPNOTE.TXT §4.4.5) の compression method 番号。
@@ -56,46 +61,56 @@ export class WaczReader {
   }
 
   /**
-   * ローカル file を開く。relative path も受け付け、`path.resolve()` で
-   * 絶対パスに canonicalize してから `source` に乗せる。
-   */
-  static async open(path: string): Promise<WaczReader> {
-    const absolute = asAbsolutePath(resolvePath(path));
-    const zip = await openZip(absolute);
-    const entries = new Map<string, Entry>();
-    for await (const entry of zip) {
-      entries.set(entry.filename, entry);
-    }
-    return new WaczReader(zip, entries, { kind: "file", path: absolute });
-  }
-
-  /**
-   * S3 上の WACZ を range GET で開く。`client` が省略された場合は
-   * default credential chain (env / shared config / IAM role) で
-   * `S3Client` を構築する。Caller が region / endpoint / credential を
-   * 細かく制御したい場合は事前に構築した `S3Client` を渡せばよい。
+   * `source.kind` で dispatch する unified factory。
    *
-   * `HeadObjectCommand` を 1 回先に発行して `ContentLength` を取る —
-   * yauzl-promise の `fromReader` は total size を引数で要求するため、
-   * S3 側に明示的に問い合わせる必要がある。
+   * - `kind: "file"` — `source.path` は `AbsolutePath` brand 済の
+   *   絶対パス。`yauzl-promise` の `open` をそのまま使う。
+   * - `kind: "s3"` — `HeadObjectCommand` で `ContentLength` を 1 回
+   *   先に取得し、`S3RangeReader` 経由で `fromReader` に渡す
+   *   (yauzl-promise の `fromReader` は total size 必須なので、
+   *   S3 側に明示的に問い合わせる手順)。`options.s3Client` が無ければ
+   *   default credential chain で構築する。
+   *
+   * raw な string (CLI argv 等) から開きたい場合は `parseReportSource`
+   * で `ReportSource` を組み立ててから渡す。
    */
-  static async openFromS3(uri: S3Uri, client?: S3Client): Promise<WaczReader> {
-    const c = client ?? new S3Client({});
-    const { bucket, key } = s3UriToBucketKey(uri);
+  static async open(
+    source: ReportSource,
+    options?: WaczOpenOptions,
+  ): Promise<WaczReader> {
+    if (source.kind === "file") {
+      const zip = await openZip(source.path);
+      return WaczReader.fromZipHandle(zip, source);
+    }
+    const c = options?.s3Client ?? new S3Client({});
+    const { bucket, key } = s3UriToBucketKey(source.uri);
     const head = await c.send(
       new HeadObjectCommand({ Bucket: bucket, Key: key }),
     );
     const size = head.ContentLength;
     if (size === undefined) {
-      throw new Error(`S3 HeadObject returned no ContentLength for ${uri}`);
+      throw new Error(`S3 HeadObject returned no ContentLength for ${source.uri}`);
     }
     const rangeReader = new S3RangeReader(c, bucket, key);
     const zip = await fromReader(rangeReader, size);
+    return WaczReader.fromZipHandle(zip, source);
+  }
+
+  /**
+   * 開いた `ZipFile` から entries map を作って `WaczReader` を組み立てる
+   * 共通処理。file / s3 の 2 path どちらでも、 zip handle 取得まで終われば
+   * あとは同じ手順 (zip の async iterator を 1 回 drain して filename →
+   * Entry の Map にする) になるので、ここに集約する。
+   */
+  private static async fromZipHandle(
+    zip: ZipFile,
+    source: ReportSource,
+  ): Promise<WaczReader> {
     const entries = new Map<string, Entry>();
     for await (const entry of zip) {
       entries.set(entry.filename, entry);
     }
-    return new WaczReader(zip, entries, { kind: "s3", uri });
+    return new WaczReader(zip, entries, source);
   }
 
   entryNames(): string[] {

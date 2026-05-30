@@ -30,6 +30,7 @@ export type {
 export {
   ALL_PROFILES,
   asAbsolutePath,
+  parseReportSource,
   parseS3Uri,
   s3UriToBucketKey,
 } from "./validate/types.js";

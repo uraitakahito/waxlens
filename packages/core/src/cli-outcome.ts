@@ -25,8 +25,9 @@ export type CliOutcome =
   | { kind: "valid"; report: Report }
   | { kind: "invalid"; report: Report }
   /**
-   * `WaczReader.open` が throw した。`cause` は型情報を持たない (Node の
-   * fs エラーは多形) ので `unknown` のまま運び、stderr formatter 側で
+   * `WaczReader.open(source)` が throw した。`cause` は型情報を持たない
+   * (Node の fs / aws-sdk のエラーは多形) ので `unknown` のまま運び、
+   * stderr formatter 側で
    * `error instanceof Error ? error.message : String(error)` する。
    */
   | { kind: "openFailed"; filePath: string; cause: unknown }

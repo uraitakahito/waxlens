@@ -29,7 +29,7 @@ import {
   DEFAULT_PROFILE,
   DEFAULT_RULES,
   exitCodeFor,
-  parseS3Uri,
+  parseReportSource,
   runValidation,
   WaczReader,
   type CliOutcome,
@@ -37,9 +37,6 @@ import {
   type RuleProfile,
 } from "@waxlens/core";
 import { renderPlain } from "./render/plain.js";
-
-/** scheme dispatch helper — `s3://` のみ remote として扱う。 */
-const isS3Uri = (input: string): boolean => input.startsWith("s3://");
 
 const here = dirname(fileURLToPath(import.meta.url));
 const manifestPath = join(here, "..", "package.json");
@@ -124,9 +121,8 @@ async function dispatch(outcome: CliOutcome, opts: CliOptions): Promise<void> {
 async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome> {
   let reader: WaczReader;
   try {
-    reader = isS3Uri(filePath)
-      ? await WaczReader.openFromS3(parseS3Uri(filePath), buildS3ClientFromEnv())
-      : await WaczReader.open(filePath);
+    const source = parseReportSource(filePath);
+    reader = await WaczReader.open(source, { s3Client: buildS3ClientFromEnv() });
   } catch (cause) {
     return { kind: "openFailed", filePath, cause };
   }

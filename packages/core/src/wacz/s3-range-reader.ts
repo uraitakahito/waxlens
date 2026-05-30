@@ -2,8 +2,8 @@
  * S3RangeReader
  *
  * yauzl-promise の `Reader` を実装し、S3 object を range GET で読む。
- * `WaczReader.openFromS3` がこの reader を `yauzl.fromReader` に渡す
- * ことで、S3 上の WACZ を local file と同じように parse できる。
+ * `WaczReader.open` の s3 branch がこの reader を `yauzl.fromReader`
+ * に渡すことで、S3 上の WACZ を local file と同じように parse できる。
  *
  * Memory 効率: yauzl が必要とする部分 (EOCD / Central Directory /
  * 各 entry の local header + data) だけを GET するので、WACZ 全体を
