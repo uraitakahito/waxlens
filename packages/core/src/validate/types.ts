@@ -151,13 +151,6 @@ export type ParseSourceError =
   | { kind: "invalid-s3-uri"; raw: string }
   | { kind: "not-absolute-path"; raw: string };
 
-/**
- * raw な string を絶対 path に正規化してから `AbsolutePath` brand 型に
- * 持ち上げる。 `resolvePath` (node:path の resolve) は任意 string を
- * 必ず絶対 path に変換するので、 通常入力で err variant は実質
- * 発生しない (resolvePath が想定外の戻り値を返した場合のみ発火する
- * safety net)。 しかし型 level の不変条件として残す。
- */
 export const parseAbsolutePath = (
   raw: string,
 ): Result<AbsolutePath, ParseSourceError> => {
@@ -191,15 +184,6 @@ export type ReportSource =
   | { kind: "file"; path: AbsolutePath }
   | { kind: "s3"; uri: S3Uri };
 
-/**
- * raw な string (CLI argv / config 値) を `ReportSource` に正規化する。
- * `s3://` で始まれば s3 transport、 そうでなければ file transport
- * として扱う。 brand 型 (`parseAbsolutePath` / `parseS3Uri`) を経由
- * するので、 malformed な入力はここで `err({ kind: ... })` として
- * 返る (throw しない)。 caller 側で transport 別の分岐を持つ必要が
- * 無くなる (single source of normalisation)。 失敗種別ごとに message
- * を組み立てたいときは `formatParseSourceError` を使う。
- */
 export const parseReportSource = (
   raw: string,
 ): Result<ReportSource, ParseSourceError> => {
