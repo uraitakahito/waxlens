@@ -140,11 +140,19 @@ export interface ReportStats {
 declare const AbsolutePathBrand: unique symbol;
 export type AbsolutePath = string & { readonly [AbsolutePathBrand]: true };
 
-export const asAbsolutePath = (raw: string): AbsolutePath => {
-  if (!isAbsolute(raw)) {
+/**
+ * raw な string を絶対 path に正規化してから `AbsolutePath` brand 型に
+ * 持ち上げる。 `resolvePath` (node:path の resolve) は任意 string を
+ * 必ず絶対 path に変換するので、 通常入力に対する `isAbsolute` check は
+ * "absolute" 不変条件を 1 関数の中で完結させるための safety net として
+ * 機能する (resolvePath が想定外の戻り値を返した場合のみ発火する)。
+ */
+export const parseAbsolutePath = (raw: string): AbsolutePath => {
+  const absolute = resolvePath(raw);
+  if (!isAbsolute(absolute)) {
     throw new TypeError(`Expected absolute path, got: ${raw}`);
   }
-  return raw as AbsolutePath;
+  return absolute as AbsolutePath;
 };
 
 declare const S3UriBrand: unique symbol;
@@ -173,7 +181,7 @@ export type ReportSource =
 /**
  * raw な string (CLI argv / config 値) を `ReportSource` に正規化する。
  * `s3://` で始まれば s3 transport、 そうでなければ file transport
- * として扱う。 brand 型 (`asAbsolutePath` / `parseS3Uri`) を経由する
+ * として扱う。 brand 型 (`parseAbsolutePath` / `parseS3Uri`) を経由する
  * ので、 malformed な入力はここで `TypeError` に変換される。 caller
  * 側で transport 別の分岐を持つ必要が無くなる (single source of
  * normalisation)。
@@ -182,7 +190,7 @@ export const parseReportSource = (raw: string): ReportSource => {
   if (raw.startsWith("s3://")) {
     return { kind: "s3", uri: parseS3Uri(raw) };
   }
-  return { kind: "file", path: asAbsolutePath(resolvePath(raw)) };
+  return { kind: "file", path: parseAbsolutePath(raw) };
 };
 
 export interface Report {

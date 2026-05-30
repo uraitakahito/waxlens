@@ -1,7 +1,7 @@
 /**
  * `validate/types.ts` の brand 型 / parser 群のテスト。
  *
- * 既存 brand 型 (`asAbsolutePath` / `parseS3Uri`) は他テストで間接的に
+ * 既存 brand 型 (`parseAbsolutePath` / `parseS3Uri`) は他テストで間接的に
  * 経由していたが、 集約 helper である `parseReportSource` の追加に
  * 合わせて、 transport 判定の正/誤入力 4 パターンを直接覆う。
  */
