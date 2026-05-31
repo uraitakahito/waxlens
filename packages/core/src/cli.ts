@@ -17,7 +17,7 @@ import { exitCodeFor, type CliOutcome } from "./cli-outcome.js";
 import { renderJson } from "./render/json.js";
 import { DEFAULT_PROFILE, runValidation } from "./validate/engine.js";
 import { DEFAULT_RULES } from "./validate/rules/index.js";
-import type { RuleProfile } from "./validate/domain.js";
+import type { ReportSource, RuleProfile } from "./validate/domain.js";
 import {
   ALL_PROFILES,
   formatParseSourceError,
@@ -39,6 +39,21 @@ const parseProfile = (raw: string): RuleProfile => {
   throw new InvalidArgumentError(`Unknown profile "${raw}". Valid: ${ALL_PROFILES.join(", ")}.`);
 };
 
+/**
+ * env (`buildS3ClientFromEnv`) を seam として 1 か所に集約した
+ * pre-bound な opener。 s3 source のときだけ `S3Client` を構築する
+ * ので、 file 入力時に S3 関連の構築コードは一切走らない。 caller
+ * (`runCli`) は transport を意識せず `openWacz(source)` を呼ぶ —
+ * domain layer は env / S3 を知らない構造になる (Composition Root
+ * pattern)。
+ */
+const openWacz = (source: ReportSource): Promise<WaczReader> => {
+  if (source.kind === "s3") {
+    return WaczReader.open(source, { s3Client: buildS3ClientFromEnv() });
+  }
+  return WaczReader.open(source);
+};
+
 async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome> {
   const sourceResult = parseReportSource(filePath);
   if (!sourceResult.ok) {
@@ -51,9 +66,7 @@ async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome> {
 
   let reader: WaczReader;
   try {
-    reader = await WaczReader.open(sourceResult.value, {
-      s3Client: buildS3ClientFromEnv(),
-    });
+    reader = await openWacz(sourceResult.value);
   } catch (cause) {
     return { kind: "openFailed", filePath, cause };
   }
