@@ -23,7 +23,6 @@ import {
   formatParseSourceError,
   parseReportSource,
 } from "./validate/domain.js";
-import { buildS3Client } from "./wacz/s3-client-factory.js";
 import { fileTransport, s3Transport } from "./wacz/transport.js";
 import { WaczReader } from "./wacz/reader.js";
 
@@ -55,7 +54,7 @@ const openWacz = (
 ): Promise<WaczReader> =>
   WaczReader.open(
     source.kind === "s3"
-      ? s3Transport(source.uri, buildS3Client(s3ForcePathStyle))
+      ? s3Transport({ ...source, forcePathStyle: s3ForcePathStyle })
       : fileTransport(source.path),
   );
 

@@ -10,8 +10,7 @@
  */
 export { WaczReader } from "./wacz/reader.js";
 export { fileTransport, s3Transport } from "./wacz/transport.js";
-export type { WaczTransport } from "./wacz/transport.js";
-export { buildS3Client } from "./wacz/s3-client-factory.js";
+export type { ResolvedS3Source, WaczTransport } from "./wacz/transport.js";
 export { DEFAULT_PROFILE, runValidation } from "./validate/engine.js";
 export { DEFAULT_RULES } from "./validate/rules/index.js";
 export { renderJson } from "./render/json.js";
