@@ -12,7 +12,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { Command, InvalidArgumentError, Option } from "commander";
+import { Command, InvalidArgumentError } from "commander";
 import { exitCodeFor, type CliOutcome } from "./cli-outcome.js";
 import { renderJson } from "./render/json.js";
 import { DEFAULT_PROFILE, runValidation } from "./validate/engine.js";
@@ -29,6 +29,11 @@ import { WaczReader } from "./wacz/reader.js";
 const here = dirname(fileURLToPath(import.meta.url));
 const manifestPath = join(here, "..", "package.json");
 const manifest = JSON.parse(readFileSync(manifestPath, "utf-8")) as { version: string };
+
+// env→boolean を strict に解釈 (空文字 / "false" / その他は全部 false)。
+// CLI flag のデフォルト値として commander に渡す。flag が立てば true で
+// 上書きされる。
+const envS3ForcePathStyle = process.env["WAXLENS_S3_FORCE_PATH_STYLE"] === "true";
 
 interface CliOptions {
   profile: RuleProfile;
@@ -48,9 +53,12 @@ const parseProfile = (raw: string): RuleProfile => {
  * を呼ぶだけ — domain layer は S3 を知らない構造になる
  * (Composition Root pattern)。
  *
- * env (`WAXLENS_S3_FORCE_PATH_STYLE`) と CLI flag
- * (`--s3-force-path-style`) の merge は commander の `Option.env()` +
- * `argParser()` が行うので、 ここに優先順位ロジックは書かない。
+ * env (`WAXLENS_S3_FORCE_PATH_STYLE=true`) は CLI flag のデフォルト値に
+ * しか影響しない: env=true ならフラグ無しでも path-style ON、 env=false /
+ * 未設定なら OFF。CLI flag を立てると env を上書きして常に ON。
+ * commander 14 の `Option.env()` は boolean flag に対しては正しく動かない
+ * (env="false" や空文字を truthy として扱う) ため、env→boolean の解釈は
+ * module top で hand-roll してから `.default()` に渡す。
  */
 const openWacz = (
   source: ReportSource,
@@ -109,14 +117,10 @@ program
     parseProfile,
     DEFAULT_PROFILE,
   )
-  .addOption(
-    new Option(
-      "--s3-force-path-style",
-      "Force path-style S3 addressing (for bundled SeaweedFS / MinIO 等)",
-    )
-      .env("WAXLENS_S3_FORCE_PATH_STYLE")
-      .argParser((v: string | boolean) => v === true || v === "true")
-      .default(false),
+  .option(
+    "--s3-force-path-style",
+    "Force path-style S3 addressing for bundled SeaweedFS / MinIO 等 (also via WAXLENS_S3_FORCE_PATH_STYLE=true)",
+    envS3ForcePathStyle,
   )
   .action(async (filePath: string, options: CliOptions) => {
     const outcome = await runCli(filePath, options);
