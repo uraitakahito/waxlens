@@ -39,7 +39,6 @@ export interface ResolvedS3Source extends S3Source {
   forcePathStyle: boolean;
 }
 
-/** file transport — 絶対パスを yauzl でそのまま開く。 */
 export const fileTransport = (path: AbsolutePath): WaczTransport => ({
   source: { kind: "file", path },
   openZip: () => yauzlOpen(path),
