@@ -35,6 +35,7 @@ import {
   WaczReader,
   type CliOutcome,
   type Report,
+  type ReportSource,
   type RuleProfile,
 } from "@waxlens/core";
 import { renderPlain } from "./render/plain.js";
@@ -48,6 +49,21 @@ interface CliOptions {
   tui: boolean;
   profile: RuleProfile;
 }
+
+/**
+ * env (`buildS3ClientFromEnv`) を seam として 1 か所に集約した
+ * pre-bound な opener。 s3 source のときだけ `S3Client` を構築する
+ * ので、 file 入力時に S3 関連の構築コードは一切走らない。 caller
+ * (`runCli`) は transport を意識せず `openWacz(source)` を呼ぶ —
+ * domain layer は env / S3 を知らない構造になる (Composition Root
+ * pattern)。
+ */
+const openWacz = (source: ReportSource): Promise<WaczReader> => {
+  if (source.kind === "s3") {
+    return WaczReader.open(source, { s3Client: buildS3ClientFromEnv() });
+  }
+  return WaczReader.open(source);
+};
 
 const parseProfile = (raw: string): RuleProfile => {
   if ((ALL_PROFILES as readonly string[]).includes(raw)) return raw as RuleProfile;
@@ -131,9 +147,7 @@ async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome> {
 
   let reader: WaczReader;
   try {
-    reader = await WaczReader.open(sourceResult.value, {
-      s3Client: buildS3ClientFromEnv(),
-    });
+    reader = await openWacz(sourceResult.value);
   } catch (cause) {
     return { kind: "openFailed", filePath, cause };
   }
