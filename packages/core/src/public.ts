@@ -9,6 +9,8 @@
  * は @waxlens/tui 側に置いてある。
  */
 export { WaczReader } from "./wacz/reader.js";
+export { fileTransport, s3Transport } from "./wacz/transport.js";
+export type { WaczTransport } from "./wacz/transport.js";
 export { buildS3Client } from "./wacz/s3-client-factory.js";
 export { DEFAULT_PROFILE, runValidation } from "./validate/engine.js";
 export { DEFAULT_RULES } from "./validate/rules/index.js";

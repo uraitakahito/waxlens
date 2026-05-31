@@ -1,5 +1,5 @@
 /**
- * `WaczReader.open` (s3 transport) の end-to-end テスト。
+ * `WaczReader.open(s3Transport(...))` の end-to-end テスト。
  *
  * aws-sdk-client-mock で S3 を mock し、`buildWacz()` で生成した完全
  * な WACZ buffer を kosher な S3 object として serve する。
@@ -25,13 +25,14 @@ import { runValidation } from "../src/validate/engine.js";
 import { DEFAULT_RULES } from "../src/validate/rules/index.js";
 import { parseS3Uri } from "../src/validate/domain.js";
 import { WaczReader } from "../src/wacz/reader.js";
+import { s3Transport } from "../src/wacz/transport.js";
 import { buildWacz } from "./fixtures/generator.js";
 
 const s3Mock = mockClient(S3Client);
 
 const RANGE_RE = /^bytes=(\d+)-(\d+)$/;
 
-describe("WaczReader.open (s3 transport)", () => {
+describe("WaczReader.open (s3Transport)", () => {
   beforeEach(() => {
     s3Mock.reset();
   });
@@ -62,7 +63,7 @@ describe("WaczReader.open (s3 transport)", () => {
     if (!uriResult.ok) throw new Error("unreachable: test input is well-formed");
     const uri = uriResult.value;
     const client = new S3Client({ region: "us-east-1" });
-    const reader = await WaczReader.open({ kind: "s3", uri }, { s3Client: client });
+    const reader = await WaczReader.open(s3Transport(uri, client));
     try {
       expect(reader.source).toEqual({ kind: "s3", uri });
 
@@ -103,7 +104,7 @@ describe("WaczReader.open (s3 transport)", () => {
     const uri = uriResult.value;
     const client = new S3Client({ region: "us-east-1" });
     await expect(
-      WaczReader.open({ kind: "s3", uri }, { s3Client: client }),
+      WaczReader.open(s3Transport(uri, client)),
     ).rejects.toThrow(/no ContentLength/);
   });
 });

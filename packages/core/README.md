@@ -90,14 +90,25 @@ import {
   WaczReader,
   DEFAULT_RULES,
   parseReportSource,
+  fileTransport,
+  s3Transport,
+  buildS3Client,
 } from "@waxlens/core";
 
 // Local file でも s3:// URI でも、`parseReportSource` が transport を
-// 判定して `ReportSource` を返す。`WaczReader.open` は `source.kind`
-// で内部 dispatch するので caller は分岐を持たなくてよい。
-const source = parseReportSource("/path/to/file.wacz");
+// 判定して `Result<ReportSource, …>` を返す。`source.kind` で
+// `fileTransport` / `s3Transport` を選び、`WaczReader.open` に渡す。
+const parsed = parseReportSource("/path/to/file.wacz");
 // または: parseReportSource("s3://bucket/key.wacz");
-const reader = await WaczReader.open(source);
+if (!parsed.ok) throw new Error(parsed.error.kind);
+const source = parsed.value;
+
+const transport =
+  source.kind === "s3"
+    ? s3Transport(source.uri, buildS3Client(false)) // forcePathStyle
+    : fileTransport(source.path);
+
+const reader = await WaczReader.open(transport);
 try {
   const result = await runValidation(reader, {
     waxlensVersion: "0.0.0",
@@ -112,8 +123,9 @@ try {
 
 `WaczReader.source` が `Report.source` の唯一の入力経路。`runValidation`
 は reader から自動で取るので caller が path を二度渡す必要はない。
-custom な `S3Client` を渡したい場合は
-`WaczReader.open(source, { s3Client: myClient })`。
+custom な `S3Client` を渡したい場合は `s3Transport(uri, myClient)`。
+独自の transport (例: in-memory buffer) を書きたい場合は
+`WaczTransport` interface を実装すればよい。
 
 default export shape (`@waxlens/tui` が消費するもの一式) は
 `src/public.ts` にある。

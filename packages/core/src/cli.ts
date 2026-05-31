@@ -24,6 +24,7 @@ import {
   parseReportSource,
 } from "./validate/domain.js";
 import { buildS3Client } from "./wacz/s3-client-factory.js";
+import { fileTransport, s3Transport } from "./wacz/transport.js";
 import { WaczReader } from "./wacz/reader.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -45,15 +46,18 @@ const parseProfile = (raw: string): RuleProfile => {
   throw new InvalidArgumentError(`Unknown profile "${raw}". Valid: ${ALL_PROFILES.join(", ")}.`);
 };
 
+// source.kind に応じた transport を選んで WaczReader.open に渡す唯一の
+// dispatch 点。s3 のときだけ client を構築する (file 入力では S3 関連の
+// コードは一切走らない)。
 const openWacz = (
   source: ReportSource,
   s3ForcePathStyle: boolean,
-): Promise<WaczReader> => {
-  if (source.kind === "s3") {
-    return WaczReader.open(source, { s3Client: buildS3Client(s3ForcePathStyle) });
-  }
-  return WaczReader.open(source);
-};
+): Promise<WaczReader> =>
+  WaczReader.open(
+    source.kind === "s3"
+      ? s3Transport(source.uri, buildS3Client(s3ForcePathStyle))
+      : fileTransport(source.path),
+  );
 
 async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome> {
   const sourceResult = parseReportSource(filePath);

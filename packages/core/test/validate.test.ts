@@ -19,6 +19,7 @@ import {
   type RuleProfile,
 } from "../src/validate/domain.js";
 import { WaczReader } from "../src/wacz/reader.js";
+import { fileTransport } from "../src/wacz/transport.js";
 import { buildWacz, type FixtureOptions } from "./fixtures/generator.js";
 
 const runAgainstFixture = async (
@@ -32,7 +33,9 @@ const runAgainstFixture = async (
   await writeFile(path, bytes);
   const sourceResult = parseReportSource(path);
   if (!sourceResult.ok) throw new Error("unreachable: test input is well-formed");
-  const reader = await WaczReader.open(sourceResult.value);
+  const source = sourceResult.value;
+  if (source.kind !== "file") throw new Error("unreachable: test writes a local file");
+  const reader = await WaczReader.open(fileTransport(source.path));
   try {
     const result = await runValidation(reader, {
       waxlensVersion: "0.0.0",

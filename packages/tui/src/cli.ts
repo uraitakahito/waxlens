@@ -29,9 +29,11 @@ import {
   DEFAULT_PROFILE,
   DEFAULT_RULES,
   exitCodeFor,
+  fileTransport,
   formatParseSourceError,
   parseReportSource,
   runValidation,
+  s3Transport,
   WaczReader,
   type CliOutcome,
   type Report,
@@ -56,15 +58,18 @@ interface CliOptions {
   s3ForcePathStyle: boolean;
 }
 
+// source.kind に応じた transport を選んで WaczReader.open に渡す唯一の
+// dispatch 点。s3 のときだけ client を構築する (file 入力では S3 関連の
+// コードは一切走らない)。
 const openWacz = (
   source: ReportSource,
   s3ForcePathStyle: boolean,
-): Promise<WaczReader> => {
-  if (source.kind === "s3") {
-    return WaczReader.open(source, { s3Client: buildS3Client(s3ForcePathStyle) });
-  }
-  return WaczReader.open(source);
-};
+): Promise<WaczReader> =>
+  WaczReader.open(
+    source.kind === "s3"
+      ? s3Transport(source.uri, buildS3Client(s3ForcePathStyle))
+      : fileTransport(source.path),
+  );
 
 const parseProfile = (raw: string): RuleProfile => {
   if ((ALL_PROFILES as readonly string[]).includes(raw)) return raw as RuleProfile;
