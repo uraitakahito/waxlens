@@ -11,29 +11,9 @@
  * `runValidation` は `Report.source` をここから取るので、caller は
  * runValidation に source を別途渡す必要がない (single source of truth)。
  */
-import {
-  fromReader,
-  open as openZip,
-  type Entry,
-  type ZipFile,
-} from "yauzl-promise";
-import {
-  HeadObjectCommand,
-  S3Client,
-} from "@aws-sdk/client-s3";
-import {
-  s3UriToBucketKey,
-  type ReportSource,
-} from "../validate/domain.js";
-import { S3RangeReader } from "./s3-range-reader.js";
-
-/**
- * `WaczReader.open` の任意 option。 s3 transport 時の `S3Client`
- * 注入のみが現状の用途。 file transport 時には無視される。
- */
-export interface WaczOpenOptions {
-  s3Client?: S3Client;
-}
+import type { Entry, ZipFile } from "yauzl-promise";
+import type { ReportSource } from "../validate/domain.js";
+import type { WaczTransport } from "./transport.js";
 
 /**
  * zip spec (PKWARE APPNOTE.TXT §4.4.5) の compression method 番号。
@@ -61,39 +41,18 @@ export class WaczReader {
   }
 
   /**
-   * `source.kind` で dispatch する unified factory。
-   *
-   * - `kind: "file"` — `source.path` は `AbsolutePath` brand 済の
-   *   絶対パス。`yauzl-promise` の `open` をそのまま使う。
-   * - `kind: "s3"` — `HeadObjectCommand` で `ContentLength` を 1 回
-   *   先に取得し、`S3RangeReader` 経由で `fromReader` に渡す
-   *   (yauzl-promise の `fromReader` は total size 必須なので、
-   *   S3 側に明示的に問い合わせる手順)。`options.s3Client` が無ければ
-   *   default credential chain で構築する。
+   * transport から `ZipFile` をもらって `WaczReader` を組み立てる薄い
+   * factory。「どう開くか」(file / s3 / 将来の transport) は
+   * `WaczTransport` 実装が持ち、ここは transport-agnostic。reader の
+   * identity (`source`) も `transport.source` から取る。
    *
    * raw な string (CLI argv 等) から開きたい場合は `parseReportSource`
-   * で `ReportSource` を組み立ててから渡す。
+   * で `ReportSource` を得て `fileTransport` / `s3Transport` を選ぶ
+   * (cli.ts の `openWacz` 参照)。
    */
-  static async open(
-    source: ReportSource,
-    options?: WaczOpenOptions,
-  ): Promise<WaczReader> {
-    if (source.kind === "file") {
-      const zip = await openZip(source.path);
-      return WaczReader.fromZipHandle(zip, source);
-    }
-    const c = options?.s3Client ?? new S3Client({});
-    const { bucket, key } = s3UriToBucketKey(source.uri);
-    const head = await c.send(
-      new HeadObjectCommand({ Bucket: bucket, Key: key }),
-    );
-    const size = head.ContentLength;
-    if (size === undefined) {
-      throw new Error(`S3 HeadObject returned no ContentLength for ${source.uri}`);
-    }
-    const rangeReader = new S3RangeReader(c, bucket, key);
-    const zip = await fromReader(rangeReader, size);
-    return WaczReader.fromZipHandle(zip, source);
+  static async open(transport: WaczTransport): Promise<WaczReader> {
+    const zip = await transport.openZip();
+    return WaczReader.fromZipHandle(zip, transport.source);
   }
 
   /**

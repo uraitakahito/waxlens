@@ -29,9 +29,11 @@ import {
   DEFAULT_PROFILE,
   DEFAULT_RULES,
   exitCodeFor,
+  fileTransport,
   formatParseSourceError,
   parseReportSource,
   runValidation,
+  s3Transport,
   WaczReader,
   type CliOutcome,
   type Report,
@@ -56,30 +58,18 @@ interface CliOptions {
   s3ForcePathStyle: boolean;
 }
 
-/**
- * caller (`runCli`) が渡した `s3ForcePathStyle` で S3Client を構築し、
- * s3 source の場合だけ `WaczReader.open` に注入する pre-bound な opener。
- * file 入力時に S3 関連の構築コードは一切走らない。 caller は
- * transport を意識せず `openWacz(source, opts.s3ForcePathStyle)`
- * を呼ぶだけ — domain layer は S3 を知らない構造になる
- * (Composition Root pattern)。
- *
- * env (`WAXLENS_S3_FORCE_PATH_STYLE=true`) は CLI flag のデフォルト値に
- * しか影響しない: env=true ならフラグ無しでも path-style ON、 env=false /
- * 未設定なら OFF。CLI flag を立てると env を上書きして常に ON。
- * commander 14 の `Option.env()` は boolean flag に対しては正しく動かない
- * (env="false" や空文字を truthy として扱う) ため、env→boolean の解釈は
- * module top で hand-roll してから `.default()` に渡す。
- */
+// source.kind に応じた transport を選んで WaczReader.open に渡す唯一の
+// dispatch 点。s3 のときだけ client を構築する (file 入力では S3 関連の
+// コードは一切走らない)。
 const openWacz = (
   source: ReportSource,
   s3ForcePathStyle: boolean,
-): Promise<WaczReader> => {
-  if (source.kind === "s3") {
-    return WaczReader.open(source, { s3Client: buildS3Client(s3ForcePathStyle) });
-  }
-  return WaczReader.open(source);
-};
+): Promise<WaczReader> =>
+  WaczReader.open(
+    source.kind === "s3"
+      ? s3Transport(source.uri, buildS3Client(s3ForcePathStyle))
+      : fileTransport(source.path),
+  );
 
 const parseProfile = (raw: string): RuleProfile => {
   if ((ALL_PROFILES as readonly string[]).includes(raw)) return raw as RuleProfile;
