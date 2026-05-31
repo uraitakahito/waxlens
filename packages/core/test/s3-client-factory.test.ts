@@ -1,12 +1,17 @@
 /**
- * `buildS3ClientFromEnv` のユニット。env が立っている / 立っていない
- * の 2 ケースを直接観測する。SDK v3 の `S3Client.config.forcePathStyle`
- * は **boolean か Provider 関数** のどちらかになりうる union 型なので、
- * `typeof` で narrow してから await する。
+ * `buildS3Client(forcePathStyle)` のユニット。 引数の boolean が
+ * `S3Client.config.forcePathStyle` に乗ることを確認する。 SDK v3 の
+ * `forcePathStyle` は **boolean か Provider 関数** のどちらかになりうる
+ * union 型なので、 `typeof` で narrow してから await する。
+ *
+ * env (`WAXLENS_S3_FORCE_PATH_STYLE`) と CLI flag (`--s3-force-path-style`)
+ * の merge は cli.ts 側 (commander の `Option.env()` + `argParser()`)
+ * が行うので、 ここでは扱わない。 `buildS3Client` は受け取った boolean
+ * を SDK に渡すだけの pure wrapper。
  */
 import type { S3Client } from "@aws-sdk/client-s3";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { buildS3ClientFromEnv } from "../src/wacz/s3-client-factory.js";
+import { describe, expect, it } from "vitest";
+import { buildS3Client } from "../src/wacz/s3-client-factory.js";
 
 const resolveForcePathStyle = async (client: S3Client): Promise<boolean | undefined> => {
   // SDK の型は `boolean | (false & Provider<...>) | (true & Provider<...>)` という
@@ -17,34 +22,14 @@ const resolveForcePathStyle = async (client: S3Client): Promise<boolean | undefi
   return typeof fps === "function" ? await fps() : fps;
 };
 
-describe("buildS3ClientFromEnv", () => {
-  let original: string | undefined;
-
-  beforeEach(() => {
-    original = process.env["WAXLENS_S3_FORCE_PATH_STYLE"];
-    delete process.env["WAXLENS_S3_FORCE_PATH_STYLE"];
-  });
-  afterEach(() => {
-    if (original === undefined) delete process.env["WAXLENS_S3_FORCE_PATH_STYLE"];
-    else process.env["WAXLENS_S3_FORCE_PATH_STYLE"] = original;
-  });
-
-  it("forcePathStyle is false by default", async () => {
-    const client = buildS3ClientFromEnv();
+describe("buildS3Client", () => {
+  it("forcePathStyle is false when passed false", async () => {
+    const client = buildS3Client(false);
     expect(await resolveForcePathStyle(client)).toBe(false);
   });
 
-  it("forcePathStyle is true when WAXLENS_S3_FORCE_PATH_STYLE=true", async () => {
-    process.env["WAXLENS_S3_FORCE_PATH_STYLE"] = "true";
-    const client = buildS3ClientFromEnv();
+  it("forcePathStyle is true when passed true", async () => {
+    const client = buildS3Client(true);
     expect(await resolveForcePathStyle(client)).toBe(true);
-  });
-
-  it("only the exact string 'true' enables forcePathStyle", async () => {
-    for (const v of ["1", "yes", "True", "TRUE", "", "false"]) {
-      process.env["WAXLENS_S3_FORCE_PATH_STYLE"] = v;
-      const client = buildS3ClientFromEnv();
-      expect(await resolveForcePathStyle(client), `value=${JSON.stringify(v)}`).toBe(false);
-    }
   });
 });
