@@ -45,9 +45,6 @@ const parseProfile = (raw: string): RuleProfile => {
   throw new InvalidArgumentError(`Unknown profile "${raw}". Valid: ${ALL_PROFILES.join(", ")}.`);
 };
 
-// source.kind に応じた transport を選んで WaczReader.open に渡す唯一の
-// dispatch 点。s3 のときだけ client を構築する (file 入力では S3 関連の
-// コードは一切走らない)。
 const openWacz = (
   source: ReportSource,
   s3ForcePathStyle: boolean,
