@@ -17,6 +17,7 @@ export { DEFAULT_RULES } from "./validate/rules/index.js";
 export { renderJson } from "./render/json.js";
 export type {
   AbsolutePath,
+  FileSource,
   Issue,
   IssueLocation,
   ParseSourceError,
@@ -26,6 +27,7 @@ export type {
   ReportSummary,
   RuleApplicability,
   RuleProfile,
+  S3Source,
   S3Uri,
   Severity,
   ValidationRule,

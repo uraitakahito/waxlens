@@ -180,9 +180,23 @@ export const s3UriToBucketKey = (uri: S3Uri): { bucket: string; key: string } =>
   return { bucket: m[1], key: m[2] };
 };
 
-export type ReportSource =
-  | { kind: "file"; path: AbsolutePath }
-  | { kind: "s3"; uri: S3Uri };
+/** Local file の WACZ source。`path` は絶対パス (AbsolutePath brand 済)。 */
+export interface FileSource {
+  kind: "file";
+  path: AbsolutePath;
+}
+
+/** S3 上の WACZ source。`uri` は `s3://bucket/key` (S3Uri brand 済)。 */
+export interface S3Source {
+  kind: "s3";
+  uri: S3Uri;
+}
+
+/**
+ * 検証対象 WACZ の identity。`Report.source` / `WaczReader.source` の
+ * wire format。transport ごとの variant は {@link FileSource} / {@link S3Source}。
+ */
+export type ReportSource = FileSource | S3Source;
 
 export const parseReportSource = (
   raw: string,
