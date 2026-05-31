@@ -12,7 +12,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { Command, InvalidArgumentError } from "commander";
+import { Command, InvalidArgumentError, Option } from "commander";
 import { exitCodeFor, type CliOutcome } from "./cli-outcome.js";
 import { renderJson } from "./render/json.js";
 import { DEFAULT_PROFILE, runValidation } from "./validate/engine.js";
@@ -23,7 +23,7 @@ import {
   formatParseSourceError,
   parseReportSource,
 } from "./validate/domain.js";
-import { buildS3ClientFromEnv } from "./wacz/s3-client-factory.js";
+import { buildS3Client } from "./wacz/s3-client-factory.js";
 import { WaczReader } from "./wacz/reader.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -32,6 +32,7 @@ const manifest = JSON.parse(readFileSync(manifestPath, "utf-8")) as { version: s
 
 interface CliOptions {
   profile: RuleProfile;
+  s3ForcePathStyle: boolean;
 }
 
 const parseProfile = (raw: string): RuleProfile => {
@@ -40,16 +41,23 @@ const parseProfile = (raw: string): RuleProfile => {
 };
 
 /**
- * env (`buildS3ClientFromEnv`) を seam として 1 か所に集約した
- * pre-bound な opener。 s3 source のときだけ `S3Client` を構築する
- * ので、 file 入力時に S3 関連の構築コードは一切走らない。 caller
- * (`runCli`) は transport を意識せず `openWacz(source)` を呼ぶ —
- * domain layer は env / S3 を知らない構造になる (Composition Root
- * pattern)。
+ * caller (`runCli`) が渡した `s3ForcePathStyle` で S3Client を構築し、
+ * s3 source の場合だけ `WaczReader.open` に注入する pre-bound な opener。
+ * file 入力時に S3 関連の構築コードは一切走らない。 caller は
+ * transport を意識せず `openWacz(source, opts.s3ForcePathStyle)`
+ * を呼ぶだけ — domain layer は S3 を知らない構造になる
+ * (Composition Root pattern)。
+ *
+ * env (`WAXLENS_S3_FORCE_PATH_STYLE`) と CLI flag
+ * (`--s3-force-path-style`) の merge は commander の `Option.env()` +
+ * `argParser()` が行うので、 ここに優先順位ロジックは書かない。
  */
-const openWacz = (source: ReportSource): Promise<WaczReader> => {
+const openWacz = (
+  source: ReportSource,
+  s3ForcePathStyle: boolean,
+): Promise<WaczReader> => {
   if (source.kind === "s3") {
-    return WaczReader.open(source, { s3Client: buildS3ClientFromEnv() });
+    return WaczReader.open(source, { s3Client: buildS3Client(s3ForcePathStyle) });
   }
   return WaczReader.open(source);
 };
@@ -66,7 +74,7 @@ async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome> {
 
   let reader: WaczReader;
   try {
-    reader = await openWacz(sourceResult.value);
+    reader = await openWacz(sourceResult.value, opts.s3ForcePathStyle);
   } catch (cause) {
     return { kind: "openFailed", filePath, cause };
   }
@@ -100,6 +108,15 @@ program
     `Rule profile (${ALL_PROFILES.join(" | ")}). Defaults to "${DEFAULT_PROFILE}".`,
     parseProfile,
     DEFAULT_PROFILE,
+  )
+  .addOption(
+    new Option(
+      "--s3-force-path-style",
+      "Force path-style S3 addressing (for bundled SeaweedFS / MinIO 等)",
+    )
+      .env("WAXLENS_S3_FORCE_PATH_STYLE")
+      .argParser((v: string | boolean) => v === true || v === "true")
+      .default(false),
   )
   .action(async (filePath: string, options: CliOptions) => {
     const outcome = await runCli(filePath, options);
