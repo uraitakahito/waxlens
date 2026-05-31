@@ -92,12 +92,12 @@ import {
   parseReportSource,
   fileTransport,
   s3Transport,
-  buildS3Client,
 } from "@waxlens/core";
 
 // Local file でも s3:// URI でも、`parseReportSource` が transport を
 // 判定して `Result<ReportSource, …>` を返す。`source.kind` で
 // `fileTransport` / `s3Transport` を選び、`WaczReader.open` に渡す。
+// s3 は接続設定 `forcePathStyle` を足した ResolvedS3Source を渡す。
 const parsed = parseReportSource("/path/to/file.wacz");
 // または: parseReportSource("s3://bucket/key.wacz");
 if (!parsed.ok) throw new Error(parsed.error.kind);
@@ -105,7 +105,7 @@ const source = parsed.value;
 
 const transport =
   source.kind === "s3"
-    ? s3Transport(source.uri, buildS3Client(false)) // forcePathStyle
+    ? s3Transport({ ...source, forcePathStyle: false })
     : fileTransport(source.path);
 
 const reader = await WaczReader.open(transport);
@@ -123,9 +123,10 @@ try {
 
 `WaczReader.source` が `Report.source` の唯一の入力経路。`runValidation`
 は reader から自動で取るので caller が path を二度渡す必要はない。
-custom な `S3Client` を渡したい場合は `s3Transport(uri, myClient)`。
-独自の transport (例: in-memory buffer) を書きたい場合は
-`WaczTransport` interface を実装すればよい。
+`forcePathStyle` は `ResolvedS3Source` で指定する (SeaweedFS / MinIO 等の
+S3 互換 endpoint 向け)。これは接続設定なので `Report.source` の wire
+format (`{ kind, uri }`) には出ない。さらに細かい transport 制御が必要なら
+`WaczTransport` interface を自前実装すればよい。
 
 default export shape (`@waxlens/tui` が消費するもの一式) は
 `src/public.ts` にある。

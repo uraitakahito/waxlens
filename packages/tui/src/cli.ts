@@ -25,7 +25,6 @@ import { fileURLToPath } from "node:url";
 import { Command, InvalidArgumentError } from "commander";
 import {
   ALL_PROFILES,
-  buildS3Client,
   DEFAULT_PROFILE,
   DEFAULT_RULES,
   exitCodeFor,
@@ -67,7 +66,7 @@ const openWacz = (
 ): Promise<WaczReader> =>
   WaczReader.open(
     source.kind === "s3"
-      ? s3Transport(source.uri, buildS3Client(s3ForcePathStyle))
+      ? s3Transport({ ...source, forcePathStyle: s3ForcePathStyle })
       : fileTransport(source.path),
   );
 

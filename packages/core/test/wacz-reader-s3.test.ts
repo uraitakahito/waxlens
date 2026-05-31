@@ -62,8 +62,9 @@ describe("WaczReader.open (s3Transport)", () => {
     const uriResult = parseS3Uri("s3://test-bucket/fixture.wacz");
     if (!uriResult.ok) throw new Error("unreachable: test input is well-formed");
     const uri = uriResult.value;
-    const client = new S3Client({ region: "us-east-1" });
-    const reader = await WaczReader.open(s3Transport(uri, client));
+    const reader = await WaczReader.open(
+      s3Transport({ kind: "s3", uri, forcePathStyle: false }),
+    );
     try {
       expect(reader.source).toEqual({ kind: "s3", uri });
 
@@ -102,9 +103,8 @@ describe("WaczReader.open (s3Transport)", () => {
     const uriResult = parseS3Uri("s3://test-bucket/bad.wacz");
     if (!uriResult.ok) throw new Error("unreachable: test input is well-formed");
     const uri = uriResult.value;
-    const client = new S3Client({ region: "us-east-1" });
     await expect(
-      WaczReader.open(s3Transport(uri, client)),
+      WaczReader.open(s3Transport({ kind: "s3", uri, forcePathStyle: false })),
     ).rejects.toThrow(/no ContentLength/);
   });
 });
