@@ -6,9 +6,6 @@
  * `WaczReader.open(transport)` はこの `openZip()` を呼ぶだけで、
  * transport の種別を知らない — 多態は transport 値が担う。
  *
- * 新しい transport (gs:// / http range / in-memory 等) を足すときは
- * ここに factory を 1 つ追加するだけで済み、`reader.ts` / `open` は不変。
- *
  * 依存の向き: この module は `WaczReader` を import しない (factory は
  * `ZipFile` を返すだけ)。`reader.ts` 側が `import type { WaczTransport }`
  * で型のみ参照するので、runtime の循環参照は発生しない。
@@ -42,7 +39,6 @@ export interface ResolvedS3Source extends S3Source {
   forcePathStyle: boolean;
 }
 
-/** file transport — 絶対パスを yauzl でそのまま開く。 */
 export const fileTransport = (path: AbsolutePath): WaczTransport => ({
   source: { kind: "file", path },
   openZip: () => yauzlOpen(path),

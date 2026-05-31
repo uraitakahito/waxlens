@@ -58,9 +58,6 @@ export const runValidation = async (
     (rule) => !rule.applicability?.excludeProfiles?.includes(profile),
   );
 
-  // validation rule と stats 抽出を並列に走らせる — stats は
-  // best-effort (内部失敗時は undefined を返す) で rule とは独立なので、
-  // 順序ハザードは無い。
   const [perRule, stats] = await Promise.all([
     Promise.all(
       activeRules.map(async (rule) => {
