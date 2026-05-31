@@ -31,9 +31,7 @@ export type {
 export {
   ALL_PROFILES,
   formatParseSourceError,
-  parseAbsolutePath,
   parseReportSource,
-  parseS3Uri,
   s3UriToBucketKey,
 } from "./validate/domain.js";
 // CLI outcome は @waxlens/tui の bin (`waxlens`) が core の bin
