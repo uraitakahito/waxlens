@@ -261,6 +261,10 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
   const capturedAt = options.capturedAt ?? "2026-05-13T00:00:00.000Z";
   const software = options.software ?? "waxlens-fixture/0.0.0";
   const waczVersion = options.waczVersion ?? "1.1.1";
+  // zip entry の mtime を固定する。archiver は date 未指定だと現在時刻を
+  // 刻むため、決定的な byte 出力 (corpus を Git LFS に置く際の churn 回避)
+  // には capturedAt 由来の固定値を全 entry に渡す必要がある。
+  const entryDate = new Date(capturedAt);
 
   const warc = buildWarcGz(software, {
     payloadDigestBad: options.payloadDigestBad ?? false,
@@ -395,14 +399,15 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
   zip.append(warc.bytes, {
     name: "archive/data.warc.gz",
     store: !(options.warcDeflate ?? false),
+    date: entryDate,
   });
   for (const entry of indexEntries) {
-    zip.append(entry.bytes, { name: entry.name });
+    zip.append(entry.bytes, { name: entry.name, date: entryDate });
   }
-  zip.append(pagesBytes, { name: "pages/pages.jsonl" });
-  zip.append(fuzzyBytes, { name: "fuzzy.json" });
+  zip.append(pagesBytes, { name: "pages/pages.jsonl", date: entryDate });
+  zip.append(fuzzyBytes, { name: "fuzzy.json", date: entryDate });
   if (!options.omitDatapackage) {
-    zip.append(datapackageBytes, { name: "datapackage.json" });
+    zip.append(datapackageBytes, { name: "datapackage.json", date: entryDate });
   }
 
   await zip.finalize();
