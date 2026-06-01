@@ -10,8 +10,10 @@
  *
  * Spec: WACZ 1.1 §datapackage.json (`profile` literal は Frictionless
  *       Data marker として必須と定められている)。
+ *       https://specs.webrecorder.net/wacz/1.1.1/#datapackage-json
  * Reference producer: browserhive/src/storage/wacz/datapackage.ts:42-49
  *       に silent-fail trap がコメントで直接書かれている。
+ *       https://github.com/uraitakahito/browserhive/blob/343a041bd4e4f4286c0834f90ab1bfb3de0cec15/src/storage/wacz/datapackage.ts#L42-L49
  */
 import { ok } from "../../result.js";
 import { parseDatapackage } from "../../wacz/datapackage.js";
