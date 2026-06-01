@@ -13,7 +13,10 @@
 declare module "archiver" {
   export class ZipArchive {
     constructor(options?: { zlib?: { level?: number } });
-    append(source: Buffer | string, data: { name: string; store?: boolean }): this;
+    append(
+      source: Buffer | string,
+      data: { name: string; store?: boolean; date?: Date | string },
+    ): this;
     finalize(): Promise<void>;
     pipe<T>(destination: T): T;
     on(event: "error" | "warning", listener: (err: Error & { code?: string }) => void): this;
