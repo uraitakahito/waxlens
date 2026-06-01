@@ -1,0 +1,35 @@
+name: corpus
+
+# waxlens-corpus の committed な WACZ fixtures に対し、waxlens の validation
+# 出力が manifest どおりかを検証する回帰ゲート。corpus は別 repo (Git LFS)
+# なので、ここで clone + `git lfs pull` してから `test:corpus` を実走させる
+# (`pnpm check` 側では CORPUS_DIR 未設定なので corpus-driven test は skip)。
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  corpus:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # corpus を sibling に clone。git-lfs は ubuntu-latest にプリインストール
+      # 済みで、clone 時に LFS 実体まで smudge される (念のため pull も明示)。
+      # corpus が private な場合はここで token / deploy key が要る (public なら不要)。
+      # 特定バージョンに固定したいなら `--branch <tag|sha>` を付ける。
+      - name: Fetch waxlens-corpus
+        run: |
+          git clone --depth 1 https://github.com/uraitakahito/waxlens-corpus.git ../waxlens-corpus
+          git -C ../waxlens-corpus lfs pull
+
+      - name: Run corpus-driven regression
+        run: CORPUS_DIR="$(cd ../waxlens-corpus && pwd)" pnpm --filter @waxlens/core test:corpus
