@@ -14,15 +14,16 @@ severity カラムは、各 rule が profile ごとにどう発火するかを�
 | 1   | `datapackage/profile-required`      | error   | error       | error   | `datapackage.json` の欠落、または `profile: "data-package"` 違反                   |
 | 2   | `datapackage/wacz-version-required` | error   | error       | warning | `wacz_version` が欠落 / 空。既知集合外の値は warning                               |
 | 3   | `datapackage/resource-hashes`       | error   | error       | error   | resource の sha256 hash または byte length が archive と一致しない                 |
-| 4   | `cdxj/index-recognised-by-wabac`    | error   | error       | error   | `indexes/` 配下に `.cdx` / `.cdxj` / `.idx` が無く、wabac.js が何もロードできない  |
-| 5   | `cdxj/index-not-gzipped`            | warning | error       | info    | gzip された CDXJ が `.idx` とペアになっていない (browserhive では producer-strict) |
-| 6   | `cdxj/filename-archive-relative`    | error   | error       | warning | CDXJ の `filename` field が `archive/` で始まっている                              |
-| 7   | `warc/storage-store`                | warning | warning     | info    | `archive/data.warc.gz` が STORE ではなく DEFLATE で zip 格納されている             |
-| 8   | `warc/members-independent`          | error   | error       | error   | `.warc.gz` を独立した gzip member の連結としてデコードできない                     |
-| 9   | `cdxj/warc-offsets`                 | error   | error       | warning | CDXJ の offset/length が member 境界に当たらない                                   |
-| 10  | `cdxj/pages-mainpage`               | warning | warning     | info    | `datapackage.mainPageURL` が `pages.jsonl` および/または CDXJ に存在しない         |
-| 11  | `warc/payload-digest`               | warning | warning     | warning | `WARC-Payload-Digest` が payload bytes の sha256 と一致しない                      |
-| 12  | `fuzzy/valid-json`                  | info    | info        | info    | `fuzzy.json` が壊れている (not JSON / not object / `rules` array 欠落)             |
+| 4   | `datapackage/frictionless-schema`   | warning | warning     | —       | `datapackage.json` が Frictionless v1 公式スキーマ (draft-04) に非適合 (補助・汎用構造の検査。lenient では除外) |
+| 5   | `cdxj/index-recognised-by-wabac`    | error   | error       | error   | `indexes/` 配下に `.cdx` / `.cdxj` / `.idx` が無く、wabac.js が何もロードできない  |
+| 6   | `cdxj/index-not-gzipped`            | warning | error       | info    | gzip された CDXJ が `.idx` とペアになっていない (browserhive では producer-strict) |
+| 7   | `cdxj/filename-archive-relative`    | error   | error       | warning | CDXJ の `filename` field が `archive/` で始まっている                              |
+| 8   | `warc/storage-store`                | warning | warning     | info    | `archive/data.warc.gz` が STORE ではなく DEFLATE で zip 格納されている             |
+| 9   | `warc/members-independent`          | error   | error       | error   | `.warc.gz` を独立した gzip member の連結としてデコードできない                     |
+| 10  | `cdxj/warc-offsets`                 | error   | error       | warning | CDXJ の offset/length が member 境界に当たらない                                   |
+| 11  | `cdxj/pages-mainpage`               | warning | warning     | info    | `datapackage.mainPageURL` が `pages.jsonl` および/または CDXJ に存在しない         |
+| 12  | `warc/payload-digest`               | warning | warning     | warning | `WARC-Payload-Digest` が payload bytes の sha256 と一致しない                      |
+| 13  | `fuzzy/valid-json`                  | info    | info        | info    | `fuzzy.json` が壊れている (not JSON / not object / `rules` array 欠落)             |
 
 ## Severity の凡例
 
@@ -93,6 +94,22 @@ issue として上げて、operator が waxlens を更新するか未知バー�
 エントリの `sha256:<hex>` hash と byte length を宣言する。この rule は
 両方を実際の bytes から再計算して、ミスマッチを `details` に
 expected/actual の hash として上げる (TUI では diff として表示される)。
+
+### `datapackage/frictionless-schema` — warning (補助)
+
+`datapackage.json` を Frictionless Data Package **v1** の公式 JSON Schema
+(draft-04、`src/validate/frictionless/data-package.schema.json` に vendoring)
+で検証する補助 rule。WACZ 固有 rule (profile / resource-hashes / wacz-version)
+が拾わない「汎用 descriptor としての奇形」(`resources` が無い、resource に
+`name`/`path` が無い、`name` が `^([-a-z0-9._/])+$` 外、`hash` が
+`sha256:<hex>` 形式でない、など) を ajv で検出し、ajv の各エラーを 1 件ずつ
+`warning` として上げる (`details` に `instancePath` / `keyword` / `params`)。
+
+公式スキーマは `additionalProperties` を閉じないため `wacz_version` /
+`mainPageURL` などの WACZ 拡張は弾かれない。一方 `name` の小文字パターン等
+WACZ より厳しい箇所があるので severity は `error` ではなく `warning` とし、
+legacy トリアージ用の `lenient` profile では除外する。スキーマ更新は
+`scripts/update-frictionless-schema.sh`、改ざん検知は pin テストで担保。
 
 ### `cdxj/index-recognised-by-wabac` — error (すべての profile)
 
