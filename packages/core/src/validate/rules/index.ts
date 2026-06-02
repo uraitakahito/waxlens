@@ -15,6 +15,7 @@ import { cdxjIndexRecognisedRule } from "./cdxj-index-recognised.js";
 import { cdxjNonGzippedRule } from "./cdxj-non-gzipped.js";
 import { cdxjPagesMainpageRule } from "./cdxj-pages-mainpage.js";
 import { cdxjWarcOffsetsRule } from "./cdxj-warc-offsets.js";
+import { datapackageFrictionlessSchemaRule } from "./datapackage-frictionless-schema.js";
 import { datapackageHashesRule } from "./datapackage-hashes.js";
 import { datapackageProfileRule } from "./datapackage-profile.js";
 import { datapackageWaczVersionRule } from "./datapackage-wacz-version.js";
@@ -36,6 +37,8 @@ export const DEFAULT_RULES: readonly ValidationRule[] = [
   datapackageProfileRule,
   datapackageWaczVersionRule,
   datapackageHashesRule,
+  // 補助: 汎用 descriptor の整形式を公式 Frictionless スキーマで検証 (warning)。
+  datapackageFrictionlessSchemaRule,
   // cdxj/index-recognised-by-wabac は他の cdxj/* rule より先に来る。
   // 「index が全く無い」状態を最優先で出して、index を読む派生 rule
   // の二次的な不満より前に置きたいため。
@@ -57,6 +60,7 @@ export {
   cdxjNonGzippedRule,
   cdxjPagesMainpageRule,
   cdxjWarcOffsetsRule,
+  datapackageFrictionlessSchemaRule,
   datapackageHashesRule,
   datapackageProfileRule,
   datapackageWaczVersionRule,
