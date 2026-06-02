@@ -85,6 +85,19 @@ export const CORPUS: CorpusSpec[] = [
     options: { omitDatapackage: true },
     expectRules: ["datapackage/profile-required"],
   },
+  {
+    name: "datapackage-frictionless-bad-name",
+    description:
+      "resource.name が Frictionless の許容パターン外 (大文字)。WACZ 固有 rule は通り、frictionless-schema だけが warning (lenient では除外)",
+    options: {
+      // name を大文字化するだけ。path/hash は不変なので resource-hashes は通り、
+      // frictionless-schema (name パターン違反) だけが発火する。warning なので
+      // valid は true のまま。lenient profile では除外され issues 空になる。
+      mutateResources: (defaults) =>
+        defaults.map((r, i) => (i === 0 ? { ...r, name: "DATA.warc.gz" } : r)),
+    },
+    expectRules: ["datapackage/frictionless-schema"],
+  },
 
   // ── cdxj/* ────────────────────────────────────────────────────────
   {
