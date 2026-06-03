@@ -68,6 +68,15 @@ export interface FixtureOptions {
    */
   omitDatapackage?: boolean;
   /**
+   * §5.2 の MUST ファイルを欠落させる(`wacz/required-files` 用)。entry を
+   * zip から落とすだけでなく、対応する `datapackage.json#resources[]` の宣言も
+   * 落とす — 「不在かつ未宣言」を再現し、required-files を単独で踏ませる
+   * (resource-hashes の "missing" と二重にならない)。
+   */
+  omitPages?: boolean;
+  omitArchive?: boolean;
+  omitIndexes?: boolean;
+  /**
    * When true, store the WARC entry as DEFLATE rather than STORE
    * (browserhive's invariant from packager.ts). Triggers rule #6.
    */
@@ -350,9 +359,17 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
     },
   ];
 
+  // omit 指定された MUST ファイルは resources 宣言からも落とす(実体と宣言を一致)。
+  const declaredDefaults = defaultResources.filter(
+    (r) =>
+      !(options.omitArchive === true && r.path.startsWith("archive/")) &&
+      !(options.omitIndexes === true && r.path.startsWith("indexes/")) &&
+      !(options.omitPages === true && r.path === "pages/pages.jsonl"),
+  );
+
   const resources = options.mutateResources
-    ? options.mutateResources(defaultResources)
-    : defaultResources;
+    ? options.mutateResources(declaredDefaults)
+    : declaredDefaults;
 
   const datapackage: Record<string, unknown> = {
     wacz_version: waczVersion,
@@ -396,15 +413,21 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
   // 内側の warc.gz はデフォルトで STORE (既に gzip 済み — 二重圧縮
   // するとサイズが膨らむだけ)。`warcDeflate` で DEFLATE に切り替えて
   // rule #6 を動かす。
-  zip.append(warc.bytes, {
-    name: "archive/data.warc.gz",
-    store: !(options.warcDeflate ?? false),
-    date: entryDate,
-  });
-  for (const entry of indexEntries) {
-    zip.append(entry.bytes, { name: entry.name, date: entryDate });
+  if (!(options.omitArchive ?? false)) {
+    zip.append(warc.bytes, {
+      name: "archive/data.warc.gz",
+      store: !(options.warcDeflate ?? false),
+      date: entryDate,
+    });
   }
-  zip.append(pagesBytes, { name: "pages/pages.jsonl", date: entryDate });
+  if (!(options.omitIndexes ?? false)) {
+    for (const entry of indexEntries) {
+      zip.append(entry.bytes, { name: entry.name, date: entryDate });
+    }
+  }
+  if (!(options.omitPages ?? false)) {
+    zip.append(pagesBytes, { name: "pages/pages.jsonl", date: entryDate });
+  }
   zip.append(fuzzyBytes, { name: "fuzzy.json", date: entryDate });
   if (!options.omitDatapackage) {
     zip.append(datapackageBytes, { name: "datapackage.json", date: entryDate });

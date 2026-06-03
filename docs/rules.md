@@ -11,19 +11,20 @@ severity カラムは、各 rule が profile ごとにどう発火するかを�
 
 | #   | Name                                | spec    | browserhive | lenient | 何を捕まえるか                                                                     |
 | --- | ----------------------------------- | ------- | ----------- | ------- | ---------------------------------------------------------------------------------- |
-| 1   | `datapackage/profile-required`      | error   | error       | error   | `datapackage.json` の欠落、または `profile: "data-package"` 違反                   |
-| 2   | `datapackage/wacz-version-required` | error   | error       | warning | `wacz_version` が欠落 / 空。既知集合外の値は warning                               |
-| 3   | `datapackage/resource-hashes`       | error   | error       | error   | resource の sha256 hash または byte length が archive と一致しない                 |
-| 4   | `datapackage/frictionless-schema`   | warning | warning     | —       | `datapackage.json` が Frictionless v1 公式スキーマ (draft-04) に非適合 (補助・汎用構造の検査。lenient では除外) |
-| 5   | `cdxj/index-recognised-by-wabac`    | error   | error       | error   | `indexes/` 配下に `.cdx` / `.cdxj` / `.idx` が無く、wabac.js が何もロードできない  |
-| 6   | `cdxj/index-not-gzipped`            | warning | error       | info    | gzip された CDXJ が `.idx` とペアになっていない (browserhive では producer-strict) |
-| 7   | `cdxj/filename-archive-relative`    | error   | error       | warning | CDXJ の `filename` field が `archive/` で始まっている                              |
-| 8   | `warc/storage-store`                | warning | warning     | info    | `archive/data.warc.gz` が STORE ではなく DEFLATE で zip 格納されている             |
-| 9   | `warc/members-independent`          | error   | error       | error   | `.warc.gz` を独立した gzip member の連結としてデコードできない                     |
-| 10  | `cdxj/warc-offsets`                 | error   | error       | warning | CDXJ の offset/length が member 境界に当たらない                                   |
-| 11  | `cdxj/pages-mainpage`               | warning | warning     | info    | `datapackage.mainPageURL` が `pages.jsonl` および/または CDXJ に存在しない         |
-| 12  | `warc/payload-digest`               | warning | warning     | warning | `WARC-Payload-Digest` が payload bytes の sha256 と一致しない                      |
-| 13  | `fuzzy/valid-json`                  | info    | info        | info    | `fuzzy.json` が壊れている (not JSON / not object / `rules` array 欠落)             |
+| 1   | `wacz/required-files`               | error   | error       | error   | WACZ §5.2 の MUST(`datapackage.json` / `pages/pages.jsonl` / `archive/` の WARC / `indexes/` の index)が欠落 |
+| 2   | `datapackage/profile-required`      | error   | error       | error   | `datapackage.json` の `profile` が `"data-package"` でない / 欠落(不在は #1 が担当) |
+| 3   | `datapackage/wacz-version-required` | error   | error       | warning | `wacz_version` が欠落 / 空。既知集合外の値は warning                               |
+| 4   | `datapackage/resource-hashes`       | error   | error       | error   | resource の sha256 hash または byte length が archive と一致しない                 |
+| 5   | `datapackage/frictionless-schema`   | warning | warning     | —       | `datapackage.json` が Frictionless v1 公式スキーマ (draft-04) に非適合 (補助・汎用構造の検査。lenient では除外) |
+| 6   | `cdxj/index-recognised-by-wabac`    | error   | error       | error   | `indexes/` 配下の index を wabac.js がロードできない(存在は #1、ロード可否はこちら) |
+| 7   | `cdxj/index-not-gzipped`            | warning | error       | info    | gzip された CDXJ が `.idx` とペアになっていない (browserhive では producer-strict) |
+| 8   | `cdxj/filename-archive-relative`    | error   | error       | warning | CDXJ の `filename` field が `archive/` で始まっている                              |
+| 9   | `warc/storage-store`                | warning | warning     | info    | `archive/data.warc.gz` が STORE ではなく DEFLATE で zip 格納されている             |
+| 10  | `warc/members-independent`          | error   | error       | error   | `.warc.gz` を独立した gzip member の連結としてデコードできない                     |
+| 11  | `cdxj/warc-offsets`                 | error   | error       | warning | CDXJ の offset/length が member 境界に当たらない                                   |
+| 12  | `cdxj/pages-mainpage`               | warning | warning     | info    | `datapackage.mainPageURL` が `pages.jsonl` および/または CDXJ に存在しない         |
+| 13  | `warc/payload-digest`               | warning | warning     | warning | `WARC-Payload-Digest` が payload bytes の sha256 と一致しない                      |
+| 14  | `fuzzy/valid-json`                  | info    | info        | info    | `fuzzy.json` が壊れている (not JSON / not object / `rules` array 欠落)             |
 
 ## Severity の凡例
 
@@ -68,12 +69,31 @@ severity カラムは、各 rule が profile ごとにどう発火するかを�
   [BrowserHive](https://github.com/uraitakahito/browserhive)。ただし
   rule の本体はコントラクトであって、特定の producer ではない)
 
+### `wacz/required-files` — error (すべての profile)
+
+WACZ [§5.2 Directories and Files](https://specs.webrecorder.net/wacz/1.1.1/#directories-and-files)
+が MUST とするファイル/ディレクトリの **存在** を直接 assert する。
+`datapackage.json` の `resources[]` 宣言には依存しないので、宣言が無い /
+壊れている WACZ でも構造的な欠落を検出できる(「不在かつ未宣言」のギャップを
+埋める)。チェックは 4 つ:
+
+- §5.2.4 `datapackage.json`(root に存在)
+- §5.2.3 `pages/pages.jsonl`(存在)
+- §5.2.1 `archive/` に WARC を 1 つ以上(`*.warc` / `*.warc.gz`)
+- §5.2.2 `indexes/` に index を 1 つ以上(`*.cdx` / `*.cdxj` / `*.idx`、gzip 可)
+
+MUST 欠落は replay-breaking なので全 profile で `error`。`datapackage.json`
+の存在はこの rule が担い、`datapackage/profile-required` は値の正しさに専念する。
+`indexes/` の「存在」はここ、「wabac がロードできるか」は
+`cdxj/index-recognised-by-wabac` が見る(観点が異なるため併存)。
+
 ### `datapackage/profile-required` — error
 
-`datapackage.json` は `profile: "data-package"` を必ず指定する必要が
-ある。これが無いと wabac.js / ReplayWeb.page が WACZ を invalid と
-判定して CDX lookup が走らず、それ以外がすべて正しくても "Archived Page
-Not Found" の分かりにくいエラーが出る。
+`datapackage.json` が存在するとき、その `profile` は `"data-package"` で
+なければならない(不在自体は `wacz/required-files` が報告する)。profile が
+無い / 値が違うと wabac.js / ReplayWeb.page が WACZ を invalid と判定して
+CDX lookup が走らず、それ以外がすべて正しくても "Archived Page Not Found"
+の分かりにくいエラーが出る。
 
 - **Spec**: WACZ 1.1 §datapackage.json (Frictionless Data Package のマーカー)
 - **Reference producer**: [browserhive `wacz/datapackage.ts:42-49`](https://github.com/uraitakahito/browserhive/blob/main/src/storage/wacz/datapackage.ts)

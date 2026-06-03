@@ -206,12 +206,14 @@ describe("validation engine — corrupted variants", () => {
     expect(report.valid).toBe(true);
   });
 
-  it("missing datapackage.json → profile-required reports it", async () => {
+  it("missing datapackage.json → wacz/required-files reports it (§5.2.4)", async () => {
     const report = await runAgainstFixture(tmpDir, "no-datapackage.wacz", {
       omitDatapackage: true,
     });
     expect(report.valid).toBe(false);
-    expect(ruleNames(report)).toContain("datapackage/profile-required");
+    // 不在は wacz/required-files が担当(profile-required は de-dup で不在を報告しない)。
+    expect(ruleNames(report)).toContain("wacz/required-files");
+    expect(ruleNames(report)).not.toContain("datapackage/profile-required");
   });
 
   // -- WARC / cross-layer rule coverage -------------------------------
