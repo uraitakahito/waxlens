@@ -1,8 +1,7 @@
 # @waxlens/tui
 
 WACZ validation 用の interactive な terminal UI。
-[`@waxlens/core`](https://www.npmjs.com/package/@waxlens/core)
-(validation engine) をラップして、その report を issue 単位の
+`@waxlens/core` をラップして、その report を issue 単位の
 expandable な詳細つきで interactive に表示する。stdout または stdin が
 TTY でないときは plain-text view に自動 fallback する
 (`waxlens foo.wacz | cat` や CI ログでも普通に動く)。

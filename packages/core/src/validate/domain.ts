@@ -226,6 +226,29 @@ export const formatParseSourceError = (e: ParseSourceError): string => {
   }
 };
 
+/**
+ * WACZ 内の 1 ファイル(zip エントリ)の一覧用レコード。renderer は
+ * これを §5.1 風のディレクトリツリーに組み直し、issue を file に重ねて
+ * 表示する。flat に持つことで JSON consumer がそのまま扱える。
+ *
+ * `present: false` は「datapackage.json が宣言しているが zip に実在しない」
+ * file を表す(declared-but-missing の可視化用)。その場合 size / 圧縮は無い。
+ */
+export interface ReportEntry {
+  /** zip エントリ path。例: `archive/data.warc.gz`。 */
+  path: string;
+  /** zip に実在するか。false = datapackage の resources にだけ現れる。 */
+  present: boolean;
+  /** 解凍後のバイト数(present のみ)。 */
+  uncompressedSize?: number;
+  /** zip の圧縮方式(0=STORE / 8=DEFLATE)(present のみ)。 */
+  compressionMethod?: number;
+  /** datapackage.json の `resources[].path` に宣言されているか。 */
+  declaredInDatapackage: boolean;
+  /** この path を `location.entry` に持つ issue(rule + severity)。 */
+  issues: { rule: string; severity: Severity }[];
+}
+
 export interface Report {
   waxlensVersion: string;
   /** report を評価する際に使った rule profile。{@link RuleProfile} を参照。 */
@@ -236,6 +259,8 @@ export interface Report {
   valid: boolean;
   summary: ReportSummary;
   issues: Issue[];
+  /** WACZ 内のファイル一覧 + 検証の紐付け。{@link ReportEntry} を参照。 */
+  entries: ReportEntry[];
   /** best-effort な metadata — {@link ReportStats} を参照。 */
   stats?: ReportStats;
 }

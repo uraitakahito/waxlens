@@ -28,6 +28,7 @@
 import type { Result } from "../result.js";
 import { ok } from "../result.js";
 import type { WaczReader } from "../wacz/reader.js";
+import { buildEntries } from "./entries.js";
 import { computeStats } from "./stats.js";
 import type {
   Issue,
@@ -73,6 +74,9 @@ export const runValidation = async (
 
   const issues = perRule.flat();
   const summary = summarise(issues, activeRules.length, Date.now() - startedAt);
+  // ファイル一覧 + issue 紐付け(best-effort)。entryNames/getEntryMeta は
+  // central directory 由来で payload を読まないので追加 I/O はほぼ無い。
+  const entries = await buildEntries(wacz, issues);
 
   const report: Report = {
     waxlensVersion: opts.waxlensVersion,
@@ -81,6 +85,7 @@ export const runValidation = async (
     valid: summary.failed === 0,
     summary,
     issues,
+    entries,
     // 条件付き spread にすることで `stats` を "明示的に undefined" で
     // はなく「不在」として表現できる — exactOptionalPropertyTypes が
     // これを要求する。

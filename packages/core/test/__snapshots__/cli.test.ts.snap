@@ -2,6 +2,53 @@
 
 exports[`cli — JSON output shape (default) > gzipped CDXJ JSON snapshot 1`] = `
 {
+  "entries": [
+    {
+      "compressionMethod": 0,
+      "declaredInDatapackage": true,
+      "issues": [],
+      "path": "archive/data.warc.gz",
+      "present": true,
+      "uncompressedSize": 246,
+    },
+    {
+      "compressionMethod": 8,
+      "declaredInDatapackage": true,
+      "issues": [
+        {
+          "rule": "cdxj/index-not-gzipped",
+          "severity": "warning",
+        },
+      ],
+      "path": "indexes/index.cdxj.gz",
+      "present": true,
+      "uncompressedSize": 154,
+    },
+    {
+      "compressionMethod": 8,
+      "declaredInDatapackage": true,
+      "issues": [],
+      "path": "pages/pages.jsonl",
+      "present": true,
+      "uncompressedSize": 215,
+    },
+    {
+      "compressionMethod": 8,
+      "declaredInDatapackage": true,
+      "issues": [],
+      "path": "fuzzy.json",
+      "present": true,
+      "uncompressedSize": 18,
+    },
+    {
+      "compressionMethod": 8,
+      "declaredInDatapackage": false,
+      "issues": [],
+      "path": "datapackage.json",
+      "present": true,
+      "uncompressedSize": 1076,
+    },
+  ],
   "issues": [
     {
       "details": {
@@ -54,6 +101,53 @@ exports[`cli — JSON output shape (default) > gzipped CDXJ JSON snapshot 1`] = 
 
 exports[`cli — JSON output shape (default) > missing-profile JSON snapshot 1`] = `
 {
+  "entries": [
+    {
+      "compressionMethod": 0,
+      "declaredInDatapackage": true,
+      "issues": [],
+      "path": "archive/data.warc.gz",
+      "present": true,
+      "uncompressedSize": 246,
+    },
+    {
+      "compressionMethod": 8,
+      "declaredInDatapackage": true,
+      "issues": [],
+      "path": "indexes/index.cdxj",
+      "present": true,
+      "uncompressedSize": 190,
+    },
+    {
+      "compressionMethod": 8,
+      "declaredInDatapackage": true,
+      "issues": [],
+      "path": "pages/pages.jsonl",
+      "present": true,
+      "uncompressedSize": 215,
+    },
+    {
+      "compressionMethod": 8,
+      "declaredInDatapackage": true,
+      "issues": [],
+      "path": "fuzzy.json",
+      "present": true,
+      "uncompressedSize": 18,
+    },
+    {
+      "compressionMethod": 8,
+      "declaredInDatapackage": false,
+      "issues": [
+        {
+          "rule": "datapackage/profile-required",
+          "severity": "error",
+        },
+      ],
+      "path": "datapackage.json",
+      "present": true,
+      "uncompressedSize": 1041,
+    },
+  ],
   "issues": [
     {
       "details": {
@@ -93,6 +187,48 @@ exports[`cli — JSON output shape (default) > missing-profile JSON snapshot 1`]
 
 exports[`cli — JSON output shape (default) > valid WACZ JSON snapshot 1`] = `
 {
+  "entries": [
+    {
+      "compressionMethod": 0,
+      "declaredInDatapackage": true,
+      "issues": [],
+      "path": "archive/data.warc.gz",
+      "present": true,
+      "uncompressedSize": 246,
+    },
+    {
+      "compressionMethod": 8,
+      "declaredInDatapackage": true,
+      "issues": [],
+      "path": "indexes/index.cdxj",
+      "present": true,
+      "uncompressedSize": 190,
+    },
+    {
+      "compressionMethod": 8,
+      "declaredInDatapackage": true,
+      "issues": [],
+      "path": "pages/pages.jsonl",
+      "present": true,
+      "uncompressedSize": 215,
+    },
+    {
+      "compressionMethod": 8,
+      "declaredInDatapackage": true,
+      "issues": [],
+      "path": "fuzzy.json",
+      "present": true,
+      "uncompressedSize": 18,
+    },
+    {
+      "compressionMethod": 8,
+      "declaredInDatapackage": false,
+      "issues": [],
+      "path": "datapackage.json",
+      "present": true,
+      "uncompressedSize": 1070,
+    },
+  ],
   "issues": [],
   "profile": "spec",
   "source": {

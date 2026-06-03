@@ -25,38 +25,50 @@
  * Ink の `exit(reason?)` 引数 (error object 用に予約されている) に
  * code を通さずに済む。
  */
-import { useState, type FC } from "react";
+import { useMemo, useState, type FC } from "react";
 import { Box, Text, useApp, useInput } from "ink";
 import type { Issue, Report } from "@waxlens/core";
+import { buildEntryTree, entryMarker, flattenTree, type TreeRow } from "./render/tree.js";
 
 interface AppProps {
   report: Report;
 }
 
+type View = "issues" | "layout";
+
 export const App: FC<AppProps> = ({ report }) => {
   const { exit } = useApp();
+  const [view, setView] = useState<View>("issues");
   const [focused, setFocused] = useState(0);
   const [expanded, setExpanded] = useState<ReadonlySet<number>>(new Set());
 
   const issues = report.issues;
+  // §5.1 風ツリーの行(report が変わらない限り再計算しない)。
+  const layoutRows = useMemo(() => flattenTree(buildEntryTree(report.entries)), [report.entries]);
+  const rowCount = view === "issues" ? issues.length : layoutRows.length;
 
   useInput((input, key) => {
     if (input === "q" || key.escape) {
       exit();
       return;
     }
-    if (key.upArrow && issues.length > 0) {
+    // Tab で Issues ⇄ Layout を切替。cursor は先頭へ戻す。
+    if (key.tab) {
+      setView((prev) => (prev === "issues" ? "layout" : "issues"));
+      setFocused(0);
+      return;
+    }
+    if (key.upArrow && rowCount > 0) {
       setFocused((prev) => Math.max(0, prev - 1));
       return;
     }
-    if (key.downArrow && issues.length > 0) {
-      setFocused((prev) => Math.min(issues.length - 1, prev + 1));
+    if (key.downArrow && rowCount > 0) {
+      setFocused((prev) => Math.min(rowCount - 1, prev + 1));
       return;
     }
-    if (key.return && issues.length > 0) {
+    if (key.return && view === "issues" && issues.length > 0) {
       // focused な issue の expansion をトグルする。set を作り直して
-      // いるのは、React の diff のために参照の同一性を安定させたい
-      // ため。
+      // いるのは、React の diff のために参照の同一性を安定させたいため。
       setExpanded((prev) => {
         const next = new Set(prev);
         if (next.has(focused)) next.delete(focused);
@@ -68,24 +80,57 @@ export const App: FC<AppProps> = ({ report }) => {
 
   return (
     <Box flexDirection="column">
-      <Header report={report} />
+      <Header report={report} view={view} />
       <Box marginTop={1} flexDirection="column">
-        {issues.length === 0 ? (
-          <Text color="green">All rules passed.</Text>
+        {view === "issues" ? (
+          issues.length === 0 ? (
+            <Text color="green">All rules passed.</Text>
+          ) : (
+            issues.map((issue, i) => (
+              <IssueRow
+                key={`${issue.rule}-${String(i)}`}
+                issue={issue}
+                focused={i === focused}
+                expanded={expanded.has(i)}
+              />
+            ))
+          )
         ) : (
-          issues.map((issue, i) => (
-            <IssueRow
-              key={`${issue.rule}-${String(i)}`}
-              issue={issue}
-              focused={i === focused}
-              expanded={expanded.has(i)}
-            />
-          ))
+          <LayoutView rows={layoutRows} focused={focused} />
         )}
       </Box>
       <Summary report={report} />
       {report.stats ? <Stats stats={report.stats} /> : null}
       <Help />
+    </Box>
+  );
+};
+
+/** Layout ビュー: §5.1 風ツリーに issue マーカー / size / (missing) を重ねる。 */
+const LayoutView: FC<{ rows: TreeRow[]; focused: number }> = ({ rows, focused }) => {
+  if (rows.length === 0) return <Text dimColor>(no entries)</Text>;
+  return (
+    <Box flexDirection="column">
+      {rows.map((row, i) => {
+        const mk = entryMarker(row.entry);
+        // マーカー Text は glyph がある(tone=error|warning)ときだけ描画するので、
+        // color は常に具体値。undefined を渡すと exactOptionalPropertyTypes に弾かれる。
+        const color = mk.tone === "warning" ? "yellow" : "red";
+        const size =
+          row.entry?.present === true && row.entry.uncompressedSize !== undefined
+            ? `  ${formatBytes(row.entry.uncompressedSize)}`
+            : "";
+        const markerText =
+          mk.glyph + (mk.rules.length > 0 ? ` ${mk.rules.join(", ")}` : "");
+        return (
+          <Text key={row.path} inverse={i === focused}>
+            {row.connector}
+            {row.name}
+            <Text dimColor>{size}</Text>
+            {mk.glyph ? <Text color={color}>{`  ${markerText}`}</Text> : null}
+          </Text>
+        );
+      })}
     </Box>
   );
 };
@@ -109,14 +154,17 @@ const formatBytes = (n: number): string => {
   return `${(n / 1024 / 1024 / 1024).toFixed(1)} GB`;
 };
 
-const Header: FC<{ report: Report }> = ({ report }) => {
+const Header: FC<{ report: Report; view: View }> = ({ report, view }) => {
   const sourceLabel =
     report.source.kind === "file" ? report.source.path : report.source.uri;
   return (
     <Box>
       <Text bold>waxlens</Text>
       <Text dimColor> {report.waxlensVersion} </Text>
-      <Text> {sourceLabel}</Text>
+      <Text> {sourceLabel} </Text>
+      <Text inverse={view === "issues"}> Issues </Text>
+      <Text> </Text>
+      <Text inverse={view === "layout"}> Layout </Text>
     </Box>
   );
 };
@@ -271,7 +319,7 @@ const Summary: FC<{ report: Report }> = ({ report }) => {
 
 const Help: FC = () => (
   <Box marginTop={1}>
-    <Text dimColor>↑↓ navigate · enter expand · q quit</Text>
+    <Text dimColor>↑↓ navigate · enter expand · tab issues/layout · q quit</Text>
   </Box>
 );
 
