@@ -45,6 +45,7 @@ const makeReport = (overrides: Partial<Report> = {}): Report => ({
       location: { entry: "indexes/index.cdxj", line: 1 },
     },
   ],
+  entries: [],
   ...overrides,
 });
 
@@ -191,5 +192,52 @@ describe("tui rendering", () => {
     const frame = lastFrame() ?? "";
     expect(frame).toContain("Payload preview (hex):");
     expect(frame).toContain("4e a7 5b 0c");
+  });
+});
+
+describe("tui — layout view", () => {
+  const withEntries = () =>
+    makeReport({
+      entries: [
+        {
+          path: "archive/data.warc.gz",
+          present: true,
+          uncompressedSize: 100,
+          compressionMethod: 0,
+          declaredInDatapackage: true,
+          issues: [{ rule: "datapackage/resource-hashes", severity: "error" }],
+        },
+        {
+          path: "datapackage.json",
+          present: true,
+          uncompressedSize: 50,
+          compressionMethod: 8,
+          declaredInDatapackage: false,
+          issues: [],
+        },
+        {
+          path: "pages/extraPages.jsonl",
+          present: false,
+          declaredInDatapackage: true,
+          issues: [],
+        },
+      ],
+    });
+
+  it("starts on the Issues view (no file tree)", () => {
+    const frame = render(<App report={withEntries()} />).lastFrame() ?? "";
+    expect(frame).not.toContain("data.warc.gz");
+  });
+
+  it("Tab switches to the Layout view: §5.1 tree + issue markers + (missing)", async () => {
+    const { lastFrame, stdin } = render(<App report={withEntries()} />);
+    stdin.write("\t"); // Tab
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    const frame = lastFrame() ?? "";
+    expect(frame).toContain("data.warc.gz"); // tree leaf
+    expect(frame).toContain("└──"); // §5.1 connector
+    expect(frame).toContain("✗"); // error marker on data.warc.gz
+    expect(frame).toContain("datapackage/resource-hashes"); // rule name on the file
+    expect(frame).toContain("(missing)"); // declared-but-absent extraPages.jsonl
   });
 });

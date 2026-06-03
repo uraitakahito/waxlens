@@ -21,6 +21,7 @@ export type {
   IssueLocation,
   ParseSourceError,
   Report,
+  ReportEntry,
   ReportSource,
   ReportStats,
   ReportSummary,

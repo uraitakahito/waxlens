@@ -25,6 +25,7 @@
  */
 import pc from "picocolors";
 import type { Issue, Report } from "@waxlens/core";
+import { buildEntryTree, entryMarker, flattenTree } from "./tree.js";
 
 export interface PlainRenderOptions {
   color: boolean;
@@ -83,8 +84,31 @@ export const renderPlain = (report: Report, opts: PlainRenderOptions): string =>
   lines.push(formatSummary(report, c));
   if (report.stats) lines.push(formatStats(report.stats, c));
 
+  // Layout: WACZ spec §5.1 風ツリー。各 file に issue マーカー / size を重ね、
+  // datapackage 宣言済みだが zip に無い file は (missing) として赤で出す。
+  if (report.entries.length > 0) {
+    lines.push("");
+    lines.push(c.bold("Layout"));
+    lines.push(...formatLayout(report, c));
+  }
+
   return lines.join("\n") + "\n";
 };
+
+const identity = (s: string): string => s;
+
+const formatLayout = (report: Report, c: typeof pc): string[] =>
+  flattenTree(buildEntryTree(report.entries)).map((row) => {
+    const mk = entryMarker(row.entry);
+    const tone = mk.tone === "error" ? c.red : mk.tone === "warning" ? c.yellow : identity;
+    const size =
+      row.entry?.present === true && row.entry.uncompressedSize !== undefined
+        ? c.dim(`  ${formatBytes(row.entry.uncompressedSize)}`)
+        : "";
+    const rules = mk.rules.length > 0 ? tone(` ${mk.rules.join(", ")}`) : "";
+    const marker = mk.glyph ? `  ${tone(mk.glyph)}${rules}` : "";
+    return `${row.connector}${row.name}${size}${marker}`;
+  });
 
 const formatStats = (stats: NonNullable<Report["stats"]>, c: typeof pc): string => {
   const parts = [
