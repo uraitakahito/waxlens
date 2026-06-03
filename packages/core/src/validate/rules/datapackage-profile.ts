@@ -30,15 +30,10 @@ export const datapackageProfileRule: ValidationRule = {
   run: async (wacz) => {
     const issues: Issue[] = [];
     const buf = await wacz.readEntry(DATAPACKAGE_ENTRY);
-    if (!buf) {
-      issues.push({
-        rule: "datapackage/profile-required",
-        severity: "error",
-        message: `${DATAPACKAGE_ENTRY} is missing from the WACZ`,
-        location: { entry: DATAPACKAGE_ENTRY },
-      });
-      return ok(issues);
-    }
+    // datapackage.json の「不在」は wacz/required-files (§5.2.4) が報告する。
+    // この rule は datapackage が在るときの profile *値* の正しさに専念し、
+    // 不在を二重報告しない。
+    if (!buf) return ok(issues);
 
     const pkg = parseDatapackage(buf.toString("utf-8"));
     if (!pkg) {

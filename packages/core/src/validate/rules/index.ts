@@ -20,6 +20,7 @@ import { datapackageHashesRule } from "./datapackage-hashes.js";
 import { datapackageProfileRule } from "./datapackage-profile.js";
 import { datapackageWaczVersionRule } from "./datapackage-wacz-version.js";
 import { fuzzyValidJsonRule } from "./fuzzy-valid-json.js";
+import { waczRequiredFilesRule } from "./wacz-required-files.js";
 import { warcMembersIndependentRule } from "./warc-members-independent.js";
 import { warcPayloadDigestRule } from "./warc-payload-digest.js";
 import { warcStorageStoreRule } from "./warc-storage-store.js";
@@ -34,6 +35,9 @@ import { warcStorageStoreRule } from "./warc-storage-store.js";
  * るので、ここからの cherry-pick で柔軟に組める。
  */
 export const DEFAULT_RULES: readonly ValidationRule[] = [
+  // §5.2 の構造的な MUST 欠落を最上段で。ファイルが欠けていれば他の
+  // rule の指摘は二次的なので、最初に「そもそも揃っているか」を出す。
+  waczRequiredFilesRule,
   datapackageProfileRule,
   datapackageWaczVersionRule,
   datapackageHashesRule,
@@ -65,6 +69,7 @@ export {
   datapackageProfileRule,
   datapackageWaczVersionRule,
   fuzzyValidJsonRule,
+  waczRequiredFilesRule,
   warcMembersIndependentRule,
   warcPayloadDigestRule,
   warcStorageStoreRule,

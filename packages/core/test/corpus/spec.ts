@@ -81,9 +81,9 @@ export const CORPUS: CorpusSpec[] = [
   },
   {
     name: "datapackage-absent",
-    description: "datapackage.json を丸ごと欠落 (複数 datapackage rule に波及)",
+    description: "datapackage.json を丸ごと欠落 (§5.2.4 の MUST 欠落 → required-files)",
     options: { omitDatapackage: true },
-    expectRules: ["datapackage/profile-required"],
+    expectRules: ["wacz/required-files"],
   },
   {
     name: "datapackage-frictionless-bad-name",
@@ -97,6 +97,27 @@ export const CORPUS: CorpusSpec[] = [
         defaults.map((r, i) => (i === 0 ? { ...r, name: "DATA.warc.gz" } : r)),
     },
     expectRules: ["datapackage/frictionless-schema"],
+  },
+
+  // ── wacz/* (§5.2 構造的な MUST の欠落) ────────────────────────────
+  {
+    name: "wacz-missing-pages",
+    description: "pages/pages.jsonl が欠落 (§5.2.3 の MUST 欠落)。宣言も落とすので required-files 単独",
+    options: { omitPages: true },
+    expectRules: ["wacz/required-files"],
+  },
+  {
+    name: "wacz-missing-archive",
+    description: "archive/ に WARC が無い (§5.2.1 の MUST 欠落)。宣言も落とすので required-files 単独",
+    options: { omitArchive: true },
+    expectRules: ["wacz/required-files"],
+  },
+  {
+    name: "wacz-missing-indexes",
+    description:
+      "indexes/ に index が無い (§5.2.2 の MUST 欠落)。required-files に加え index-recognised-by-wabac も発火 (相補的)",
+    options: { omitIndexes: true },
+    expectRules: ["wacz/required-files"],
   },
 
   // ── cdxj/* ────────────────────────────────────────────────────────
