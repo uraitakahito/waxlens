@@ -198,6 +198,37 @@ describe("tui rendering", () => {
     expect(frame).toContain("Payload preview (hex):");
     expect(frame).toContain("4e a7 5b 0c");
   });
+
+  it("shows a spec URL line when an issue carries params.section", () => {
+    const report = makeReport({
+      issues: [
+        {
+          rule: "wacz/required-files",
+          severity: "error",
+          messageKey: "wacz/required-files.missing-archive",
+          params: { section: "5.2.1" },
+          location: { entry: "archive/" },
+        },
+      ],
+    });
+    const frame = render(<App report={report} locale="en" />).lastFrame() ?? "";
+    expect(frame).toContain("spec https://specs.webrecorder.net/wacz/1.1.1/#archive");
+  });
+
+  it("omits the spec line when an issue has no resolvable section", () => {
+    const report = makeReport({
+      issues: [
+        {
+          rule: "x/y",
+          severity: "error",
+          messageKey: "x/y.z",
+          location: { entry: "datapackage.json" },
+        },
+      ],
+    });
+    const frame = render(<App report={report} locale="en" />).lastFrame() ?? "";
+    expect(frame).not.toContain("spec https://");
+  });
 });
 
 describe("tui — layout view", () => {

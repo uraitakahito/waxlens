@@ -24,7 +24,7 @@
  * のためにある。
  */
 import pc from "picocolors";
-import { t, type Issue, type Locale, type Report } from "@waxlens/core";
+import { specUrl, t, type Issue, type Locale, type Report } from "@waxlens/core";
 import { buildEntryTree, entryMarker, flattenTree } from "./tree.js";
 
 export interface PlainRenderOptions {
@@ -136,6 +136,10 @@ const formatIssue = (issue: Issue, c: typeof pc, locale: Locale): string => {
   const where = formatLocation(issue);
   const wherePart = where ? `${c.dim(where)} — ` : "";
   const out = [`${wherePart}${t(issue.messageKey, issue.params ?? {}, locale)}`];
+
+  // params.section が解決できれば spec への直リンクを 1 行足す(開発者向け)。
+  const url = specUrl(issue.params?.["section"]);
+  if (url !== undefined) out.push(`      ${c.dim(`spec ${url}`)}`);
 
   if (issue.details !== undefined) {
     const json = JSON.stringify(issue.details);

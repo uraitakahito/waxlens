@@ -151,6 +151,13 @@ describe("cli — JSON output shape (default)", () => {
     expect(en.stdout).toContain("pages/pages.jsonl is missing");
   });
 
+  it("section を持つ issue は specUrl を同梱する(locale 非依存)", async () => {
+    const path = await writeFixture(tmpDir, "spec.wacz", { omitArchive: true });
+    const out = await runCli([path]).then((r) => r.stdout);
+    expect(out).toContain('"section": "5.2.1"');
+    expect(out).toContain('"specUrl": "https://specs.webrecorder.net/wacz/1.1.1/#archive"');
+  });
+
   it("gzipped CDXJ JSON snapshot", async () => {
     const path = await writeFixture(tmpDir, "gz-cdxj.wacz", { cdxjGzipped: true });
     const result = await runCli([path]);

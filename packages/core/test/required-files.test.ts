@@ -36,6 +36,26 @@ const rulesFor = async (tmpDir: string, options: FixtureOptions = {}): Promise<s
   }
 };
 
+const issuesFor = async (tmpDir: string, options: FixtureOptions = {}) => {
+  const { bytes } = await buildWacz(options);
+  const path = join(tmpDir, "fixture.wacz");
+  await writeFile(path, bytes);
+  const src = parseReportSource(path);
+  if (!src.ok || src.value.kind !== "file") throw new Error("unreachable: local file");
+  const reader = await WaczReader.open(fileTransport(src.value.path));
+  try {
+    const result = await runValidation(reader, {
+      waxlensVersion: "0.0.0",
+      rules: DEFAULT_RULES,
+      profile: "spec",
+    });
+    if (!result.ok) throw new Error("unreachable: runValidation err");
+    return result.value.issues;
+  } finally {
+    await reader.close();
+  }
+};
+
 describe("wacz/required-files", () => {
   let tmpDir: string;
   beforeEach(async () => {
@@ -56,6 +76,17 @@ describe("wacz/required-files", () => {
     ["omitIndexes", { omitIndexes: true }],
   ])("%s で §5.2 MUST 欠落として required-files が発火する", async (_label, options) => {
     expect(await rulesFor(tmpDir, options)).toContain(RF);
+  });
+
+  it.each([
+    ["omitArchive", { omitArchive: true }, "5.2.1"],
+    ["omitIndexes", { omitIndexes: true }, "5.2.2"],
+    ["omitPages", { omitPages: true }, "5.2.3"],
+    ["omitDatapackage", { omitDatapackage: true }, "5.2.4"],
+  ])("%s の issue が params.section=%s を運ぶ(spec URL 解決用)", async (_l, options, section) => {
+    const issues = await issuesFor(tmpDir, options);
+    const rf = issues.find((i) => i.rule === RF);
+    expect(rf?.params?.["section"]).toBe(section);
   });
 });
 
