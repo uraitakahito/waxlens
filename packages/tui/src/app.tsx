@@ -108,9 +108,10 @@ export const App: FC<AppProps> = ({ report }) => {
 };
 
 /**
- * Layout ビュー: 左に §5.1 風ツリー(issue マーカー / size / (missing))、
- * 右に選択行(focused)の詳細ペイン。右の空きを使って「何のファイルで
- * 何が問題か」を出す。中身(bytes)は読まず Report だけで描く。
+ * Layout ビュー: 左に §5.1 風ツリー(状態アイコン ✗/⚠ + size)、右に
+ * 選択行(focused)の詳細ペイン。理由・rule 名・message は冗長なので
+ * ツリーには出さず、すべてペインに一本化する(ツリー=概要、ペイン=詳細)。
+ * 中身(bytes)は読まず Report だけで描く。
  */
 const LayoutView: FC<{ rows: TreeRow[]; focused: number; report: Report }> = ({
   rows,
@@ -125,20 +126,21 @@ const LayoutView: FC<{ rows: TreeRow[]; focused: number; report: Report }> = ({
       <Box flexDirection="column" flexShrink={0}>
         {rows.map((row, i) => {
           const mk = entryMarker(row.entry);
-          // マーカー Text は glyph がある(tone=error|warning)ときだけ描画するので、
-          // color は常に具体値。undefined を渡すと exactOptionalPropertyTypes に弾かれる。
+          // ツリーは状態アイコンだけ(error/missing → ✗、warning → ⚠)。理由・
+          // rule 名・message は DetailPane が持つ。glyph があるときだけ描画する
+          // ので color は常に具体値(undefined は exactOptionalPropertyTypes に弾かれる)。
+          const glyph = mk.tone === "error" ? "✗" : mk.tone === "warning" ? "⚠" : "";
           const color = mk.tone === "warning" ? "yellow" : "red";
           const size =
             row.entry?.present === true && row.entry.uncompressedSize !== undefined
               ? `  ${formatBytes(row.entry.uncompressedSize)}`
               : "";
-          const markerText = mk.glyph + (mk.rules.length > 0 ? ` ${mk.rules.join(", ")}` : "");
           return (
             <Text key={row.path} inverse={i === focused}>
               {row.connector}
               {row.name}
               <Text dimColor>{size}</Text>
-              {mk.glyph ? <Text color={color}>{`  ${markerText}`}</Text> : null}
+              {glyph ? <Text color={color}>{`  ${glyph}`}</Text> : null}
             </Text>
           );
         })}
