@@ -49,7 +49,7 @@ const validateSchema = new Ajv04({
 
 export const datapackageFrictionlessSchemaRule: ValidationRule = {
   name: "datapackage/frictionless-schema",
-  description: `${DATAPACKAGE_ENTRY} should conform to the Frictionless v1 schema (auxiliary)`,
+  descriptionKey: "datapackage/frictionless-schema.desc",
   severity: "warning",
   // 公式スキーマは WACZ より厳しい箇所があるため warning。legacy トリアージ
   // 用の lenient profile では generic な findings を出したくないので除外する。
@@ -69,7 +69,8 @@ export const datapackageFrictionlessSchemaRule: ValidationRule = {
         issues.push({
           rule: "datapackage/frictionless-schema",
           severity: "warning",
-          message: `Frictionless schema: ${at} ${err.message ?? "invalid"}`,
+          messageKey: "datapackage/frictionless-schema.violation",
+          params: { at, detail: err.message ?? "invalid" },
           location: { entry: DATAPACKAGE_ENTRY },
           details: {
             instancePath: err.instancePath,

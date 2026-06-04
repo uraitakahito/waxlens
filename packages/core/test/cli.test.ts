@@ -41,8 +41,11 @@ interface RunResult {
  * 駆動する)。
  */
 const runCli = async (args: string[]): Promise<RunResult> => {
+  // snapshot を locale 非依存にするため、メッセージ言語を en に固定する
+  // (マシンの LANG が ja でも JSON 出力が決定的になる)。
+  const env = { ...process.env, WAXLENS_LANG: "en" };
   try {
-    const { stdout, stderr } = await execFileAsync("node", [CLI_PATH, ...args]);
+    const { stdout, stderr } = await execFileAsync("node", [CLI_PATH, ...args], { env });
     return { stdout, stderr, code: 0 };
   } catch (e) {
     // execFile は非ゼロ exit で reject する。reject 値は `code`、
@@ -136,6 +139,16 @@ describe("cli — JSON output shape (default)", () => {
     const result = await runCli([path]);
     expect(result.code).toBe(1);
     expect(stabiliseJson(result.stdout)).toMatchSnapshot();
+  });
+
+  it("--lang ja localises issue messages (key/params stable)", async () => {
+    const path = await writeFixture(tmpDir, "ja.wacz", { omitPages: true });
+    const ja = await runCli([path, "--lang", "ja"]);
+    // messageKey/params は locale 非依存、message だけ訳される。
+    expect(ja.stdout).toContain('"messageKey": "wacz/required-files.missing-pages"');
+    expect(ja.stdout).toContain("pages/pages.jsonl がありません");
+    const en = await runCli([path, "--lang", "en"]);
+    expect(en.stdout).toContain("pages/pages.jsonl is missing");
   });
 
   it("gzipped CDXJ JSON snapshot", async () => {

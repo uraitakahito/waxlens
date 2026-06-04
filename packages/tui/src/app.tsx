@@ -25,19 +25,23 @@
  * Ink の `exit(reason?)` 引数 (error object 用に予約されている) に
  * code を通さずに済む。
  */
-import { useMemo, useState, type FC } from "react";
+import { createContext, useContext, useMemo, useState, type FC } from "react";
 import { Box, Text, useApp, useInput } from "ink";
-import type { Issue, Report, ReportEntry } from "@waxlens/core";
+import { t, type Issue, type Locale, type Report, type ReportEntry } from "@waxlens/core";
 import { buildEntryTree, entryMarker, flattenTree, type TreeRow } from "./render/tree.js";
 import { codecName, entryIssues, expectedLabel } from "./render/detail.js";
 
+/** 表示 locale。App が provide し、issue メッセージを描く子が consume する。 */
+const LocaleContext = createContext<Locale>("en");
+
 interface AppProps {
   report: Report;
+  locale: Locale;
 }
 
 type View = "issues" | "layout";
 
-export const App: FC<AppProps> = ({ report }) => {
+export const App: FC<AppProps> = ({ report, locale }) => {
   const { exit } = useApp();
   const [view, setView] = useState<View>("issues");
   const [focused, setFocused] = useState(0);
@@ -80,30 +84,32 @@ export const App: FC<AppProps> = ({ report }) => {
   });
 
   return (
-    <Box flexDirection="column">
-      <Header report={report} view={view} />
-      <Box marginTop={1} flexDirection="column">
-        {view === "issues" ? (
-          issues.length === 0 ? (
-            <Text color="green">All rules passed.</Text>
+    <LocaleContext.Provider value={locale}>
+      <Box flexDirection="column">
+        <Header report={report} view={view} />
+        <Box marginTop={1} flexDirection="column">
+          {view === "issues" ? (
+            issues.length === 0 ? (
+              <Text color="green">All rules passed.</Text>
+            ) : (
+              issues.map((issue, i) => (
+                <IssueRow
+                  key={`${issue.rule}-${String(i)}`}
+                  issue={issue}
+                  focused={i === focused}
+                  expanded={expanded.has(i)}
+                />
+              ))
+            )
           ) : (
-            issues.map((issue, i) => (
-              <IssueRow
-                key={`${issue.rule}-${String(i)}`}
-                issue={issue}
-                focused={i === focused}
-                expanded={expanded.has(i)}
-              />
-            ))
-          )
-        ) : (
-          <LayoutView rows={layoutRows} focused={focused} report={report} />
-        )}
+            <LayoutView rows={layoutRows} focused={focused} report={report} />
+          )}
+        </Box>
+        <Summary report={report} />
+        {report.stats ? <Stats stats={report.stats} /> : null}
+        <Help />
       </Box>
-      <Summary report={report} />
-      {report.stats ? <Stats stats={report.stats} /> : null}
-      <Help />
-    </Box>
+    </LocaleContext.Provider>
   );
 };
 
@@ -201,6 +207,7 @@ const IssueList: FC<{ entry: ReportEntry; report: Report }> = ({ entry, report }
 };
 
 const IssueLine: FC<{ issue: Issue }> = ({ issue }) => {
+  const locale = useContext(LocaleContext);
   const tone = toneFor(issue.severity);
   const loc = formatLocation(issue);
   return (
@@ -209,7 +216,7 @@ const IssueLine: FC<{ issue: Issue }> = ({ issue }) => {
       <Box marginLeft={2}>
         <Text>
           {loc ? <Text dimColor>{`${loc} — `}</Text> : null}
-          {issue.message}
+          {t(issue.messageKey, issue.params ?? {}, locale)}
         </Text>
       </Box>
     </Box>
@@ -255,6 +262,7 @@ const IssueRow: FC<{ issue: Issue; focused: boolean; expanded: boolean }> = ({
   focused,
   expanded,
 }) => {
+  const locale = useContext(LocaleContext);
   const tone = toneFor(issue.severity);
   const icon = iconFor(issue.severity);
   const location = formatLocation(issue);
@@ -269,7 +277,7 @@ const IssueRow: FC<{ issue: Issue; focused: boolean; expanded: boolean }> = ({
       <Box marginLeft={6}>
         <Text>
           {location ? <Text dimColor>{`${location} — `}</Text> : null}
-          {issue.message}
+          {t(issue.messageKey, issue.params ?? {}, locale)}
         </Text>
       </Box>
       {expanded && issue.details !== undefined ? (

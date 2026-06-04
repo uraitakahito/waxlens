@@ -1,0 +1,70 @@
+{
+  "i18n.smoke": "{n, plural, one {# file} other {# files}} missing",
+
+  "wacz/required-files.desc": "WACZ §5.2 requires these files/directories to exist",
+  "wacz/required-files.missing-datapackage": "datapackage.json is missing (WACZ §5.2.4: MUST exist at the root)",
+  "wacz/required-files.missing-pages": "pages/pages.jsonl is missing (WACZ §5.2.3: MUST be present)",
+  "wacz/required-files.missing-archive": "archive/ has no WARC file (WACZ §5.2.1: MUST contain at least one .warc/.warc.gz)",
+  "wacz/required-files.missing-indexes": "indexes/ has no index file (WACZ §5.2.2: MUST contain at least one .cdx/.cdxj/.idx)",
+
+  "datapackage/profile-required.desc": "datapackage.json must set profile === \"data-package\"",
+  "datapackage/profile-required.invalid-json": "{entry} is not valid JSON or not an object",
+  "datapackage/profile-required.missing-field": "{entry} is missing the \"profile\" field",
+  "datapackage/profile-required.mismatch": "{entry} profile is {actual}, expected \"{expected}\"",
+
+  "datapackage/resource-hashes.desc": "datapackage.json resource hashes must match the WACZ contents",
+  "datapackage/resource-hashes.no-resources": "{entry} has no \"resources\" array (or it is empty)",
+  "datapackage/resource-hashes.invalid-path": "{entry} resource is missing or has an invalid \"path\"",
+  "datapackage/resource-hashes.resource-missing": "Resource \"{path}\" listed in {entry} is missing from the WACZ",
+  "datapackage/resource-hashes.no-hash": "Resource \"{path}\" has no \"hash\" in {entry}",
+  "datapackage/resource-hashes.hash-mismatch": "Resource \"{path}\" hash mismatch",
+  "datapackage/resource-hashes.byte-mismatch": "Resource \"{path}\" byte length mismatch",
+
+  "datapackage/wacz-version-required.desc": "datapackage.json must declare a non-empty wacz_version",
+  "datapackage/wacz-version-required.missing-field": "{entry} is missing the \"wacz_version\" field",
+  "datapackage/wacz-version-required.not-string": "{entry} \"wacz_version\" must be a non-empty string",
+  "datapackage/wacz-version-required.unknown-version": "{entry} \"wacz_version\" = \"{version}\" is outside the known-good set",
+
+  "datapackage/frictionless-schema.desc": "datapackage.json should conform to the Frictionless v1 schema (auxiliary)",
+  "datapackage/frictionless-schema.violation": "Frictionless schema: {at} {detail}",
+
+  "cdxj/index-recognised-by-wabac.desc": "WACZ must contain a wabac-recognised index (.cdx / .cdxj / .idx)",
+  "cdxj/index-recognised-by-wabac.no-index": "No wabac-recognised index file found under indexes/ — wabac.js needs at least one .cdx / .cdxj / .idx entry to serve any URL",
+  "cdxj/index-recognised-by-wabac.missing-pair": "{name} references \"{pair}\" but no such entry exists in the WACZ",
+
+  "cdxj/index-not-gzipped.desc": "indexes/index.cdxj must not be gzipped (wabac.js silently ignores .cdxj.gz)",
+  "cdxj/index-not-gzipped.gzipped-entry": "Entry \"{name}\" is a gzipped CDXJ — wabac.js does not recognise .cdxj.gz / .cdx.gz",
+  "cdxj/index-not-gzipped.gzip-magic": "{entry} starts with the gzip magic bytes — the file is named correctly but the content is compressed",
+
+  "cdxj/filename-archive-relative.desc": "indexes/index.cdxj entries must use archive-relative filenames (not \"archive/...\")",
+  "cdxj/filename-archive-relative.parse-error": "{entry} line {line} could not be parsed ({reason})",
+  "cdxj/filename-archive-relative.no-filename": "{entry} entry has no \"filename\" field",
+  "cdxj/filename-archive-relative.starts-with-archive": "{entry} entry \"filename\" starts with \"archive/\" — wabac.js prepends archive/ itself, double-prefix breaks replay",
+
+  "cdxj/warc-offsets.desc": "indexes/index.cdxj offset/length must land on a WARC gzip-member boundary",
+  "cdxj/warc-offsets.missing-or-nonnumeric": "indexes/index.cdxj line {line}: offset / length missing or not numeric",
+  "cdxj/warc-offsets.offset-no-match": "indexes/index.cdxj line {line}: offset {offset} does not match any WARC gzip-member start",
+  "cdxj/warc-offsets.length-mismatch": "indexes/index.cdxj line {line}: length {length} does not match WARC member at offset {offset} (actual {actual})",
+
+  "cdxj/pages-mainpage.desc": "datapackage.mainPageURL must appear in both pages/pages.jsonl and indexes/index.cdxj",
+  "cdxj/pages-mainpage.not-in-pages": "datapackage.json mainPageURL \"{url}\" is not listed in pages/pages.jsonl",
+  "cdxj/pages-mainpage.no-cdxj-record": "datapackage.json mainPageURL \"{url}\" has no record in indexes/index.cdxj",
+
+  "warc/storage-store.desc": "archive/data.warc.gz must be stored with method STORE (0), not DEFLATE",
+  "warc/storage-store.zip-compressed": "{entry} is zip-compressed (method {method}) — should be STORE (0) so CDXJ offsets seek correctly",
+
+  "warc/members-independent.desc": "archive/data.warc.gz must concatenate independent gzip members",
+  "warc/members-independent.no-members": "{entry} contains no gzip members (empty or unrecognised)",
+  "warc/members-independent.decode-failed": "Failed to decode gzip member at offset {offset} (length {length})",
+  "warc/members-independent.unexpected-error": "Unexpected error walking {entry}: {detail}",
+
+  "warc/payload-digest.desc": "WARC records' WARC-Payload-Digest must match a fresh sha256 of the payload",
+  "warc/payload-digest.non-sha256": "WARC record #{memberIdx} uses non-sha256 digest \"{algo}\" — not verified",
+  "warc/payload-digest.no-http-body": "WARC record #{memberIdx} ({recordType}) has WARC-Payload-Digest but no parseable HTTP body",
+  "warc/payload-digest.mismatch": "WARC record #{memberIdx} payload digest mismatch",
+
+  "fuzzy/valid-json.desc": "fuzzy.json (when present) must parse as '{' rules: [...] '}'",
+  "fuzzy/valid-json.invalid-json": "{entry} is not valid JSON",
+  "fuzzy/valid-json.not-object": "{entry} top level must be an object",
+  "fuzzy/valid-json.missing-rules": "{entry} is missing the \"rules\" array"
+}

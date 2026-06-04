@@ -254,7 +254,7 @@ describe("validation engine — corrupted variants", () => {
     expect(report.valid).toBe(false);
     const offset = report.issues.filter((i) => i.rule === "cdxj/warc-offsets");
     expect(offset).toHaveLength(1);
-    expect(offset[0]?.message).toContain("length");
+    expect(offset[0]?.messageKey).toBe("cdxj/warc-offsets.length-mismatch");
   });
 
   it("mainPageURL not covered → cdxj/pages-mainpage warns", async () => {

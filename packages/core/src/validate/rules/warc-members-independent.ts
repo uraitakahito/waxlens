@@ -29,7 +29,7 @@ const WARC_ENTRY = "archive/data.warc.gz";
 
 export const warcMembersIndependentRule: ValidationRule = {
   name: "warc/members-independent",
-  description: `${WARC_ENTRY} must concatenate independent gzip members`,
+  descriptionKey: "warc/members-independent.desc",
   severity: "error",
 
   run: async (wacz) => {
@@ -47,7 +47,8 @@ export const warcMembersIndependentRule: ValidationRule = {
         issues.push({
           rule: "warc/members-independent",
           severity: "error",
-          message: `${WARC_ENTRY} contains no gzip members (empty or unrecognised)`,
+          messageKey: "warc/members-independent.no-members",
+          params: { entry: WARC_ENTRY },
           location: { entry: WARC_ENTRY },
           details: { archiveBytes: bytes.byteLength },
         });
@@ -57,7 +58,8 @@ export const warcMembersIndependentRule: ValidationRule = {
         issues.push({
           rule: "warc/members-independent",
           severity: "error",
-          message: `Failed to decode gzip member at offset ${String(error.offset)} (length ${String(error.length)})`,
+          messageKey: "warc/members-independent.decode-failed",
+          params: { offset: String(error.offset), length: String(error.length) },
           location: { entry: WARC_ENTRY, offset: error.offset },
           details: {
             offset: error.offset,
@@ -71,7 +73,8 @@ export const warcMembersIndependentRule: ValidationRule = {
         issues.push({
           rule: "warc/members-independent",
           severity: "error",
-          message: `Unexpected error walking ${WARC_ENTRY}: ${error instanceof Error ? error.message : String(error)}`,
+          messageKey: "warc/members-independent.unexpected-error",
+          params: { entry: WARC_ENTRY, detail: error instanceof Error ? error.message : String(error) },
           location: { entry: WARC_ENTRY },
         });
       }

@@ -34,9 +34,9 @@ describe("entryIssues", () => {
     valid: false,
     summary: { passed: 0, failed: 2, warnings: 0, info: 0, durationMs: 1 },
     issues: [
-      { rule: "a/one", severity: "error", message: "m1", location: { entry: "pages/pages.jsonl" } },
-      { rule: "b/two", severity: "warning", message: "m2", location: { entry: "datapackage.json" } },
-      { rule: "c/three", severity: "info", message: "m3" }, // location 無し
+      { rule: "a/one", severity: "error", messageKey: "a/one.x", location: { entry: "pages/pages.jsonl" } },
+      { rule: "b/two", severity: "warning", messageKey: "b/two.x", location: { entry: "datapackage.json" } },
+      { rule: "c/three", severity: "info", messageKey: "c/three.x" }, // location 無し
     ],
     entries: [],
   } satisfies Report;

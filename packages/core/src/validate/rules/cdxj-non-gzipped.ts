@@ -42,7 +42,7 @@ const GZIP_MAGIC_1 = 0x8b;
 
 export const cdxjNonGzippedRule: ValidationRule = {
   name: "cdxj/index-not-gzipped",
-  description: `${EXPECTED_CDXJ} must not be gzipped (wabac.js silently ignores .cdxj.gz)`,
+  descriptionKey: "cdxj/index-not-gzipped.desc",
   // ベースラインを `warning` にしているのは、gzip された CDXJ が
   // spec 準拠の WACZ で `.idx` header ファイルとペアになっている
   // ケースがあるため (wabac.js の `loadIDX` 経路がこれを扱う)。
@@ -64,7 +64,8 @@ export const cdxjNonGzippedRule: ValidationRule = {
         issues.push({
           rule: "cdxj/index-not-gzipped",
           severity: "warning",
-          message: `Entry "${name}" is a gzipped CDXJ — wabac.js does not recognise .cdxj.gz / .cdx.gz`,
+          messageKey: "cdxj/index-not-gzipped.gzipped-entry",
+          params: { name },
           location: { entry: name },
         });
       }
@@ -76,7 +77,8 @@ export const cdxjNonGzippedRule: ValidationRule = {
         issues.push({
           rule: "cdxj/index-not-gzipped",
           severity: "warning",
-          message: `${EXPECTED_CDXJ} starts with the gzip magic bytes — the file is named correctly but the content is compressed`,
+          messageKey: "cdxj/index-not-gzipped.gzip-magic",
+          params: { entry: EXPECTED_CDXJ },
           location: { entry: EXPECTED_CDXJ },
         });
       }

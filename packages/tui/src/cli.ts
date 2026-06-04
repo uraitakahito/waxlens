@@ -31,10 +31,13 @@ import {
   fileTransport,
   formatParseSourceError,
   parseReportSource,
+  resolveLocale,
   runValidation,
   s3Transport,
+  SUPPORTED_LOCALES,
   WaczReader,
   type CliOutcome,
+  type Locale,
   type Report,
   type ReportSource,
   type RuleProfile,
@@ -55,6 +58,7 @@ interface CliOptions {
   tui: boolean;
   profile: RuleProfile;
   s3ForcePathStyle: boolean;
+  lang?: string;
 }
 
 const openWacz = (
@@ -97,6 +101,7 @@ program
     "Force path-style S3 addressing for bundled SeaweedFS / MinIO 等 (also via WAXLENS_S3_FORCE_PATH_STYLE=true)",
     envS3ForcePathStyle,
   )
+  .option("--lang <locale>", `Message language (${SUPPORTED_LOCALES.join(" | ")}). Defaults to LANG / en.`)
   .action(async (filePath: string, options: CliOptions) => {
     const outcome = await runCli(filePath, options);
     await dispatch(outcome, options);
@@ -122,13 +127,14 @@ await program.parseAsync(process.argv);
  * exit code 2 になる — 現状の挙動と同じ。
  */
 async function dispatch(outcome: CliOutcome, opts: CliOptions): Promise<void> {
+  const locale = resolveLocale(opts.lang);
   switch (outcome.kind) {
     case "valid":
     case "invalid":
       if (shouldUseTui(opts)) {
-        await runTui(outcome.report);
+        await runTui(outcome.report, locale);
       } else {
-        process.stdout.write(renderPlain(outcome.report, { color: opts.color }));
+        process.stdout.write(renderPlain(outcome.report, { color: opts.color, locale }));
       }
       return;
     case "openFailed": {
@@ -186,12 +192,12 @@ function shouldUseTui(opts: CliOptions): boolean {
   return process.stdout.isTTY && process.stdin.isTTY;
 }
 
-async function runTui(report: Report): Promise<void> {
+async function runTui(report: Report, locale: Locale): Promise<void> {
   const [{ render }, { createElement }, { App }] = await Promise.all([
     import("ink"),
     import("react"),
     import("./app.js"),
   ]);
-  const instance = render(createElement(App, { report }));
+  const instance = render(createElement(App, { report, locale }));
   await instance.waitUntilExit();
 }

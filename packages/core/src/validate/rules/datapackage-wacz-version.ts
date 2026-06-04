@@ -26,7 +26,7 @@ const KNOWN_VERSIONS = ["1.0.0", "1.1.0", "1.1.1"] as const;
 
 export const datapackageWaczVersionRule: ValidationRule = {
   name: "datapackage/wacz-version-required",
-  description: `${DATAPACKAGE_ENTRY} must declare a non-empty wacz_version`,
+  descriptionKey: "datapackage/wacz-version-required.desc",
   severity: "error",
   applicability: {
     severityByProfile: { lenient: "warning" },
@@ -51,7 +51,8 @@ export const datapackageWaczVersionRule: ValidationRule = {
       issues.push({
         rule: "datapackage/wacz-version-required",
         severity: "error",
-        message: `${DATAPACKAGE_ENTRY} is missing the "wacz_version" field`,
+        messageKey: "datapackage/wacz-version-required.missing-field",
+        params: { entry: DATAPACKAGE_ENTRY },
         location: { entry: DATAPACKAGE_ENTRY },
         details: { knownVersions: KNOWN_VERSIONS },
       });
@@ -62,7 +63,8 @@ export const datapackageWaczVersionRule: ValidationRule = {
       issues.push({
         rule: "datapackage/wacz-version-required",
         severity: "error",
-        message: `${DATAPACKAGE_ENTRY} "wacz_version" must be a non-empty string`,
+        messageKey: "datapackage/wacz-version-required.not-string",
+        params: { entry: DATAPACKAGE_ENTRY },
         location: { entry: DATAPACKAGE_ENTRY },
         details: { actual: version, knownVersions: KNOWN_VERSIONS },
       });
@@ -73,7 +75,8 @@ export const datapackageWaczVersionRule: ValidationRule = {
       issues.push({
         rule: "datapackage/wacz-version-required",
         severity: "warning",
-        message: `${DATAPACKAGE_ENTRY} "wacz_version" = "${version}" is outside the known-good set`,
+        messageKey: "datapackage/wacz-version-required.unknown-version",
+        params: { entry: DATAPACKAGE_ENTRY, version },
         location: { entry: DATAPACKAGE_ENTRY },
         details: { actual: version, knownVersions: KNOWN_VERSIONS },
       });

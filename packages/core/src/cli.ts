@@ -15,6 +15,7 @@ import { fileURLToPath } from "node:url";
 import { Command, InvalidArgumentError } from "commander";
 import { exitCodeFor, type CliOutcome } from "./cli-outcome.js";
 import { renderJson } from "./render/json.js";
+import { resolveLocale, SUPPORTED_LOCALES, type Locale } from "./i18n/translate.js";
 import { DEFAULT_PROFILE, runValidation } from "./validate/engine.js";
 import { DEFAULT_RULES } from "./validate/rules/index.js";
 import type { ReportSource, RuleProfile } from "./validate/domain.js";
@@ -38,6 +39,7 @@ const envS3ForcePathStyle = process.env["WAXLENS_S3_FORCE_PATH_STYLE"] === "true
 interface CliOptions {
   profile: RuleProfile;
   s3ForcePathStyle: boolean;
+  lang?: string;
 }
 
 const parseProfile = (raw: string): RuleProfile => {
@@ -107,9 +109,10 @@ program
     "Force path-style S3 addressing for bundled SeaweedFS / MinIO 等 (also via WAXLENS_S3_FORCE_PATH_STYLE=true)",
     envS3ForcePathStyle,
   )
+  .option("--lang <locale>", `Message language (${SUPPORTED_LOCALES.join(" | ")}). Defaults to LANG / en.`)
   .action(async (filePath: string, options: CliOptions) => {
     const outcome = await runCli(filePath, options);
-    dispatch(outcome);
+    dispatch(outcome, resolveLocale(options.lang));
     // `process.exit(N)` ではなく `process.exitCode` をセットすることで、
     // stdout の同期 flush と `parseAsync` の Promise の clean な resolve
     // を保証しつつ、Node が event loop drain で自然終了するときに正しい
@@ -138,11 +141,11 @@ await program.parseAsync(process.argv);
  * 生まれる variant で、論理的には到達不能。万一来たら silent (stderr
  * 出さない) のまま exit code 2 になる — 現状の挙動と同じ。
  */
-function dispatch(outcome: CliOutcome): void {
+function dispatch(outcome: CliOutcome, locale: Locale): void {
   switch (outcome.kind) {
     case "valid":
     case "invalid":
-      process.stdout.write(renderJson(outcome.report));
+      process.stdout.write(renderJson(outcome.report, locale));
       return;
     case "openFailed": {
       const message =

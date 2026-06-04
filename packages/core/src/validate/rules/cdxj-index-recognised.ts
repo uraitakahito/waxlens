@@ -58,7 +58,7 @@ const parseIdxPairFilename = (text: string): string | null => {
 
 export const cdxjIndexRecognisedRule: ValidationRule = {
   name: "cdxj/index-recognised-by-wabac",
-  description: `WACZ must contain a wabac-recognised index (${ACCEPTED_SUFFIXES.join(" / ")})`,
+  descriptionKey: "cdxj/index-recognised-by-wabac.desc",
   severity: "error",
 
   run: async (wacz) => {
@@ -73,8 +73,7 @@ export const cdxjIndexRecognisedRule: ValidationRule = {
       issues.push({
         rule: "cdxj/index-recognised-by-wabac",
         severity: "error",
-        message:
-          "No wabac-recognised index file found under indexes/ — wabac.js needs at least one .cdx / .cdxj / .idx entry to serve any URL",
+        messageKey: "cdxj/index-recognised-by-wabac.no-index",
         location: { entry: INDEXES_PREFIX },
         details: {
           acceptedSuffixes: ACCEPTED_SUFFIXES,
@@ -106,7 +105,8 @@ export const cdxjIndexRecognisedRule: ValidationRule = {
         issues.push({
           rule: "cdxj/index-recognised-by-wabac",
           severity: "warning",
-          message: `${name} references "${pair}" but no such entry exists in the WACZ`,
+          messageKey: "cdxj/index-recognised-by-wabac.missing-pair",
+          params: { name, pair },
           location: { entry: name },
           details: { idxFile: name, claimedPair: pair, candidatesChecked: candidates },
         });

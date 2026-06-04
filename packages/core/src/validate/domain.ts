@@ -18,6 +18,7 @@
  *     としては "serialise 可能なら何でも"。
  */
 import { isAbsolute, resolve as resolvePath } from "node:path";
+import type { MsgParams } from "../i18n/translate.js";
 import { err, ok, type Result } from "../result.js";
 import type { WaczReader } from "../wacz/reader.js";
 
@@ -72,8 +73,13 @@ export interface Issue {
    */
   rule: string;
   severity: Severity;
-  /** 1 行の human-readable な要約。renderer は severity に応じて色付けしてもよい。 */
-  message: string;
+  /**
+   * メッセージの i18n キー(`<rule>/<short>`)。renderer が locale 別の
+   * ICU カタログで解決する。human-readable な prose は core に持たない。
+   */
+  messageKey: string;
+  /** メッセージに差し込むランタイム値(path・行番号・理由など)。 */
+  params?: MsgParams;
   location?: IssueLocation;
   /**
    * renderer が必要に応じて expand できる structured payload。
@@ -87,8 +93,8 @@ export interface Issue {
 export interface ValidationRule {
   /** `Issue.rule` に入るのと同じ値。 */
   name: string;
-  /** 1 文での rationale。`--help` と docs/rules.md に出る。 */
-  description: string;
+  /** rationale の i18n キー(`<rule>/desc`)。locale 別カタログで解決。 */
+  descriptionKey: string;
   /**
    * baseline の severity。profile 固有の override が無いときに使う。
    * profile 固有の override が無くても engine は profile logic を通すので、

@@ -28,7 +28,7 @@ import { hasIndex, hasWarc } from "../wacz-spec.js";
 
 export const waczRequiredFilesRule: ValidationRule = {
   name: "wacz/required-files",
-  description: "WACZ §5.2 が MUST とするファイル/ディレクトリが存在しなければならない",
+  descriptionKey: "wacz/required-files.desc",
   // 構造的な MUST 欠落は replay-breaking なので全 profile で error
   // (resource-hashes / index-recognised と同じ扱い)。
   severity: "error",
@@ -39,12 +39,18 @@ export const waczRequiredFilesRule: ValidationRule = {
     const issues: Issue[] = [];
     const names = wacz.entryNames();
 
-    const need = (present: boolean, entry: string, message: string): void => {
+    const need = (
+      present: boolean,
+      entry: string,
+      messageKey: string,
+      params?: Record<string, string | number>,
+    ): void => {
       if (!present) {
         issues.push({
           rule: "wacz/required-files",
           severity: "error",
-          message,
+          messageKey,
+          ...(params && { params }),
           location: { entry },
         });
       }
@@ -53,22 +59,22 @@ export const waczRequiredFilesRule: ValidationRule = {
     need(
       wacz.hasEntry("datapackage.json"),
       "datapackage.json",
-      "datapackage.json is missing (WACZ §5.2.4: MUST exist at the root)",
+      "wacz/required-files.missing-datapackage",
     );
     need(
       wacz.hasEntry("pages/pages.jsonl"),
       "pages/pages.jsonl",
-      "pages/pages.jsonl is missing (WACZ §5.2.3: MUST be present)",
+      "wacz/required-files.missing-pages",
     );
     need(
       hasWarc(names),
       "archive/",
-      "archive/ has no WARC file (WACZ §5.2.1: MUST contain at least one .warc/.warc.gz)",
+      "wacz/required-files.missing-archive",
     );
     need(
       hasIndex(names),
       "indexes/",
-      "indexes/ has no index file (WACZ §5.2.2: MUST contain at least one .cdx/.cdxj/.idx)",
+      "wacz/required-files.missing-indexes",
     );
 
     return Promise.resolve(ok(issues));

@@ -20,7 +20,7 @@ const FUZZY_ENTRY = "fuzzy.json";
 
 export const fuzzyValidJsonRule: ValidationRule = {
   name: "fuzzy/valid-json",
-  description: `${FUZZY_ENTRY} (when present) must parse as { rules: [...] }`,
+  descriptionKey: "fuzzy/valid-json.desc",
   severity: "info",
 
   run: async (wacz) => {
@@ -41,7 +41,8 @@ export const fuzzyValidJsonRule: ValidationRule = {
       issues.push({
         rule: "fuzzy/valid-json",
         severity: "info",
-        message: `${FUZZY_ENTRY} is not valid JSON`,
+        messageKey: "fuzzy/valid-json.invalid-json",
+        params: { entry: FUZZY_ENTRY },
         location: { entry: FUZZY_ENTRY },
         details: { reason: error instanceof Error ? error.message : String(error) },
       });
@@ -52,7 +53,8 @@ export const fuzzyValidJsonRule: ValidationRule = {
       issues.push({
         rule: "fuzzy/valid-json",
         severity: "info",
-        message: `${FUZZY_ENTRY} top level must be an object`,
+        messageKey: "fuzzy/valid-json.not-object",
+        params: { entry: FUZZY_ENTRY },
         location: { entry: FUZZY_ENTRY },
         details: { actualType: Array.isArray(parsed) ? "array" : typeof parsed },
       });
@@ -64,7 +66,8 @@ export const fuzzyValidJsonRule: ValidationRule = {
       issues.push({
         rule: "fuzzy/valid-json",
         severity: "info",
-        message: `${FUZZY_ENTRY} is missing the "rules" array`,
+        messageKey: "fuzzy/valid-json.missing-rules",
+        params: { entry: FUZZY_ENTRY },
         location: { entry: FUZZY_ENTRY },
         details: { actualType: typeof rules },
       });

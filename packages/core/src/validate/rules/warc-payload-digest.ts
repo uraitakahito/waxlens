@@ -43,7 +43,7 @@ const BODY_VERBATIM_TYPES = new Set(["warcinfo", "metadata", "resource"]);
 
 export const warcPayloadDigestRule: ValidationRule = {
   name: "warc/payload-digest",
-  description: `WARC records' WARC-Payload-Digest must match a fresh sha256 of the payload`,
+  descriptionKey: "warc/payload-digest.desc",
   severity: "warning",
 
   run: async (wacz) => {
@@ -70,7 +70,8 @@ export const warcPayloadDigestRule: ValidationRule = {
         issues.push({
           rule: "warc/payload-digest",
           severity: "info",
-          message: `WARC record #${String(memberIdx)} uses non-sha256 digest "${declared.split(":")[0] ?? ""}" — not verified`,
+          messageKey: "warc/payload-digest.non-sha256",
+          params: { memberIdx: String(memberIdx), algo: declared.split(":")[0] ?? "" },
           location: { entry: WARC_ENTRY, offset: member.offset },
           details: { recordType, declared },
         });
@@ -82,7 +83,8 @@ export const warcPayloadDigestRule: ValidationRule = {
         issues.push({
           rule: "warc/payload-digest",
           severity: "warning",
-          message: `WARC record #${String(memberIdx)} (${recordType || "unknown"}) has WARC-Payload-Digest but no parseable HTTP body`,
+          messageKey: "warc/payload-digest.no-http-body",
+          params: { memberIdx: String(memberIdx), recordType: recordType || "unknown" },
           location: { entry: WARC_ENTRY, offset: member.offset },
           details: { recordType, declared },
         });
@@ -94,7 +96,8 @@ export const warcPayloadDigestRule: ValidationRule = {
         issues.push({
           rule: "warc/payload-digest",
           severity: "warning",
-          message: `WARC record #${String(memberIdx)} payload digest mismatch`,
+          messageKey: "warc/payload-digest.mismatch",
+          params: { memberIdx: String(memberIdx) },
           location: { entry: WARC_ENTRY, offset: member.offset },
           details: {
             recordType,
