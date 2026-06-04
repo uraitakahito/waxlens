@@ -1,9 +1,10 @@
 /**
  * `Report.entries`(ファイル一覧 + 検証の紐付け)のテスト。
  *
- * - zip の実エントリを present:true で網羅し、size / declared が取れる
+ * - zip の実エントリを present:true で網羅し、size / expectedBy が取れる
  * - hash 不一致は該当 file の issues に紐付く
  * - datapackage が宣言するが zip に無い path は present:false で出る
+ * - §5.2 MUST が不在なら present:false / expectedBy:[wacz-spec] で出る
  */
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -45,7 +46,7 @@ describe("Report.entries", () => {
     await rm(tmpDir, { recursive: true, force: true });
   });
 
-  it("zip の実エントリを present:true で網羅し、size / declared が取れる", async () => {
+  it("zip の実エントリを present:true で網羅し、size / expectedBy が取れる", async () => {
     const report = await reportFor(tmpDir);
     const paths = report.entries.map((e) => e.path);
     expect(paths).toContain("archive/data.warc.gz");
@@ -54,12 +55,12 @@ describe("Report.entries", () => {
     const warc = report.entries.find((e) => e.path === "archive/data.warc.gz");
     expect(warc?.present).toBe(true);
     expect(typeof warc?.uncompressedSize).toBe("number");
-    expect(warc?.declaredInDatapackage).toBe(true); // resources[] に居る
+    expect(warc?.expectedBy).toContain("datapackage"); // resources[] に居る
 
-    // datapackage.json 自身は resources[] に列挙されないので declared=false
+    // datapackage.json 自身は resources[] には居ないが、§5.2.4 の MUST。
     const dp = report.entries.find((e) => e.path === "datapackage.json");
     expect(dp?.present).toBe(true);
-    expect(dp?.declaredInDatapackage).toBe(false);
+    expect(dp?.expectedBy).toEqual(["wacz-spec"]);
   });
 
   it("hash 不一致は該当 file の issues に紐付く", async () => {
@@ -91,6 +92,17 @@ describe("Report.entries", () => {
     });
     const ghost = report.entries.find((e) => e.path === "pages/extraPages.jsonl");
     expect(ghost?.present).toBe(false);
-    expect(ghost?.declaredInDatapackage).toBe(true);
+    expect(ghost?.expectedBy).toContain("datapackage");
+  });
+
+  it("§5.2 MUST が不在(未宣言)でも present:false / expectedBy:[wacz-spec] で出る", async () => {
+    // omitPages は zip からも resources[] からも pages.jsonl を落とす
+    // (= 不在かつ未宣言)。それでも §5.2.3 の MUST としてツリーに出るべき。
+    const report = await reportFor(tmpDir, { omitPages: true });
+    const pages = report.entries.find((e) => e.path === "pages/pages.jsonl");
+    expect(pages?.present).toBe(false);
+    expect(pages?.expectedBy).toEqual(["wacz-spec"]);
+    // wacz/required-files の issue が該当 entry に紐付く
+    expect(pages?.issues.some((i) => i.rule === "wacz/required-files")).toBe(true);
   });
 });

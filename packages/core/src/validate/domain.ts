@@ -231,20 +231,31 @@ export const formatParseSourceError = (e: ParseSourceError): string => {
  * これを §5.1 風のディレクトリツリーに組み直し、issue を file に重ねて
  * 表示する。flat に持つことで JSON consumer がそのまま扱える。
  *
- * `present: false` は「datapackage.json が宣言しているが zip に実在しない」
- * file を表す(declared-but-missing の可視化用)。その場合 size / 圧縮は無い。
+ * `present: false` は「期待されるが zip に実在しない」file を表す。
+ * 「なぜ期待されるか」は {@link ReportEntry.expectedBy} が持つ — datapackage の
+ * 宣言由来か、WACZ §5.2 の MUST 由来か。その場合 size / 圧縮は無い。
  */
+
+/**
+ * ReportEntry が「あるべき」とされる理由。
+ *   - `"datapackage"`: datapackage.json の `resources[].path` に宣言されている。
+ *   - `"wacz-spec"`: WACZ §5.2 が MUST とする(datapackage.json / pages/pages.jsonl /
+ *     archive/ の WARC / indexes/ の index)。
+ * 両方に該当することもある。空配列 = zip に実在するだけで、特に「期待」はされていない。
+ */
+export type ExpectedBy = "datapackage" | "wacz-spec";
+
 export interface ReportEntry {
   /** zip エントリ path。例: `archive/data.warc.gz`。 */
   path: string;
-  /** zip に実在するか。false = datapackage の resources にだけ現れる。 */
+  /** zip に実在するか。false = 期待されるが実在しない(欠落)。 */
   present: boolean;
   /** 解凍後のバイト数(present のみ)。 */
   uncompressedSize?: number;
   /** zip の圧縮方式(0=STORE / 8=DEFLATE)(present のみ)。 */
   compressionMethod?: number;
-  /** datapackage.json の `resources[].path` に宣言されているか。 */
-  declaredInDatapackage: boolean;
+  /** なぜ「あるべき」か。{@link ExpectedBy} を参照。空 = 実在するだけ。 */
+  expectedBy: ExpectedBy[];
   /** この path を `location.entry` に持つ issue(rule + severity)。 */
   issues: { rule: string; severity: Severity }[];
 }

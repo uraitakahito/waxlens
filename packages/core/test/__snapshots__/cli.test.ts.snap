@@ -5,7 +5,9 @@ exports[`cli — JSON output shape (default) > gzipped CDXJ JSON snapshot 1`] = 
   "entries": [
     {
       "compressionMethod": 0,
-      "declaredInDatapackage": true,
+      "expectedBy": [
+        "datapackage",
+      ],
       "issues": [],
       "path": "archive/data.warc.gz",
       "present": true,
@@ -13,7 +15,9 @@ exports[`cli — JSON output shape (default) > gzipped CDXJ JSON snapshot 1`] = 
     },
     {
       "compressionMethod": 8,
-      "declaredInDatapackage": true,
+      "expectedBy": [
+        "datapackage",
+      ],
       "issues": [
         {
           "rule": "cdxj/index-not-gzipped",
@@ -26,7 +30,10 @@ exports[`cli — JSON output shape (default) > gzipped CDXJ JSON snapshot 1`] = 
     },
     {
       "compressionMethod": 8,
-      "declaredInDatapackage": true,
+      "expectedBy": [
+        "datapackage",
+        "wacz-spec",
+      ],
       "issues": [],
       "path": "pages/pages.jsonl",
       "present": true,
@@ -34,7 +41,9 @@ exports[`cli — JSON output shape (default) > gzipped CDXJ JSON snapshot 1`] = 
     },
     {
       "compressionMethod": 8,
-      "declaredInDatapackage": true,
+      "expectedBy": [
+        "datapackage",
+      ],
       "issues": [],
       "path": "fuzzy.json",
       "present": true,
@@ -42,7 +51,9 @@ exports[`cli — JSON output shape (default) > gzipped CDXJ JSON snapshot 1`] = 
     },
     {
       "compressionMethod": 8,
-      "declaredInDatapackage": false,
+      "expectedBy": [
+        "wacz-spec",
+      ],
       "issues": [],
       "path": "datapackage.json",
       "present": true,
@@ -104,7 +115,9 @@ exports[`cli — JSON output shape (default) > missing-profile JSON snapshot 1`]
   "entries": [
     {
       "compressionMethod": 0,
-      "declaredInDatapackage": true,
+      "expectedBy": [
+        "datapackage",
+      ],
       "issues": [],
       "path": "archive/data.warc.gz",
       "present": true,
@@ -112,7 +125,9 @@ exports[`cli — JSON output shape (default) > missing-profile JSON snapshot 1`]
     },
     {
       "compressionMethod": 8,
-      "declaredInDatapackage": true,
+      "expectedBy": [
+        "datapackage",
+      ],
       "issues": [],
       "path": "indexes/index.cdxj",
       "present": true,
@@ -120,7 +135,10 @@ exports[`cli — JSON output shape (default) > missing-profile JSON snapshot 1`]
     },
     {
       "compressionMethod": 8,
-      "declaredInDatapackage": true,
+      "expectedBy": [
+        "datapackage",
+        "wacz-spec",
+      ],
       "issues": [],
       "path": "pages/pages.jsonl",
       "present": true,
@@ -128,7 +146,9 @@ exports[`cli — JSON output shape (default) > missing-profile JSON snapshot 1`]
     },
     {
       "compressionMethod": 8,
-      "declaredInDatapackage": true,
+      "expectedBy": [
+        "datapackage",
+      ],
       "issues": [],
       "path": "fuzzy.json",
       "present": true,
@@ -136,7 +156,9 @@ exports[`cli — JSON output shape (default) > missing-profile JSON snapshot 1`]
     },
     {
       "compressionMethod": 8,
-      "declaredInDatapackage": false,
+      "expectedBy": [
+        "wacz-spec",
+      ],
       "issues": [
         {
           "rule": "datapackage/profile-required",
@@ -190,7 +212,9 @@ exports[`cli — JSON output shape (default) > valid WACZ JSON snapshot 1`] = `
   "entries": [
     {
       "compressionMethod": 0,
-      "declaredInDatapackage": true,
+      "expectedBy": [
+        "datapackage",
+      ],
       "issues": [],
       "path": "archive/data.warc.gz",
       "present": true,
@@ -198,7 +222,9 @@ exports[`cli — JSON output shape (default) > valid WACZ JSON snapshot 1`] = `
     },
     {
       "compressionMethod": 8,
-      "declaredInDatapackage": true,
+      "expectedBy": [
+        "datapackage",
+      ],
       "issues": [],
       "path": "indexes/index.cdxj",
       "present": true,
@@ -206,7 +232,10 @@ exports[`cli — JSON output shape (default) > valid WACZ JSON snapshot 1`] = `
     },
     {
       "compressionMethod": 8,
-      "declaredInDatapackage": true,
+      "expectedBy": [
+        "datapackage",
+        "wacz-spec",
+      ],
       "issues": [],
       "path": "pages/pages.jsonl",
       "present": true,
@@ -214,7 +243,9 @@ exports[`cli — JSON output shape (default) > valid WACZ JSON snapshot 1`] = `
     },
     {
       "compressionMethod": 8,
-      "declaredInDatapackage": true,
+      "expectedBy": [
+        "datapackage",
+      ],
       "issues": [],
       "path": "fuzzy.json",
       "present": true,
@@ -222,7 +253,9 @@ exports[`cli — JSON output shape (default) > valid WACZ JSON snapshot 1`] = `
     },
     {
       "compressionMethod": 8,
-      "declaredInDatapackage": false,
+      "expectedBy": [
+        "wacz-spec",
+      ],
       "issues": [],
       "path": "datapackage.json",
       "present": true,

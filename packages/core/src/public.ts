@@ -16,6 +16,7 @@ export { DEFAULT_RULES } from "./validate/rules/index.js";
 export { renderJson } from "./render/json.js";
 export type {
   AbsolutePath,
+  ExpectedBy,
   FileSource,
   Issue,
   IssueLocation,

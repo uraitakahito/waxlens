@@ -1,24 +1,28 @@
 /**
  * `Report.entries` の収集(best-effort)。
  *
- * WACZ(zip)の実エントリを列挙し、各 file に
- *   - getEntryMeta() の size / 圧縮方式
- *   - datapackage.json が宣言しているか (resources[].path)
+ * 「期待されるファイル集合」を **実在 ∪ datapackage 宣言 ∪ §5.2 MUST** の
+ * 和として作り、各 path に
+ *   - present: zip に実在するか
+ *   - expectedBy: なぜ「あるべき」か(datapackage 宣言 / §5.2 MUST)
+ *   - getEntryMeta() の size / 圧縮方式(present のみ)
  *   - その path を `location.entry` に持つ issue
  * を紐付けた flat なリストを返す。renderer (tui) がこれを §5.1 風の
  * ディレクトリツリーへ組み直す。
  *
- * datapackage が宣言しているが zip に無い path は `present: false` の
- * entry として加える(declared-but-missing の可視化)。location.entry が
- * どの entry にも一致しない issue(例: datapackage.json 自体の欠落)は
- * Layout には出さない — Issues ビュー側で従来どおり見える。
+ * 期待されるが zip に無い path は `present: false` の entry として出る
+ * (欠落の可視化)。これにより「datapackage 宣言済みだが無い」だけでなく
+ * 「§5.2 が MUST とするのに無い(未宣言でも)」ファイルもツリーに現れる。
+ * archive/ ・ indexes/ の「≥1」は特定 path が無いので、未充足のときだけ
+ * ディレクトリ単位の placeholder entry を足す。
  *
  * stats.ts と同じく engine から best-effort で呼ばれる。datapackage の
  * parse は緩い `parseDatapackage` を使い、失敗しても一覧は止めない。
  */
 import { parseDatapackage } from "../wacz/datapackage.js";
 import type { WaczReader } from "../wacz/reader.js";
-import type { Issue, ReportEntry } from "./domain.js";
+import type { ExpectedBy, Issue, ReportEntry } from "./domain.js";
+import { SPEC_REQUIRED_PATHS, hasIndex, hasWarc } from "./wacz-spec.js";
 
 const DATAPACKAGE_ENTRY = "datapackage.json";
 
@@ -39,37 +43,45 @@ export const buildEntries = async (
   issues: readonly Issue[],
 ): Promise<ReportEntry[]> => {
   const declared = await declaredPaths(wacz);
+  const names = wacz.entryNames();
+  const present = new Set(names);
   const byPath = new Map<string, ReportEntry>();
 
-  // 1) zip の実エントリ
-  for (const path of wacz.entryNames()) {
-    const meta = wacz.getEntryMeta(path);
+  // path が「なぜ期待されるか」。datapackage 宣言 + §5.2 の特定パス。
+  const expectFor = (path: string): ExpectedBy[] => {
+    const by: ExpectedBy[] = [];
+    if (declared.has(path)) by.push("datapackage");
+    if (SPEC_REQUIRED_PATHS.includes(path)) by.push("wacz-spec");
+    return by;
+  };
+
+  // 1) 実在 ∪ datapackage 宣言 ∪ §5.2 特定パス を 1 つの集合にして entry 化。
+  //    present で実在を、expectedBy で「なぜ期待されるか」を持つ。
+  for (const path of new Set([...names, ...declared, ...SPEC_REQUIRED_PATHS])) {
+    const meta = present.has(path) ? wacz.getEntryMeta(path) : undefined;
     byPath.set(path, {
       path,
-      present: true,
+      present: present.has(path),
       // exactOptionalPropertyTypes: undefined を明示代入しないよう条件 spread。
       ...(meta && {
         uncompressedSize: meta.uncompressedSize,
         compressionMethod: meta.compressionMethod,
       }),
-      declaredInDatapackage: declared.has(path),
+      expectedBy: expectFor(path),
       issues: [],
     });
   }
 
-  // 2) datapackage が宣言するが zip に無い path(declared-but-missing)
-  for (const path of declared) {
-    if (!byPath.has(path)) {
-      byPath.set(path, {
-        path,
-        present: false,
-        declaredInDatapackage: true,
-        issues: [],
-      });
-    }
+  // 2) §5.2 の「ディレクトリに ≥1」(archive/ の WARC、indexes/ の index)。
+  //    特定 path が無いので、未充足のときだけ dir 単位の placeholder を足す。
+  if (!hasWarc(names)) {
+    byPath.set("archive/", { path: "archive/", present: false, expectedBy: ["wacz-spec"], issues: [] });
+  }
+  if (!hasIndex(names)) {
+    byPath.set("indexes/", { path: "indexes/", present: false, expectedBy: ["wacz-spec"], issues: [] });
   }
 
-  // 3) issue を path で紐付け
+  // 3) issue を path で紐付け(archive//indexes/ の placeholder にも付く)。
   for (const issue of issues) {
     const path = issue.location?.entry;
     if (path === undefined) continue;
