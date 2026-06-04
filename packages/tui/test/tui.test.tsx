@@ -229,16 +229,18 @@ describe("tui — layout view", () => {
     expect(frame).not.toContain("data.warc.gz");
   });
 
-  it("Tab switches to the Layout view: §5.1 tree + issue markers + (missing)", async () => {
+  it("Tab switches to the Layout view: §5.1 tree with compact status icons", async () => {
     const { lastFrame, stdin } = render(<App report={withEntries()} />);
     stdin.write("\t"); // Tab
     await new Promise((resolve) => setTimeout(resolve, 20));
     const frame = lastFrame() ?? "";
     expect(frame).toContain("data.warc.gz"); // tree leaf
     expect(frame).toContain("└──"); // §5.1 connector
-    expect(frame).toContain("✗"); // error marker on data.warc.gz
-    expect(frame).toContain("datapackage/resource-hashes"); // rule name on the file
-    expect(frame).toContain("(missing — declared in datapackage)"); // declared-but-absent extraPages.jsonl
+    expect(frame).toContain("✗"); // compact status icon (error issue / missing)
+    // 詳細(rule 名・欠落理由)はツリーから消え、DetailPane に一本化した。
+    // focus 0 はディレクトリ行なのでペインは (select a file) → frame 全体から消える。
+    expect(frame).not.toContain("datapackage/resource-hashes");
+    expect(frame).not.toContain("(missing — declared in datapackage)");
   });
 
   // 詳細ペイン: 単一 root file を entry にして focus 0 がその file を指すようにし、
