@@ -24,11 +24,12 @@
  * のためにある。
  */
 import pc from "picocolors";
-import type { Issue, Report } from "@waxlens/core";
+import { t, type Issue, type Locale, type Report } from "@waxlens/core";
 import { buildEntryTree, entryMarker, flattenTree } from "./tree.js";
 
 export interface PlainRenderOptions {
   color: boolean;
+  locale: Locale;
 }
 
 const ICON = {
@@ -70,7 +71,7 @@ export const renderPlain = (report: Report, opts: PlainRenderOptions): string =>
     const headerColor = worst === "error" ? c.red : worst === "warning" ? c.yellow : c.cyan;
     lines.push(`${headerColor(`[${headerIcon}]`)} ${c.bold(ruleName)}`);
     for (const issue of ruleIssues) {
-      lines.push(`    ${formatIssue(issue, c)}`);
+      lines.push(`    ${formatIssue(issue, c, opts.locale)}`);
     }
   }
 
@@ -131,10 +132,10 @@ const formatBytes = (n: number): string => {
  * 構造化された details は 1 段インデントを下げて JSON 化する。これに
  * よって renderer が JSON consumer に見えるデータについて嘘をつかない。
  */
-const formatIssue = (issue: Issue, c: typeof pc): string => {
+const formatIssue = (issue: Issue, c: typeof pc, locale: Locale): string => {
   const where = formatLocation(issue);
   const wherePart = where ? `${c.dim(where)} — ` : "";
-  const out = [`${wherePart}${issue.message}`];
+  const out = [`${wherePart}${t(issue.messageKey, issue.params ?? {}, locale)}`];
 
   if (issue.details !== undefined) {
     const json = JSON.stringify(issue.details);

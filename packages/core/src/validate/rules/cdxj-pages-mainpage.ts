@@ -29,7 +29,7 @@ const CDXJ_ENTRY = "indexes/index.cdxj";
 
 export const cdxjPagesMainpageRule: ValidationRule = {
   name: "cdxj/pages-mainpage",
-  description: `datapackage.mainPageURL must appear in both ${PAGES_ENTRY} and ${CDXJ_ENTRY}`,
+  descriptionKey: "cdxj/pages-mainpage.desc",
   severity: "warning",
   applicability: {
     severityByProfile: { lenient: "info" },
@@ -61,7 +61,8 @@ export const cdxjPagesMainpageRule: ValidationRule = {
         issues.push({
           rule: "cdxj/pages-mainpage",
           severity: "warning",
-          message: `${DATAPACKAGE_ENTRY} mainPageURL "${mainPageURL}" is not listed in ${PAGES_ENTRY}`,
+          messageKey: "cdxj/pages-mainpage.not-in-pages",
+          params: { url: mainPageURL },
           location: { entry: PAGES_ENTRY },
           details: {
             mainPageURL,
@@ -82,7 +83,8 @@ export const cdxjPagesMainpageRule: ValidationRule = {
         issues.push({
           rule: "cdxj/pages-mainpage",
           severity: "warning",
-          message: `${DATAPACKAGE_ENTRY} mainPageURL "${mainPageURL}" has no record in ${CDXJ_ENTRY}`,
+          messageKey: "cdxj/pages-mainpage.no-cdxj-record",
+          params: { url: mainPageURL },
           location: { entry: CDXJ_ENTRY },
           details: {
             mainPageURL,

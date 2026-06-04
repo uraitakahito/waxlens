@@ -24,7 +24,7 @@ const EXPECTED_PROFILE = "data-package";
 
 export const datapackageProfileRule: ValidationRule = {
   name: "datapackage/profile-required",
-  description: `${DATAPACKAGE_ENTRY} must set profile === "${EXPECTED_PROFILE}"`,
+  descriptionKey: "datapackage/profile-required.desc",
   severity: "error",
 
   run: async (wacz) => {
@@ -40,7 +40,8 @@ export const datapackageProfileRule: ValidationRule = {
       issues.push({
         rule: "datapackage/profile-required",
         severity: "error",
-        message: `${DATAPACKAGE_ENTRY} is not valid JSON or not an object`,
+        messageKey: "datapackage/profile-required.invalid-json",
+        params: { entry: DATAPACKAGE_ENTRY },
         location: { entry: DATAPACKAGE_ENTRY },
       });
       return ok(issues);
@@ -50,7 +51,8 @@ export const datapackageProfileRule: ValidationRule = {
       issues.push({
         rule: "datapackage/profile-required",
         severity: "error",
-        message: `${DATAPACKAGE_ENTRY} is missing the "profile" field`,
+        messageKey: "datapackage/profile-required.missing-field",
+        params: { entry: DATAPACKAGE_ENTRY },
         location: { entry: DATAPACKAGE_ENTRY },
         details: { expected: EXPECTED_PROFILE },
       });
@@ -65,7 +67,12 @@ export const datapackageProfileRule: ValidationRule = {
       issues.push({
         rule: "datapackage/profile-required",
         severity: "error",
-        message: `${DATAPACKAGE_ENTRY} profile is ${JSON.stringify(pkg.profile)}, expected "${EXPECTED_PROFILE}"`,
+        messageKey: "datapackage/profile-required.mismatch",
+        params: {
+          entry: DATAPACKAGE_ENTRY,
+          actual: JSON.stringify(pkg.profile),
+          expected: EXPECTED_PROFILE,
+        },
         location: { entry: DATAPACKAGE_ENTRY },
         details: { expected: EXPECTED_PROFILE, actual: pkg.profile },
       });

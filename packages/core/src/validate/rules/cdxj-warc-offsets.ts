@@ -42,7 +42,7 @@ const EXPECTED_FILENAME = "data.warc.gz";
 
 export const cdxjWarcOffsetsRule: ValidationRule = {
   name: "cdxj/warc-offsets",
-  description: `${CDXJ_ENTRY} offset/length must land on a WARC gzip-member boundary`,
+  descriptionKey: "cdxj/warc-offsets.desc",
   severity: "error",
   applicability: {
     severityByProfile: { lenient: "warning" },
@@ -86,7 +86,8 @@ export const cdxjWarcOffsetsRule: ValidationRule = {
         issues.push({
           rule: "cdxj/warc-offsets",
           severity: "error",
-          message: `${CDXJ_ENTRY} line ${String(line)}: offset / length missing or not numeric`,
+          messageKey: "cdxj/warc-offsets.missing-or-nonnumeric",
+          params: { line: String(line) },
           location: { entry: CDXJ_ENTRY, line },
           details: { offset: offsetField, length: lengthField },
         });
@@ -109,7 +110,8 @@ export const cdxjWarcOffsetsRule: ValidationRule = {
         issues.push({
           rule: "cdxj/warc-offsets",
           severity: "error",
-          message: `${CDXJ_ENTRY} line ${String(line)}: offset ${String(offset)} does not match any WARC gzip-member start`,
+          messageKey: "cdxj/warc-offsets.offset-no-match",
+          params: { line: String(line), offset: String(offset) },
           location: { entry: CDXJ_ENTRY, line, offset },
           details: {
             requested: { offset, length },
@@ -122,7 +124,13 @@ export const cdxjWarcOffsetsRule: ValidationRule = {
         issues.push({
           rule: "cdxj/warc-offsets",
           severity: "error",
-          message: `${CDXJ_ENTRY} line ${String(line)}: length ${String(length)} does not match WARC member at offset ${String(offset)} (actual ${String(member.length)})`,
+          messageKey: "cdxj/warc-offsets.length-mismatch",
+          params: {
+            line: String(line),
+            length: String(length),
+            offset: String(offset),
+            actual: String(member.length),
+          },
           location: { entry: CDXJ_ENTRY, line, offset },
           details: {
             expected: { offset, length },

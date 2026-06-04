@@ -34,14 +34,16 @@ const makeReport = (overrides: Partial<Report> = {}): Report => ({
     {
       rule: "datapackage/profile-required",
       severity: "error",
-      message: 'datapackage.json is missing the "profile" field',
+      messageKey: "datapackage/profile-required.missing-field",
+      params: { entry: "datapackage.json" },
       location: { entry: "datapackage.json" },
       details: { expected: "data-package" },
     },
     {
       rule: "cdxj/filename-archive-relative",
       severity: "error",
-      message: 'entry "filename" starts with "archive/"',
+      messageKey: "cdxj/filename-archive-relative.starts-with-archive",
+      params: { entry: "indexes/index.cdxj" },
       location: { entry: "indexes/index.cdxj", line: 1 },
     },
   ],
@@ -51,7 +53,7 @@ const makeReport = (overrides: Partial<Report> = {}): Report => ({
 
 describe("tui rendering", () => {
   it("renders all issue rule names and the summary", () => {
-    const { lastFrame } = render(<App report={makeReport()} />);
+    const { lastFrame } = render(<App report={makeReport()} locale="en" />);
     const frame = lastFrame() ?? "";
     expect(frame).toContain("waxlens");
     expect(frame).toContain("datapackage/profile-required");
@@ -67,12 +69,12 @@ describe("tui rendering", () => {
       valid: true,
       summary: { passed: 5, failed: 0, warnings: 0, info: 0, durationMs: 8 },
     });
-    const { lastFrame } = render(<App report={report} />);
+    const { lastFrame } = render(<App report={report} locale="en" />);
     expect(lastFrame() ?? "").toContain("All rules passed.");
   });
 
   it("starts with the cursor on the first issue", () => {
-    const { lastFrame } = render(<App report={makeReport()} />);
+    const { lastFrame } = render(<App report={makeReport()} locale="en" />);
     const frame = lastFrame() ?? "";
     // カーソルは最初の rule 名と同じ行に座る。順序を確認することで
     // assert する: ▶ は最初の rule の手前にあり、フレーム内では
@@ -85,7 +87,7 @@ describe("tui rendering", () => {
   });
 
   it("expands details on enter", async () => {
-    const { lastFrame, stdin } = render(<App report={makeReport()} />);
+    const { lastFrame, stdin } = render(<App report={makeReport()} locale="en" />);
     // enter を押す前は details payload が見えていないはず。
     expect(lastFrame() ?? "").not.toContain("expected:");
 
@@ -104,7 +106,7 @@ describe("tui rendering", () => {
   });
 
   it("moves the cursor with the down arrow", async () => {
-    const { lastFrame, stdin } = render(<App report={makeReport()} />);
+    const { lastFrame, stdin } = render(<App report={makeReport()} locale="en" />);
     // ESC[B は down arrow の ANSI シーケンス。Ink はこれを
     // `useInput` 内で `key.downArrow` に decode する。
     stdin.write("[B");
@@ -122,7 +124,7 @@ describe("tui rendering", () => {
     const report = makeReport({
       stats: { warcRecordCount: 42, warcArchiveBytes: 5 * 1024 * 1024, hosts: ["a", "b", "c"] },
     });
-    const frame = render(<App report={report} />).lastFrame() ?? "";
+    const frame = render(<App report={report} locale="en" />).lastFrame() ?? "";
     expect(frame).toContain("42 records");
     expect(frame).toContain("5.0 MB");
     expect(frame).toContain("3 hosts");
@@ -134,12 +136,13 @@ describe("tui rendering", () => {
         {
           rule: "datapackage/resource-hashes",
           severity: "error",
-          message: "hash mismatch",
+          messageKey: "datapackage/resource-hashes.hash-mismatch",
+          params: { path: "archive/data.warc.gz" },
           details: { expected: "sha256:GOOD", actual: "sha256:BAD" },
         },
       ],
     });
-    const { lastFrame, stdin } = render(<App report={report} />);
+    const { lastFrame, stdin } = render(<App report={report} locale="en" />);
     stdin.write("\r");
     await new Promise((resolve) => setTimeout(resolve, 20));
     const frame = lastFrame() ?? "";
@@ -155,7 +158,8 @@ describe("tui rendering", () => {
         {
           rule: "cdxj/warc-offsets",
           severity: "error",
-          message: "offset mismatch",
+          messageKey: "cdxj/warc-offsets.offset-no-match",
+          params: { line: "1", offset: "99" },
           details: {
             requested: { offset: 99, length: 100 },
             candidates: [{ offset: 0, length: 200, warcHeader: ["WARC/1.1"] }],
@@ -163,7 +167,7 @@ describe("tui rendering", () => {
         },
       ],
     });
-    const { lastFrame, stdin } = render(<App report={report} />);
+    const { lastFrame, stdin } = render(<App report={report} locale="en" />);
     stdin.write("\r");
     await new Promise((resolve) => setTimeout(resolve, 20));
     expect(lastFrame() ?? "").toContain("Nearby WARC members:");
@@ -175,7 +179,8 @@ describe("tui rendering", () => {
         {
           rule: "warc/payload-digest",
           severity: "warning",
-          message: "payload digest mismatch",
+          messageKey: "warc/payload-digest.mismatch",
+          params: { memberIdx: "1" },
           details: {
             expected: "sha256:GOOD",
             actual: "sha256:BAD",
@@ -186,7 +191,7 @@ describe("tui rendering", () => {
         },
       ],
     });
-    const { lastFrame, stdin } = render(<App report={report} />);
+    const { lastFrame, stdin } = render(<App report={report} locale="en" />);
     stdin.write("\r");
     await new Promise((resolve) => setTimeout(resolve, 20));
     const frame = lastFrame() ?? "";
@@ -225,12 +230,12 @@ describe("tui — layout view", () => {
     });
 
   it("starts on the Issues view (no file tree)", () => {
-    const frame = render(<App report={withEntries()} />).lastFrame() ?? "";
+    const frame = render(<App report={withEntries()} locale="en" />).lastFrame() ?? "";
     expect(frame).not.toContain("data.warc.gz");
   });
 
   it("Tab switches to the Layout view: §5.1 tree with compact status icons", async () => {
-    const { lastFrame, stdin } = render(<App report={withEntries()} />);
+    const { lastFrame, stdin } = render(<App report={withEntries()} locale="en" />);
     stdin.write("\t"); // Tab
     await new Promise((resolve) => setTimeout(resolve, 20));
     const frame = lastFrame() ?? "";
@@ -261,12 +266,13 @@ describe("tui — layout view", () => {
         {
           rule: "datapackage/profile-required",
           severity: "error",
-          message: 'datapackage.json is missing the "profile" field',
+          messageKey: "datapackage/profile-required.missing-field",
+          params: { entry: "datapackage.json" },
           location: { entry: "datapackage.json" },
         },
       ],
     });
-    const { lastFrame, stdin } = render(<App report={report} />);
+    const { lastFrame, stdin } = render(<App report={report} locale="en" />);
     stdin.write("\t"); // Tab → Layout、focus 0 = datapackage.json(root file）
     await new Promise((resolve) => setTimeout(resolve, 20));
     const frame = lastFrame() ?? "";
@@ -293,12 +299,12 @@ describe("tui — layout view", () => {
         {
           rule: "wacz/required-files",
           severity: "error",
-          message: "datapackage.json is missing (WACZ §5.2.4: MUST exist at the root)",
+          messageKey: "wacz/required-files.missing-datapackage",
           location: { entry: "datapackage.json" },
         },
       ],
     });
-    const { lastFrame, stdin } = render(<App report={report} />);
+    const { lastFrame, stdin } = render(<App report={report} locale="en" />);
     stdin.write("\t");
     await new Promise((resolve) => setTimeout(resolve, 20));
     const frame = lastFrame() ?? "";

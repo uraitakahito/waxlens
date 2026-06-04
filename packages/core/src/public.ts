@@ -14,6 +14,8 @@ export type { ResolvedS3Source, WaczTransport } from "./wacz/transport.js";
 export { DEFAULT_PROFILE, runValidation } from "./validate/engine.js";
 export { DEFAULT_RULES } from "./validate/rules/index.js";
 export { renderJson } from "./render/json.js";
+export { SUPPORTED_LOCALES, resolveLocale, t } from "./i18n/translate.js";
+export type { Locale, MsgParams } from "./i18n/translate.js";
 export type {
   AbsolutePath,
   ExpectedBy,

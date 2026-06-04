@@ -30,7 +30,7 @@ const DATAPACKAGE_ENTRY = "datapackage.json";
 
 export const datapackageHashesRule: ValidationRule = {
   name: "datapackage/resource-hashes",
-  description: `${DATAPACKAGE_ENTRY} resource hashes must match the WACZ contents`,
+  descriptionKey: "datapackage/resource-hashes.desc",
   severity: "error",
 
   run: async (wacz) => {
@@ -46,7 +46,8 @@ export const datapackageHashesRule: ValidationRule = {
       issues.push({
         rule: "datapackage/resource-hashes",
         severity: "error",
-        message: `${DATAPACKAGE_ENTRY} has no "resources" array (or it is empty)`,
+        messageKey: "datapackage/resource-hashes.no-resources",
+        params: { entry: DATAPACKAGE_ENTRY },
         location: { entry: DATAPACKAGE_ENTRY },
       });
       return ok(issues);
@@ -61,7 +62,8 @@ export const datapackageHashesRule: ValidationRule = {
         issues.push({
           rule: "datapackage/resource-hashes",
           severity: "error",
-          message: `${DATAPACKAGE_ENTRY} resource is missing or has an invalid "path"`,
+          messageKey: "datapackage/resource-hashes.invalid-path",
+          params: { entry: DATAPACKAGE_ENTRY },
           location: { entry: DATAPACKAGE_ENTRY },
           details: { resource: res },
         });
@@ -73,7 +75,8 @@ export const datapackageHashesRule: ValidationRule = {
         issues.push({
           rule: "datapackage/resource-hashes",
           severity: "error",
-          message: `Resource "${path}" listed in ${DATAPACKAGE_ENTRY} is missing from the WACZ`,
+          messageKey: "datapackage/resource-hashes.resource-missing",
+          params: { path, entry: DATAPACKAGE_ENTRY },
           location: { entry: path },
         });
         continue;
@@ -84,7 +87,8 @@ export const datapackageHashesRule: ValidationRule = {
         issues.push({
           rule: "datapackage/resource-hashes",
           severity: "error",
-          message: `Resource "${path}" has no "hash" in ${DATAPACKAGE_ENTRY}`,
+          messageKey: "datapackage/resource-hashes.no-hash",
+          params: { path, entry: DATAPACKAGE_ENTRY },
           location: { entry: path },
           details: { actual: actualHash },
         });
@@ -92,7 +96,8 @@ export const datapackageHashesRule: ValidationRule = {
         issues.push({
           rule: "datapackage/resource-hashes",
           severity: "error",
-          message: `Resource "${path}" hash mismatch`,
+          messageKey: "datapackage/resource-hashes.hash-mismatch",
+          params: { path },
           location: { entry: path },
           details: { expected: expectedHash, actual: actualHash },
         });
@@ -103,7 +108,8 @@ export const datapackageHashesRule: ValidationRule = {
         issues.push({
           rule: "datapackage/resource-hashes",
           severity: "error",
-          message: `Resource "${path}" byte length mismatch`,
+          messageKey: "datapackage/resource-hashes.byte-mismatch",
+          params: { path },
           location: { entry: path },
           details: { expected: expectedBytes, actual: actualBytes },
         });

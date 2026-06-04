@@ -32,7 +32,7 @@ const WARC_ENTRY = "archive/data.warc.gz";
 
 export const warcStorageStoreRule: ValidationRule = {
   name: "warc/storage-store",
-  description: `${WARC_ENTRY} must be stored with method STORE (0), not DEFLATE`,
+  descriptionKey: "warc/storage-store.desc",
   severity: "warning",
   applicability: {
     severityByProfile: { lenient: "info" },
@@ -53,7 +53,8 @@ export const warcStorageStoreRule: ValidationRule = {
       issues.push({
         rule: "warc/storage-store",
         severity: "warning",
-        message: `${WARC_ENTRY} is zip-compressed (method ${String(meta.compressionMethod)}) — should be STORE (0) so CDXJ offsets seek correctly`,
+        messageKey: "warc/storage-store.zip-compressed",
+        params: { entry: WARC_ENTRY, method: String(meta.compressionMethod) },
         location: { entry: WARC_ENTRY },
         details: {
           expected: ZIP_COMPRESSION_STORE,

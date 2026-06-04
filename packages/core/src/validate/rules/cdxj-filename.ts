@@ -33,7 +33,7 @@ const CDXJ_ENTRY = "indexes/index.cdxj";
 
 export const cdxjFilenameRule: ValidationRule = {
   name: "cdxj/filename-archive-relative",
-  description: `${CDXJ_ENTRY} entries must use archive-relative filenames (not "archive/...")`,
+  descriptionKey: "cdxj/filename-archive-relative.desc",
   severity: "error",
   applicability: {
     severityByProfile: { lenient: "warning" },
@@ -56,7 +56,12 @@ export const cdxjFilenameRule: ValidationRule = {
       issues.push({
         rule: "cdxj/filename-archive-relative",
         severity: "error",
-        message: `${CDXJ_ENTRY} line ${String(parseErr.line)} could not be parsed (${parseErr.reason})`,
+        messageKey: "cdxj/filename-archive-relative.parse-error",
+        params: {
+          entry: CDXJ_ENTRY,
+          line: String(parseErr.line),
+          reason: parseErr.reason,
+        },
         location: { entry: CDXJ_ENTRY, line: parseErr.line },
         details: { rawLine: parseErr.rawLine },
       });
@@ -72,7 +77,8 @@ export const cdxjFilenameRule: ValidationRule = {
         issues.push({
           rule: "cdxj/filename-archive-relative",
           severity: "error",
-          message: `${CDXJ_ENTRY} entry has no "filename" field`,
+          messageKey: "cdxj/filename-archive-relative.no-filename",
+          params: { entry: CDXJ_ENTRY },
           location: { entry: CDXJ_ENTRY, line: lineNum },
           details: { surt: entry.surt, timestamp: entry.timestamp },
         });
@@ -83,7 +89,8 @@ export const cdxjFilenameRule: ValidationRule = {
         issues.push({
           rule: "cdxj/filename-archive-relative",
           severity: "error",
-          message: `${CDXJ_ENTRY} entry "filename" starts with "archive/" — wabac.js prepends archive/ itself, double-prefix breaks replay`,
+          messageKey: "cdxj/filename-archive-relative.starts-with-archive",
+          params: { entry: CDXJ_ENTRY },
           location: { entry: CDXJ_ENTRY, line: lineNum },
           details: {
             surt: entry.surt,
