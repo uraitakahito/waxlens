@@ -27,8 +27,9 @@
  */
 import { useMemo, useState, type FC } from "react";
 import { Box, Text, useApp, useInput } from "ink";
-import type { Issue, Report } from "@waxlens/core";
+import type { Issue, Report, ReportEntry } from "@waxlens/core";
 import { buildEntryTree, entryMarker, flattenTree, type TreeRow } from "./render/tree.js";
+import { codecName, entryIssues, expectedLabel } from "./render/detail.js";
 
 interface AppProps {
   report: Report;
@@ -96,7 +97,7 @@ export const App: FC<AppProps> = ({ report }) => {
             ))
           )
         ) : (
-          <LayoutView rows={layoutRows} focused={focused} />
+          <LayoutView rows={layoutRows} focused={focused} report={report} />
         )}
       </Box>
       <Summary report={report} />
@@ -106,31 +107,109 @@ export const App: FC<AppProps> = ({ report }) => {
   );
 };
 
-/** Layout ビュー: §5.1 風ツリーに issue マーカー / size / (missing) を重ねる。 */
-const LayoutView: FC<{ rows: TreeRow[]; focused: number }> = ({ rows, focused }) => {
+/**
+ * Layout ビュー: 左に §5.1 風ツリー(issue マーカー / size / (missing))、
+ * 右に選択行(focused)の詳細ペイン。右の空きを使って「何のファイルで
+ * 何が問題か」を出す。中身(bytes)は読まず Report だけで描く。
+ */
+const LayoutView: FC<{ rows: TreeRow[]; focused: number; report: Report }> = ({
+  rows,
+  focused,
+  report,
+}) => {
   if (rows.length === 0) return <Text dimColor>(no entries)</Text>;
+  const selected = rows[focused]?.entry;
+  return (
+    <Box>
+      {/* 左: 既存ツリー。flexShrink={0} で自然幅を保ち、右ペインに場所を空ける。 */}
+      <Box flexDirection="column" flexShrink={0}>
+        {rows.map((row, i) => {
+          const mk = entryMarker(row.entry);
+          // マーカー Text は glyph がある(tone=error|warning)ときだけ描画するので、
+          // color は常に具体値。undefined を渡すと exactOptionalPropertyTypes に弾かれる。
+          const color = mk.tone === "warning" ? "yellow" : "red";
+          const size =
+            row.entry?.present === true && row.entry.uncompressedSize !== undefined
+              ? `  ${formatBytes(row.entry.uncompressedSize)}`
+              : "";
+          const markerText = mk.glyph + (mk.rules.length > 0 ? ` ${mk.rules.join(", ")}` : "");
+          return (
+            <Text key={row.path} inverse={i === focused}>
+              {row.connector}
+              {row.name}
+              <Text dimColor>{size}</Text>
+              {mk.glyph ? <Text color={color}>{`  ${markerText}`}</Text> : null}
+            </Text>
+          );
+        })}
+      </Box>
+      {/* 右: 選択ファイルの詳細。 */}
+      <Box
+        flexDirection="column"
+        flexGrow={1}
+        marginLeft={2}
+        borderStyle="round"
+        borderDimColor
+        paddingX={1}
+      >
+        <DetailPane entry={selected} report={report} />
+      </Box>
+    </Box>
+  );
+};
+
+/** 右ペイン: 選択 entry のメタ情報(path/status/size/expected)+ 紐づく issue 全文。 */
+const DetailPane: FC<{ entry: ReportEntry | undefined; report: Report }> = ({ entry, report }) => {
+  if (!entry) return <Text dimColor>(select a file)</Text>;
   return (
     <Box flexDirection="column">
-      {rows.map((row, i) => {
-        const mk = entryMarker(row.entry);
-        // マーカー Text は glyph がある(tone=error|warning)ときだけ描画するので、
-        // color は常に具体値。undefined を渡すと exactOptionalPropertyTypes に弾かれる。
-        const color = mk.tone === "warning" ? "yellow" : "red";
-        const size =
-          row.entry?.present === true && row.entry.uncompressedSize !== undefined
-            ? `  ${formatBytes(row.entry.uncompressedSize)}`
-            : "";
-        const markerText =
-          mk.glyph + (mk.rules.length > 0 ? ` ${mk.rules.join(", ")}` : "");
-        return (
-          <Text key={row.path} inverse={i === focused}>
-            {row.connector}
-            {row.name}
-            <Text dimColor>{size}</Text>
-            {mk.glyph ? <Text color={color}>{`  ${markerText}`}</Text> : null}
-          </Text>
-        );
-      })}
+      <Text bold>{entry.path}</Text>
+      <Box>
+        <Text dimColor>status </Text>
+        {entry.present ? <Text color="green">present</Text> : <Text color="red">MISSING</Text>}
+      </Box>
+      {entry.present && entry.uncompressedSize !== undefined ? (
+        <Box>
+          <Text dimColor>size </Text>
+          <Text>{`${formatBytes(entry.uncompressedSize)}  (${codecName(entry.compressionMethod)})`}</Text>
+        </Box>
+      ) : null}
+      <Box>
+        <Text dimColor>expected </Text>
+        <Text>{expectedLabel(entry.expectedBy)}</Text>
+      </Box>
+      <IssueList entry={entry} report={report} />
+    </Box>
+  );
+};
+
+/** 選択 file に紐づく issue を全文(icon + rule + message + location)で列挙。 */
+const IssueList: FC<{ entry: ReportEntry; report: Report }> = ({ entry, report }) => {
+  const issues = entryIssues(report, entry.path);
+  return (
+    <Box flexDirection="column" marginTop={1}>
+      <Text dimColor>issues</Text>
+      {issues.length === 0 ? (
+        <Text color="green">  none</Text>
+      ) : (
+        issues.map((issue, n) => <IssueLine key={`${issue.rule}-${String(n)}`} issue={issue} />)
+      )}
+    </Box>
+  );
+};
+
+const IssueLine: FC<{ issue: Issue }> = ({ issue }) => {
+  const tone = toneFor(issue.severity);
+  const loc = formatLocation(issue);
+  return (
+    <Box flexDirection="column">
+      <Text color={tone}>{`${iconFor(issue.severity)} ${issue.rule}`}</Text>
+      <Box marginLeft={2}>
+        <Text>
+          {loc ? <Text dimColor>{`${loc} — `}</Text> : null}
+          {issue.message}
+        </Text>
+      </Box>
     </Box>
   );
 };
