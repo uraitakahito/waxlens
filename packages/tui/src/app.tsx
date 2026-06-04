@@ -27,7 +27,7 @@
  */
 import { createContext, useContext, useMemo, useState, type FC } from "react";
 import { Box, Text, useApp, useInput } from "ink";
-import { t, type Issue, type Locale, type Report, type ReportEntry } from "@waxlens/core";
+import { specUrl, t, type Issue, type Locale, type Report, type ReportEntry } from "@waxlens/core";
 import { buildEntryTree, entryMarker, flattenTree, type TreeRow } from "./render/tree.js";
 import { codecName, entryIssues, expectedLabel } from "./render/detail.js";
 
@@ -206,6 +206,17 @@ const IssueList: FC<{ entry: ReportEntry; report: Report }> = ({ entry, report }
   );
 };
 
+/** issue の params.section が表で解決できれば spec への直リンク行を出す(dimmed)。 */
+const SpecLink: FC<{ issue: Issue; indent: number }> = ({ issue, indent }) => {
+  const url = specUrl(issue.params?.["section"]);
+  if (url === undefined) return null;
+  return (
+    <Box marginLeft={indent}>
+      <Text dimColor>{`spec ${url}`}</Text>
+    </Box>
+  );
+};
+
 const IssueLine: FC<{ issue: Issue }> = ({ issue }) => {
   const locale = useContext(LocaleContext);
   const tone = toneFor(issue.severity);
@@ -219,6 +230,7 @@ const IssueLine: FC<{ issue: Issue }> = ({ issue }) => {
           {t(issue.messageKey, issue.params ?? {}, locale)}
         </Text>
       </Box>
+      <SpecLink issue={issue} indent={2} />
     </Box>
   );
 };
@@ -280,6 +292,7 @@ const IssueRow: FC<{ issue: Issue; focused: boolean; expanded: boolean }> = ({
           {t(issue.messageKey, issue.params ?? {}, locale)}
         </Text>
       </Box>
+      <SpecLink issue={issue} indent={6} />
       {expanded && issue.details !== undefined ? (
         <Box marginLeft={6} flexDirection="column">
           <ExpandedDetails details={issue.details} />

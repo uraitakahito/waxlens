@@ -56,25 +56,31 @@ export const waczRequiredFilesRule: ValidationRule = {
       }
     };
 
+    // params.section は spec のセクション番号。renderer が specUrl() で
+    // 該当アンカー(例 §5.2.1 → #archive)へのリンクを出すのに使う。
     need(
       wacz.hasEntry("datapackage.json"),
       "datapackage.json",
       "wacz/required-files.missing-datapackage",
+      { section: "5.2.4" },
     );
     need(
       wacz.hasEntry("pages/pages.jsonl"),
       "pages/pages.jsonl",
       "wacz/required-files.missing-pages",
+      { section: "5.2.3" },
     );
     need(
       hasWarc(names),
       "archive/",
       "wacz/required-files.missing-archive",
+      { section: "5.2.1" },
     );
     need(
       hasIndex(names),
       "indexes/",
       "wacz/required-files.missing-indexes",
+      { section: "5.2.2" },
     );
 
     return Promise.resolve(ok(issues));

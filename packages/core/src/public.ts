@@ -16,6 +16,7 @@ export { DEFAULT_RULES } from "./validate/rules/index.js";
 export { renderJson } from "./render/json.js";
 export { SUPPORTED_LOCALES, resolveLocale, t } from "./i18n/translate.js";
 export type { Locale, MsgParams } from "./i18n/translate.js";
+export { SPEC_SECTIONS, specUrl } from "./validate/spec-sections.js";
 export type {
   AbsolutePath,
   ExpectedBy,
