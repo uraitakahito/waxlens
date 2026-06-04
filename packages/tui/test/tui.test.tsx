@@ -240,4 +240,67 @@ describe("tui — layout view", () => {
     expect(frame).toContain("datapackage/resource-hashes"); // rule name on the file
     expect(frame).toContain("(missing — declared in datapackage)"); // declared-but-absent extraPages.jsonl
   });
+
+  // 詳細ペイン: 単一 root file を entry にして focus 0 がその file を指すようにし、
+  // 矢印ナビに依存せず検証する(ナビ自体は別テストが cover 済み)。
+  it("Layout pane shows metadata + full issue for the selected file", async () => {
+    const report = makeReport({
+      entries: [
+        {
+          path: "datapackage.json",
+          present: true,
+          uncompressedSize: 885,
+          compressionMethod: 8,
+          expectedBy: ["wacz-spec"],
+          issues: [{ rule: "datapackage/profile-required", severity: "error" }],
+        },
+      ],
+      issues: [
+        {
+          rule: "datapackage/profile-required",
+          severity: "error",
+          message: 'datapackage.json is missing the "profile" field',
+          location: { entry: "datapackage.json" },
+        },
+      ],
+    });
+    const { lastFrame, stdin } = render(<App report={report} />);
+    stdin.write("\t"); // Tab → Layout、focus 0 = datapackage.json(root file）
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    const frame = lastFrame() ?? "";
+    expect(frame).toContain("present"); // status
+    expect(frame).toContain("DEFLATE"); // codecName(8)
+    expect(frame).toContain("required by §5.2"); // expectedLabel(["wacz-spec"])
+    expect(frame).toContain("datapackage/profile-required"); // ペインの issue rule
+    // 全文 message はペイン幅で word-wrap される(Ink は語の途中で折らない)。
+    // message にしか出ない語 "field" で本文が描かれていることを確認する。
+    expect(frame).toContain("field");
+  });
+
+  it("Layout pane shows MISSING + §5.2 reason for an absent required file", async () => {
+    const report = makeReport({
+      entries: [
+        {
+          path: "datapackage.json",
+          present: false,
+          expectedBy: ["wacz-spec"],
+          issues: [{ rule: "wacz/required-files", severity: "error" }],
+        },
+      ],
+      issues: [
+        {
+          rule: "wacz/required-files",
+          severity: "error",
+          message: "datapackage.json is missing (WACZ §5.2.4: MUST exist at the root)",
+          location: { entry: "datapackage.json" },
+        },
+      ],
+    });
+    const { lastFrame, stdin } = render(<App report={report} />);
+    stdin.write("\t");
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    const frame = lastFrame() ?? "";
+    expect(frame).toContain("MISSING"); // pane の status(tree は小文字 missing なので pane を指す）
+    expect(frame).toContain("wacz/required-files"); // pane の issue rule
+  });
 });
