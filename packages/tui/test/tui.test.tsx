@@ -204,7 +204,7 @@ describe("tui — layout view", () => {
           present: true,
           uncompressedSize: 100,
           compressionMethod: 0,
-          declaredInDatapackage: true,
+          expectedBy: ["datapackage"],
           issues: [{ rule: "datapackage/resource-hashes", severity: "error" }],
         },
         {
@@ -212,13 +212,13 @@ describe("tui — layout view", () => {
           present: true,
           uncompressedSize: 50,
           compressionMethod: 8,
-          declaredInDatapackage: false,
+          expectedBy: ["wacz-spec"],
           issues: [],
         },
         {
           path: "pages/extraPages.jsonl",
           present: false,
-          declaredInDatapackage: true,
+          expectedBy: ["datapackage"],
           issues: [],
         },
       ],
@@ -238,6 +238,6 @@ describe("tui — layout view", () => {
     expect(frame).toContain("└──"); // §5.1 connector
     expect(frame).toContain("✗"); // error marker on data.warc.gz
     expect(frame).toContain("datapackage/resource-hashes"); // rule name on the file
-    expect(frame).toContain("(missing)"); // declared-but-absent extraPages.jsonl
+    expect(frame).toContain("(missing — declared in datapackage)"); // declared-but-absent extraPages.jsonl
   });
 });

@@ -8,7 +8,7 @@ import { buildEntryTree, entryMarker, flattenTree } from "../src/render/tree.js"
 const entry = (path: string, over: Partial<ReportEntry> = {}): ReportEntry => ({
   path,
   present: true,
-  declaredInDatapackage: false,
+  expectedBy: [],
   issues: [],
   ...over,
 });
@@ -50,9 +50,14 @@ describe("entryMarker", () => {
       "warning",
     );
   });
-  it("declared-but-missing → (missing) / error", () => {
-    const m = entryMarker(entry("x", { present: false, declaredInDatapackage: true }));
-    expect(m.glyph).toBe("(missing)");
+  it("declared-but-missing → 理由つき (missing) / error", () => {
+    const m = entryMarker(entry("x", { present: false, expectedBy: ["datapackage"] }));
+    expect(m.glyph).toBe("(missing — declared in datapackage)");
+    expect(m.tone).toBe("error");
+  });
+  it("§5.2 MUST 欠落 → required by §5.2 を併記 / error", () => {
+    const m = entryMarker(entry("x", { present: false, expectedBy: ["wacz-spec"] }));
+    expect(m.glyph).toBe("(missing — required by §5.2)");
     expect(m.tone).toBe("error");
   });
   it("clean file → グリフ無し / none", () => {

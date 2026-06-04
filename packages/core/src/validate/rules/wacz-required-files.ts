@@ -24,9 +24,7 @@
  */
 import { ok } from "../../result.js";
 import type { Issue, ValidationRule } from "../domain.js";
-
-const WARC_RE = /^archive\/.+\.warc(\.gz)?$/;
-const INDEX_RE = /^indexes\/.+\.(cdx|cdxj|idx)(\.gz)?$/;
+import { hasIndex, hasWarc } from "../wacz-spec.js";
 
 export const waczRequiredFilesRule: ValidationRule = {
   name: "wacz/required-files",
@@ -63,12 +61,12 @@ export const waczRequiredFilesRule: ValidationRule = {
       "pages/pages.jsonl is missing (WACZ §5.2.3: MUST be present)",
     );
     need(
-      names.some((name) => WARC_RE.test(name)),
+      hasWarc(names),
       "archive/",
       "archive/ has no WARC file (WACZ §5.2.1: MUST contain at least one .warc/.warc.gz)",
     );
     need(
-      names.some((name) => INDEX_RE.test(name)),
+      hasIndex(names),
       "indexes/",
       "indexes/ has no index file (WACZ §5.2.2: MUST contain at least one .cdx/.cdxj/.idx)",
     );

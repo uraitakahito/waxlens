@@ -87,11 +87,23 @@ export interface EntryMarker {
 export const entryMarker = (entry?: ReportEntry): EntryMarker => {
   if (entry === undefined) return { glyph: "", rules: [], tone: "none" };
   const rules = entry.issues.map((i) => i.rule);
-  if (!entry.present) return { glyph: "(missing)", rules, tone: "error" };
+  // 欠落は「なぜ期待されるか」を併記する(§5.2 MUST / datapackage 宣言)。
+  if (!entry.present) return { glyph: `(missing — ${missingReason(entry)})`, rules, tone: "error" };
   const worst = worstSeverity(entry.issues);
   if (worst === "error") return { glyph: "✗", rules, tone: "error" };
   if (worst === "warning") return { glyph: "⚠", rules, tone: "warning" };
   return { glyph: "", rules, tone: "none" };
+};
+
+/**
+ * present:false の file が「なぜ期待されるか」を一語で返す。§5.2 MUST を
+ * datapackage 宣言より優先(より強い根拠)。expectedBy が空の欠落は
+ * 理由不明として "missing"(通常は起きない)。
+ */
+const missingReason = (entry: ReportEntry): string => {
+  if (entry.expectedBy.includes("wacz-spec")) return "required by §5.2";
+  if (entry.expectedBy.includes("datapackage")) return "declared in datapackage";
+  return "missing";
 };
 
 const worstSeverity = (issues: { severity: Severity }[]): Severity | undefined => {
