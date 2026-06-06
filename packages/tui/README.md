@@ -1,38 +1,17 @@
 # @waxlens/tui
 
 WACZ validation 用の interactive な terminal UI。
-`@waxlens/core` をラップして、その report を issue 単位の
-expandable な詳細つきで interactive に表示する。stdout または stdin が
-TTY でないときは plain-text view に自動 fallback する
-(`waxlens foo.wacz | cat` や CI ログでも普通に動く)。
 
 machine-readable な JSON 出力が欲しい場合は `@waxlens/core` の
 `waxlens-validate` bin を直接使う。
 
 ## CLI: `waxlens`
 
-```
-waxlens <file>                    validate; TUI on a TTY, plain text on a pipe
-waxlens <file> --no-color         disable ANSI colour escapes in plain output
-waxlens <file> --no-tui           force plain output even on a TTY
-waxlens <file> --profile <name>   spec (default) | browserhive | lenient
-waxlens --version
+```sh
 waxlens --help
+# spec (default) | browserhive | lenient
+waxlens <file> --profile <name>
 ```
-
-### キーバインド (TUI モード)
-
-| キー        | 動作                          |
-| ----------- | ----------------------------- |
-| `↑` / `↓`   | issue 間でカーソル移動        |
-| `enter`     | expanded な詳細パネルをトグル |
-| `q` / `Esc` | 終了                          |
-
-expanded な詳細は payload の形に応じて自動整形される: hash mismatch
-は `expected` / `actual` の diff、CDXJ↔WARC 系 issue は問題の offset の
-実際の WARC record header、payload-digest mismatch は payload 先頭
-256 bytes の hex dump。それ以外は JSON-pretty ブロックに fallback する
-ので、JSON 出力が持っている情報を human view が失うことは無い。
 
 ### Exit codes
 
