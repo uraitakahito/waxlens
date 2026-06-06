@@ -10,7 +10,7 @@ machine-readable な JSON 出力が欲しい場合は `@waxlens/core` の
 ```sh
 waxlens --help
 # spec (default) | browserhive | lenient
-waxlens <file> --profile <name>
+waxlens FILE --profile PROFILE
 ```
 
 ### Exit codes
