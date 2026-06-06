@@ -65,10 +65,6 @@ waxlens s3://my-bucket/captures/abc.wacz
 
 元に戻すときは `pnpm remove -g @waxlens/core @waxlens/tui`。
 
-### 新しい rule を追加する
-
-[`docs/rules.md` → "新しい rule を追加する"](docs/rules.md) を参照。
-
 ## Docker Compose stack (bundled SeaweedFS)
 
 `waxlens-validate s3://...` を試したい場合は、bundled SeaweedFS を含む

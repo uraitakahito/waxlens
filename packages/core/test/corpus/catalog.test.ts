@@ -14,7 +14,7 @@ const MANIFEST: Manifest = {
   fixtures: [
     {
       file: "fixtures/good.wacz",
-      description: "全 rule を pass する黄金 WACZ",
+      description: "全 rule を pass する正常系 WACZ",
       expect: { valid: true, issues: [] },
     },
     {
@@ -24,7 +24,7 @@ const MANIFEST: Manifest = {
     },
     {
       file: "fixtures/good-webrecorder.wacz",
-      description: "webrecorder producer の黄金",
+      description: "webrecorder producer の正常系",
       byProfile: {
         spec: { valid: true, issues: [{ rule: "cdxj/index-not-gzipped", severity: "warning" }] },
         browserhive: {
@@ -40,8 +40,8 @@ const MANIFEST: Manifest = {
 describe("renderCatalog", () => {
   const md = renderCatalog(MANIFEST);
 
-  it("黄金は発火 rule が — / exit 0", () => {
-    expect(md).toContain("| `good.wacz` | 全 rule を pass する黄金 WACZ | — | 0 |");
+  it("正常系は発火 rule が — / exit 0", () => {
+    expect(md).toContain("| `good.wacz` | 全 rule を pass する正常系 WACZ | — | 0 |");
   });
 
   it("error issue を持つ標本は rule(severity) / exit 1", () => {

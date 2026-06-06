@@ -21,7 +21,7 @@ export interface CorpusSpec {
   /** buildWacz に渡す生成オプション。 */
   options: FixtureOptions;
   /**
-   * 意図する違反 rule (`spec` profile での発火を期待)。 空配列 = 黄金
+   * 意図する違反 rule (`spec` profile での発火を期待)。 空配列 = 正常系
    * (どの rule も error にしない)。 build-corpus が
    * `expectRules ⊆ 実際に出た rule` を assert する。
    */
@@ -29,17 +29,17 @@ export interface CorpusSpec {
 }
 
 export const CORPUS: CorpusSpec[] = [
-  // ── 黄金 (全 rule pass) ────────────────────────────────────────────
+  // ── 正常系 (全 rule pass) ────────────────────────────────────────────
   {
     name: "good",
-    description: "全 rule を pass する黄金 WACZ (browserhive producer)",
+    description: "全 rule を pass する正常系 WACZ (browserhive producer)",
     options: {},
     expectRules: [],
   },
   {
     name: "good-webrecorder",
     description:
-      "webrecorder producer の黄金。spec/lenient では valid、browserhive では cdxj/index-not-gzipped が error (byProfile になる)",
+      "webrecorder producer の正常系。spec/lenient では valid、browserhive では cdxj/index-not-gzipped が error (byProfile になる)",
     options: { producer: "webrecorder" },
     expectRules: [],
   },
