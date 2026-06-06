@@ -15,12 +15,17 @@ import { cdxjIndexRecognisedRule } from "./cdxj-index-recognised.js";
 import { cdxjNonGzippedRule } from "./cdxj-non-gzipped.js";
 import { cdxjPagesMainpageRule } from "./cdxj-pages-mainpage.js";
 import { cdxjWarcOffsetsRule } from "./cdxj-warc-offsets.js";
+import { datapackageDigestRule } from "./datapackage-digest.js";
 import { datapackageFrictionlessSchemaRule } from "./datapackage-frictionless-schema.js";
 import { datapackageHashesRule } from "./datapackage-hashes.js";
 import { datapackageProfileRule } from "./datapackage-profile.js";
+import { datapackageResourcesCompleteRule } from "./datapackage-resources-complete.js";
 import { datapackageWaczVersionRule } from "./datapackage-wacz-version.js";
 import { fuzzyValidJsonRule } from "./fuzzy-valid-json.js";
+import { pagesPageSchemaRule } from "./pages-page-schema.js";
 import { waczRequiredFilesRule } from "./wacz-required-files.js";
+import { waczReservedDirsCleanRule } from "./wacz-reserved-dirs-clean.js";
+import { warcExtensionRule } from "./warc-extension.js";
 import { warcMembersIndependentRule } from "./warc-members-independent.js";
 import { warcPayloadDigestRule } from "./warc-payload-digest.js";
 import { warcStorageStoreRule } from "./warc-storage-store.js";
@@ -38,17 +43,26 @@ export const DEFAULT_RULES: readonly ValidationRule[] = [
   // §5.2 の構造的な MUST 欠落を最上段で。ファイルが欠けていれば他の
   // rule の指摘は二次的なので、最初に「そもそも揃っているか」を出す。
   waczRequiredFilesRule,
+  // 予約ディレクトリ(archive/indexes/pages)に異物が無いか(MUST NOT)。
+  waczReservedDirsCleanRule,
   datapackageProfileRule,
   datapackageWaczVersionRule,
   datapackageHashesRule,
   // 補助: 汎用 descriptor の整形式を公式 Frictionless スキーマで検証 (warning)。
   datapackageFrictionlessSchemaRule,
+  // §5.2.5 digest(SHOULD)+ 全ファイルが resources に列挙されているか(MUST)。
+  datapackageDigestRule,
+  datapackageResourcesCompleteRule,
+  // §5.2.3 pages.jsonl の各 page 行が url/ts を持つか(MUST)。
+  pagesPageSchemaRule,
   // cdxj/index-recognised-by-wabac は他の cdxj/* rule より先に来る。
   // 「index が全く無い」状態を最優先で出して、index を読む派生 rule
   // の二次的な不満より前に置きたいため。
   cdxjIndexRecognisedRule,
   cdxjNonGzippedRule,
   cdxjFilenameRule,
+  // §5.2.1 WARC の拡張子と中身の gzip 状態の整合。
+  warcExtensionRule,
   warcStorageStoreRule,
   warcMembersIndependentRule,
   cdxjWarcOffsetsRule,
@@ -77,12 +91,17 @@ export {
   cdxjNonGzippedRule,
   cdxjPagesMainpageRule,
   cdxjWarcOffsetsRule,
+  datapackageDigestRule,
   datapackageFrictionlessSchemaRule,
   datapackageHashesRule,
   datapackageProfileRule,
+  datapackageResourcesCompleteRule,
   datapackageWaczVersionRule,
   fuzzyValidJsonRule,
+  pagesPageSchemaRule,
   waczRequiredFilesRule,
+  waczReservedDirsCleanRule,
+  warcExtensionRule,
   warcMembersIndependentRule,
   warcPayloadDigestRule,
   warcStorageStoreRule,

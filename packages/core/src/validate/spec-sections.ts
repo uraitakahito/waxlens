@@ -16,6 +16,7 @@ export const SPEC_SECTIONS: Record<string, string> = {
   "5.2.2": `${BASE}#indexes`,
   "5.2.3": `${BASE}#pages`,
   "5.2.4": `${BASE}#datapackage-json`,
+  "5.2.5": `${BASE}#datapackage-digest-json`,
 };
 
 /**

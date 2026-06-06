@@ -66,5 +66,26 @@
   "fuzzy/valid-json.desc": "fuzzy.json は(存在する場合)'{' rules: [...] '}' としてパースできる必要がある",
   "fuzzy/valid-json.invalid-json": "{entry} は有効な JSON ではありません",
   "fuzzy/valid-json.not-object": "{entry} のトップレベルはオブジェクトである必要があります",
-  "fuzzy/valid-json.missing-rules": "{entry} に \"rules\" 配列がありません"
+  "fuzzy/valid-json.missing-rules": "{entry} に \"rules\" 配列がありません",
+
+  "warc/extension-gzip-match.desc": "archive の WARC は GZIP の場合 .warc.gz、そうでなければ .warc を使う必要がある(WACZ §5.2.1)",
+  "warc/extension-gzip-match.gz-needs-gz-ext": "{entry} は GZIP 圧縮されていますが .warc.gz 拡張子を使っていません(WACZ §5.2.1: GZIP の WARC は .warc.gz を使う必要があります)",
+  "warc/extension-gzip-match.plain-has-gz-ext": "{entry} は .warc.gz 拡張子ですが、中身は GZIP 圧縮されていません",
+
+  "pages/page-schema.desc": "pages/pages.jsonl の各 page 行は url と ts を持つ valid JSON である必要がある(WACZ §5.2.3)",
+  "pages/page-schema.not-json": "pages/pages.jsonl の {line} 行目は有効な JSON ではありません",
+  "pages/page-schema.missing-prop": "pages/pages.jsonl の {line} 行目に必須プロパティがありません: {props}",
+
+  "datapackage/digest.desc": "datapackage-digest.json は存在すべきで、その hash は datapackage.json と一致する必要がある(WACZ §5.2.5)",
+  "datapackage/digest.absent": "datapackage-digest.json がありません(WACZ §5.2.5: datapackage.json を検証するため含めるべきです)",
+  "datapackage/digest.invalid-json": "{entry} は有効な JSON ではありません",
+  "datapackage/digest.bad-path": "{entry} は \"path\" を \"datapackage.json\" に設定する必要があります",
+  "datapackage/digest.no-hash": "{entry} に datapackage.json の \"hash\" がありません",
+  "datapackage/digest.hash-mismatch": "{entry} の hash が実際の datapackage.json の sha256 と一致しません",
+
+  "wacz/reserved-dirs-clean.desc": "予約ディレクトリ archive/ indexes/ pages/ にカスタムファイルを追加してはならない(WACZ MUST NOT)",
+  "wacz/reserved-dirs-clean.unexpected": "{entry} は予約ディレクトリ \"{dir}\" 内の想定外ファイルです(WACZ はそこにカスタムファイルを追加してはならない)",
+
+  "datapackage/resources-complete.desc": "WACZ 内のすべてのファイルは datapackage.json の resources に列挙される必要がある(WACZ MUST)",
+  "datapackage/resources-complete.orphan": "{entry} は datapackage.json の resources に列挙されていません(WACZ は追加ファイルをすべて列挙する必要があります)"
 }
