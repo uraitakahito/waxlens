@@ -31,6 +31,7 @@ export const warcMembersIndependentRule: ValidationRule = {
   name: "warc/members-independent",
   descriptionKey: "warc/members-independent.desc",
   severity: "error",
+  conformance: "MUST",
 
   run: async (wacz) => {
     const issues: Issue[] = [];

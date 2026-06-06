@@ -49,6 +49,7 @@ export const cdxjNonGzippedRule: ValidationRule = {
   // `browserhive` profile はより厳しく、plain な `.cdxj` を期待し
   // どんな `.gz` index も error 扱いにする。
   severity: "warning",
+  conformance: "MAY",
   applicability: {
     severityByProfile: {
       browserhive: "error",

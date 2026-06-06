@@ -31,6 +31,7 @@ export const cdxjPagesMainpageRule: ValidationRule = {
   name: "cdxj/pages-mainpage",
   descriptionKey: "cdxj/pages-mainpage.desc",
   severity: "warning",
+  conformance: "SHOULD",
   applicability: {
     severityByProfile: { lenient: "info" },
   },

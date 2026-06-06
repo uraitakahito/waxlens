@@ -28,6 +28,7 @@ export const datapackageWaczVersionRule: ValidationRule = {
   name: "datapackage/wacz-version-required",
   descriptionKey: "datapackage/wacz-version-required.desc",
   severity: "error",
+  conformance: "MUST",
   applicability: {
     severityByProfile: { lenient: "warning" },
   },

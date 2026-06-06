@@ -45,6 +45,7 @@ export const warcPayloadDigestRule: ValidationRule = {
   name: "warc/payload-digest",
   descriptionKey: "warc/payload-digest.desc",
   severity: "warning",
+  conformance: "SHOULD",
 
   run: async (wacz) => {
     const issues: Issue[] = [];
