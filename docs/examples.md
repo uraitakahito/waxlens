@@ -1,23 +1,14 @@
 # 事例集(waxlens-corpus)
 
-[`webrecorder/example-webarchive`](https://github.com/webrecorder/example-webarchive)
-の実アーカイブ(各 package の README「実際の WACZ で試す」で使う)に加えて、
-rule ごとの WACZ 標本集 [`uraitakahito/waxlens-corpus`](https://github.com/uraitakahito/waxlens-corpus)
-を使うと、**各 rule の失敗例**と **profile 差**を系統的に確認できる。2 つは
-相補的 — example-webarchive は「実在アーカイブで初手の動作確認」、corpus は
-「rule 別の失敗例 + profile 差のカタログ」。
+WACZ 標本集 [`uraitakahito/waxlens-corpus`](https://github.com/uraitakahito/waxlens-corpus)
+を使うと、**各 rule の失敗例**と **profile 差**を系統的に確認できる。
 
-corpus は **黄金 2 本 + rule 違反 18 本 = 20 標本**を持ち、各標本の期待結果は
-`manifest.json`(waxlens が実際に `runValidation` した出力)に集約されている。
-下の[標本カタログ](#標本カタログ)は、その `manifest.json` から自動生成して
-いるので、corpus の実挙動と常に一致する(rule 一覧と severity matrix は
-[`docs/rules.md`](rules.md)、JSON 出力の形は [`docs/json-schema.md`](json-schema.md))。
+各標本の期待結果は `manifest.json`(waxlens が実際に `runValidation` した出力)に集約されている。
+rule 一覧と severity matrix は [`docs/rules.md`](rules.md)、JSON 出力の形は [`docs/json-schema.md`](json-schema.md)。
 
 ## 入手方法
 
-corpus の WACZ は **Git LFS** 管理(`.gitattributes` が `*.wacz` を LFS 化)。
-そのため `raw.githubusercontent.com/…/good.wacz` は LFS ポインタ(テキスト)を
-返し、実体ではない点に注意。実体を得る方法は 3 つ:
+corpus の WACZ は **Git LFS** 管理。実体を得る方法は 3 つ:
 
 ```sh
 # 方法 A: clone(git-lfs があれば実体まで smudge される)
