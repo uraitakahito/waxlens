@@ -19,16 +19,16 @@ curl -sL \
   -o /tmp/waxlens-demo/wikipedia.wacz
 ```
 
-以降の例の `<path>` はこの `/tmp/waxlens-demo/wikipedia.wacz` に
+以降の例の `PATH` はこの `/tmp/waxlens-demo/wikipedia.wacz` に
 読み替えると動かせる:
 
 ```sh
 # Local file
-waxlens-validate <path>
+waxlens-validate PATH
 # S3 (AWS credentials は default credential chain — env / shared config / IAM role)
-waxlens-validate s3://<bucket>/<key>.wacz
+waxlens-validate s3://BUCKET/KEY.wacz
 # spec (default) | browserhive | lenient
-waxlens-validate <source> --profile <name>
+waxlens-validate SOURCE --profile PROFILE
 ```
 
 rule 別の失敗例や profile 差を試したい場合は、20 標本を揃えた
