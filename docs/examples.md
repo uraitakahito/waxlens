@@ -37,8 +37,8 @@ CORPUS_DIR=../waxlens-corpus pnpm --filter @waxlens/core corpus:build
 
 | fixture | 説明 | `spec` の発火 rule | exit |
 | --- | --- | --- | --- |
-| `good.wacz` | 全 rule を pass する黄金 WACZ (browserhive producer) | — | 0 |
-| `good-webrecorder.wacz` | webrecorder producer の黄金。spec/lenient では valid、browserhive では cdxj/index-not-gzipped が error (byProfile になる) | `cdxj/index-not-gzipped` (warning) | 0 |
+| `good.wacz` | 全 rule を pass する正常系 WACZ (browserhive producer) | — | 0 |
+| `good-webrecorder.wacz` | webrecorder producer の正常系。spec/lenient では valid、browserhive では cdxj/index-not-gzipped が error (byProfile になる) | `cdxj/index-not-gzipped` (warning) | 0 |
 | `datapackage-no-profile.wacz` | datapackage.json の profile field を省略 | `datapackage/profile-required` (error) | 1 |
 | `datapackage-wrong-profile.wacz` | datapackage.json の profile が不正な値 | `datapackage/profile-required` (error) | 1 |
 | `datapackage-unknown-version.wacz` | wacz_version が未知の値 (9.9.9) — warning | `datapackage/wacz-version-required` (warning) | 0 |
@@ -81,9 +81,9 @@ CORPUS_DIR=../waxlens-corpus pnpm --filter @waxlens/core corpus:build
 代表 3 本を `waxlens`(plain 出力)で実際に検証した例。出力メッセージは
 ロケール依存(`--lang` / `WAXLENS_LANG` / `LANG`)で、以下は日本語ロケールの例。
 
-### 黄金 — `good.wacz` → exit 0
+### 正常系 — `good.wacz` → exit 0
 
-全 rule を pass する黄金(browserhive producer)。`error` も `warning` も無い。
+全 rule を pass する正常系(browserhive producer)。`error` も `warning` も無い。
 
 ```text
 $ waxlens good.wacz
