@@ -31,5 +31,11 @@ jobs:
           git clone --depth 1 https://github.com/uraitakahito/waxlens-corpus.git ../waxlens-corpus
           git -C ../waxlens-corpus lfs pull
 
+      # docs/examples.md のカタログ表が manifest.json と一致しているか検査する。
+      # manifest は LFS 対象外なので、この step 自体は `lfs pull` に依存しない。
+      # ズレていれば fail させ、`corpus:docs` での再生成 + commit を促す。
+      - name: Check docs/examples.md is fresh
+        run: CORPUS_DIR="$(cd ../waxlens-corpus && pwd)" pnpm --filter @waxlens/core corpus:docs:check
+
       - name: Run corpus-driven regression
         run: CORPUS_DIR="$(cd ../waxlens-corpus && pwd)" pnpm --filter @waxlens/core test:corpus

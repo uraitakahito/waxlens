@@ -15,6 +15,8 @@
   matrix、upstream 参照
 - [`docs/json-schema.md`](docs/json-schema.md) — `WaxlensReport`
   (`--json` 出力) の wire format
+- [`docs/examples.md`](docs/examples.md) — [waxlens-corpus](https://github.com/uraitakahito/waxlens-corpus)
+  を使った rule 別の事例カタログ (失敗例・profile 差)。`manifest.json` から自動生成
 
 package 個別の詳細:
 

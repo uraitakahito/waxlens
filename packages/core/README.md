@@ -31,6 +31,11 @@ waxlens-validate s3://<bucket>/<key>.wacz
 waxlens-validate <source> --profile <name>
 ```
 
+rule 別の失敗例や profile 差を試したい場合は、20 標本を揃えた
+[waxlens-corpus](https://github.com/uraitakahito/waxlens-corpus) を使う —
+入手方法とカタログは
+[`docs/examples.md`](https://github.com/uraitakahito/waxlens/blob/main/docs/examples.md)。
+
 ### Exit codes
 
 | Code | 意味                                             |

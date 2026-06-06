@@ -44,7 +44,11 @@ gzip 済み CDXJ に対する informational な warning が 1 件出る — `.id
 `--profile browserhive` で動かすと exit 1 になる。これは BrowserHive の
 plain な `.cdxj` 慣習を強制する profile のため。
 
-その他様々なパターンのwaczファイルは[waxlens-corpus](https://github.com/uraitakahito/waxlens-corpus)で確認できます。
+rule ごとの失敗例や profile 差を試せる WACZ 標本(20 本)は
+[waxlens-corpus](https://github.com/uraitakahito/waxlens-corpus) にある。入手方法と
+全標本のカタログは
+[`docs/examples.md`](https://github.com/uraitakahito/waxlens/blob/main/docs/examples.md)
+を参照。
 
 ## License
 
