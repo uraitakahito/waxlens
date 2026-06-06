@@ -25,6 +25,8 @@
     "test:watch": "vitest",
     "corpus:build": "vitest run test/corpus/build-corpus.test.ts",
     "test:corpus": "vitest run test/corpus/corpus-driven.test.ts",
+    "corpus:docs": "vitest run test/corpus/build-docs.test.ts",
+    "corpus:docs:check": "WAXLENS_DOCS_CHECK=1 vitest run test/corpus/build-docs.test.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "check": "pnpm typecheck && pnpm lint && pnpm build && pnpm test",
