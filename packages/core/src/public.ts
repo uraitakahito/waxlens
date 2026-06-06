@@ -12,13 +12,14 @@ export { WaczReader } from "./wacz/reader.js";
 export { fileTransport, s3Transport } from "./wacz/transport.js";
 export type { ResolvedS3Source, WaczTransport } from "./wacz/transport.js";
 export { DEFAULT_PROFILE, runValidation } from "./validate/engine.js";
-export { DEFAULT_RULES } from "./validate/rules/index.js";
+export { DEFAULT_RULES, conformanceForRule } from "./validate/rules/index.js";
 export { renderJson } from "./render/json.js";
 export { SUPPORTED_LOCALES, resolveLocale, t } from "./i18n/translate.js";
 export type { Locale, MsgParams } from "./i18n/translate.js";
 export { SPEC_SECTIONS, specUrl } from "./validate/spec-sections.js";
 export type {
   AbsolutePath,
+  Conformance,
   ExpectedBy,
   FileSource,
   Issue,

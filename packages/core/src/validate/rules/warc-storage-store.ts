@@ -34,6 +34,7 @@ export const warcStorageStoreRule: ValidationRule = {
   name: "warc/storage-store",
   descriptionKey: "warc/storage-store.desc",
   severity: "warning",
+  conformance: "SHOULD",
   applicability: {
     severityByProfile: { lenient: "info" },
   },

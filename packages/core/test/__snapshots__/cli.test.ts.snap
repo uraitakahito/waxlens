@@ -62,6 +62,7 @@ exports[`cli — JSON output shape (default) > gzipped CDXJ JSON snapshot 1`] = 
   ],
   "issues": [
     {
+      "conformance": "MUST",
       "details": {
         "acceptedSuffixes": [
           ".cdx",
@@ -81,6 +82,7 @@ exports[`cli — JSON output shape (default) > gzipped CDXJ JSON snapshot 1`] = 
       "severity": "error",
     },
     {
+      "conformance": "MAY",
       "location": {
         "entry": "indexes/index.cdxj.gz",
       },
@@ -177,6 +179,7 @@ exports[`cli — JSON output shape (default) > missing-profile JSON snapshot 1`]
   ],
   "issues": [
     {
+      "conformance": "MUST",
       "details": {
         "expected": "data-package",
       },

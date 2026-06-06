@@ -25,6 +25,12 @@ import type { WaczReader } from "../wacz/reader.js";
 export type Severity = "error" | "warning" | "info";
 
 /**
+ * spec の規範レベル(RFC 2119)。`Severity`(waxlens の影響判断・profile 依存)
+ * とは直交する別軸で、spec が定める要件の強さを表す(profile 非依存)。
+ */
+export type Conformance = "MUST" | "MUST NOT" | "SHOULD" | "SHOULD NOT" | "MAY";
+
+/**
  * Rule セットの selector。profile を選ぶと producer 固有な rule
  * (例: `cdxj/index-not-gzipped`) の severity が組み替えられるが、
  * spec が要求する check を silent にすることはない。デフォルトは
@@ -102,6 +108,12 @@ export interface ValidationRule {
    * `applicability.severityByProfile` 経由で `warning` に降格しうる。
    */
   severity: Severity;
+  /**
+   * spec の規範レベル(RFC 2119)。`severity` と独立で profile に依存しない —
+   * 「spec が MUST と言っているか SHOULD か」を表す。renderer が rule 名から
+   * 解決して表示する({@link Conformance})。
+   */
+  conformance: Conformance;
   /**
    * profile 別の override。省略時は、rule が全 profile で baseline
    * severity のまま適用される。

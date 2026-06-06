@@ -44,6 +44,7 @@ export const cdxjWarcOffsetsRule: ValidationRule = {
   name: "cdxj/warc-offsets",
   descriptionKey: "cdxj/warc-offsets.desc",
   severity: "error",
+  conformance: "MUST",
   applicability: {
     severityByProfile: { lenient: "warning" },
   },

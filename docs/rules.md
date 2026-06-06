@@ -9,22 +9,27 @@ severity カラムは、各 rule が profile ごとにどう発火するかを�
 デフォルト profile は **`spec`** (WACZ spec + wabac.js 互換)。
 各カラムの意味の詳細は下の [プロファイル](#プロファイル) を参照。
 
-| #   | Name                                | spec    | browserhive | lenient | 何を捕まえるか                                                                     |
-| --- | ----------------------------------- | ------- | ----------- | ------- | ---------------------------------------------------------------------------------- |
-| 1   | `wacz/required-files`               | error   | error       | error   | WACZ §5.2 の MUST(`datapackage.json` / `pages/pages.jsonl` / `archive/` の WARC / `indexes/` の index)が欠落 |
-| 2   | `datapackage/profile-required`      | error   | error       | error   | `datapackage.json` の `profile` が `"data-package"` でない / 欠落(不在は #1 が担当) |
-| 3   | `datapackage/wacz-version-required` | error   | error       | warning | `wacz_version` が欠落 / 空。既知集合外の値は warning                               |
-| 4   | `datapackage/resource-hashes`       | error   | error       | error   | resource の sha256 hash または byte length が archive と一致しない                 |
-| 5   | `datapackage/frictionless-schema`   | warning | warning     | —       | `datapackage.json` が Frictionless v1 公式スキーマ (draft-04) に非適合 (補助・汎用構造の検査。lenient では除外) |
-| 6   | `cdxj/index-recognised-by-wabac`    | error   | error       | error   | `indexes/` 配下の index を wabac.js がロードできない(存在は #1、ロード可否はこちら) |
-| 7   | `cdxj/index-not-gzipped`            | warning | error       | info    | gzip された CDXJ が `.idx` とペアになっていない (browserhive では producer-strict) |
-| 8   | `cdxj/filename-archive-relative`    | error   | error       | warning | CDXJ の `filename` field が `archive/` で始まっている                              |
-| 9   | `warc/storage-store`                | warning | warning     | info    | `archive/data.warc.gz` が STORE ではなく DEFLATE で zip 格納されている             |
-| 10  | `warc/members-independent`          | error   | error       | error   | `.warc.gz` を独立した gzip member の連結としてデコードできない                     |
-| 11  | `cdxj/warc-offsets`                 | error   | error       | warning | CDXJ の offset/length が member 境界に当たらない                                   |
-| 12  | `cdxj/pages-mainpage`               | warning | warning     | info    | `datapackage.mainPageURL` が `pages.jsonl` および/または CDXJ に存在しない         |
-| 13  | `warc/payload-digest`               | warning | warning     | warning | `WARC-Payload-Digest` が payload bytes の sha256 と一致しない                      |
-| 14  | `fuzzy/valid-json`                  | info    | info        | info    | `fuzzy.json` が壊れている (not JSON / not object / `rules` array 欠落)             |
+conformance カラムは、その rule が司る spec の **規範レベル**(RFC 2119 の
+MUST / SHOULD / MAY)を示す。severity が「waxlens の影響判断・profile で変わる」
+のに対し、conformance は「spec がそう定めている事実・profile に依存しない」
+別軸である。1 つの rule が複数レベルに跨る場合は代表レベルを採る。
+
+| #   | Name                                | conformance | spec    | browserhive | lenient | 何を捕まえるか                                                                     |
+| --- | ----------------------------------- | ----------- | ------- | ----------- | ------- | ---------------------------------------------------------------------------------- |
+| 1   | `wacz/required-files`               | MUST        | error   | error       | error   | WACZ §5.2 の MUST(`datapackage.json` / `pages/pages.jsonl` / `archive/` の WARC / `indexes/` の index)が欠落 |
+| 2   | `datapackage/profile-required`      | MUST        | error   | error       | error   | `datapackage.json` の `profile` が `"data-package"` でない / 欠落(不在は #1 が担当) |
+| 3   | `datapackage/wacz-version-required` | MUST        | error   | error       | warning | `wacz_version` が欠落 / 空。既知集合外の値は warning                               |
+| 4   | `datapackage/resource-hashes`       | MUST        | error   | error       | error   | resource の sha256 hash または byte length が archive と一致しない                 |
+| 5   | `datapackage/frictionless-schema`   | SHOULD      | warning | warning     | —       | `datapackage.json` が Frictionless v1 公式スキーマ (draft-04) に非適合 (補助・汎用構造の検査。lenient では除外) |
+| 6   | `cdxj/index-recognised-by-wabac`    | MUST        | error   | error       | error   | `indexes/` 配下の index を wabac.js がロードできない(存在は #1、ロード可否はこちら) |
+| 7   | `cdxj/index-not-gzipped`            | MAY         | warning | error       | info    | gzip された CDXJ が `.idx` とペアになっていない (browserhive では producer-strict) |
+| 8   | `cdxj/filename-archive-relative`    | MUST        | error   | error       | warning | CDXJ の `filename` field が `archive/` で始まっている                              |
+| 9   | `warc/storage-store`                | SHOULD      | warning | warning     | info    | `archive/data.warc.gz` が STORE ではなく DEFLATE で zip 格納されている             |
+| 10  | `warc/members-independent`          | MUST        | error   | error       | error   | `.warc.gz` を独立した gzip member の連結としてデコードできない                     |
+| 11  | `cdxj/warc-offsets`                 | MUST        | error   | error       | warning | CDXJ の offset/length が member 境界に当たらない                                   |
+| 12  | `cdxj/pages-mainpage`               | SHOULD      | warning | warning     | info    | `datapackage.mainPageURL` が `pages.jsonl` および/または CDXJ に存在しない         |
+| 13  | `warc/payload-digest`               | SHOULD      | warning | warning     | warning | `WARC-Payload-Digest` が payload bytes の sha256 と一致しない                      |
+| 14  | `fuzzy/valid-json`                  | MAY         | info    | info        | info    | `fuzzy.json` が壊れている (not JSON / not object / `rules` array 欠落)             |
 
 ## Severity の凡例
 

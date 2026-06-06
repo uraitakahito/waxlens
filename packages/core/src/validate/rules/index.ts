@@ -9,7 +9,7 @@
  * 順に issue を辿るので、意味的にまとまった rule (datapackage/*、
  * cdxj/*、warc/*) を並べておくと読みやすい。
  */
-import type { ValidationRule } from "../domain.js";
+import type { Conformance, ValidationRule } from "../domain.js";
 import { cdxjFilenameRule } from "./cdxj-filename.js";
 import { cdxjIndexRecognisedRule } from "./cdxj-index-recognised.js";
 import { cdxjNonGzippedRule } from "./cdxj-non-gzipped.js";
@@ -56,6 +56,19 @@ export const DEFAULT_RULES: readonly ValidationRule[] = [
   warcPayloadDigestRule,
   fuzzyValidJsonRule,
 ];
+
+/**
+ * rule 名 → spec の規範レベル(RFC 2119)の対応。`DEFAULT_RULES` の宣言から
+ * 導出するので二重管理は無い。renderer が issue.rule から表示用に引く
+ * (`spec-sections.ts` の `specUrl` と対称な、render 時解決のパターン)。
+ */
+const RULE_CONFORMANCE = new Map<string, Conformance>(
+  DEFAULT_RULES.map((rule) => [rule.name, rule.conformance]),
+);
+
+/** rule 名から spec 規範レベルを引く。未知の rule 名は `undefined`(badge を出さない)。 */
+export const conformanceForRule = (rule: string): Conformance | undefined =>
+  RULE_CONFORMANCE.get(rule);
 
 /** Re-export for tests / library consumers that want to compose their own list. */
 export {

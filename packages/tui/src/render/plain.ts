@@ -24,7 +24,7 @@
  * のためにある。
  */
 import pc from "picocolors";
-import { specUrl, t, type Issue, type Locale, type Report } from "@waxlens/core";
+import { conformanceForRule, specUrl, t, type Issue, type Locale, type Report } from "@waxlens/core";
 import { buildEntryTree, entryMarker, flattenTree } from "./tree.js";
 
 export interface PlainRenderOptions {
@@ -69,7 +69,10 @@ export const renderPlain = (report: Report, opts: PlainRenderOptions): string =>
     const headerIcon =
       worst === "error" ? ICON.error : worst === "warning" ? ICON.warning : ICON.info;
     const headerColor = worst === "error" ? c.red : worst === "warning" ? c.yellow : c.cyan;
-    lines.push(`${headerColor(`[${headerIcon}]`)} ${c.bold(ruleName)}`);
+    // spec の規範レベル(MUST/SHOULD/MAY)を rule 名の後に併記。severity とは別軸。
+    const conformance = conformanceForRule(ruleName);
+    const conformanceBadge = conformance !== undefined ? `  ${c.dim(conformance)}` : "";
+    lines.push(`${headerColor(`[${headerIcon}]`)} ${c.bold(ruleName)}${conformanceBadge}`);
     for (const issue of ruleIssues) {
       lines.push(`    ${formatIssue(issue, c, opts.locale)}`);
     }

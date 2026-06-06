@@ -10,17 +10,21 @@
  * バイト単位で再現可能。
  */
 import { t, type Locale } from "../i18n/translate.js";
+import { conformanceForRule } from "../validate/rules/index.js";
 import { specUrl } from "../validate/spec-sections.js";
 import type { Report } from "../validate/domain.js";
 
 export const renderJson = (report: Report, locale: Locale): string => {
   const issues = report.issues.map((issue) => {
     const url = specUrl(issue.params?.["section"]);
+    // rule が宣言する spec 規範レベル(MUST/SHOULD/MAY)。severity とは独立。
+    const conformance = conformanceForRule(issue.rule);
     return {
       ...issue,
       message: t(issue.messageKey, issue.params ?? {}, locale),
       // params.section が表で解決できたときだけ spec への直リンクを同梱。
       ...(url !== undefined && { specUrl: url }),
+      ...(conformance !== undefined && { conformance }),
     };
   });
   return `${JSON.stringify({ ...report, issues }, null, 2)}\n`;

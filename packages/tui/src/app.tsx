@@ -27,7 +27,15 @@
  */
 import { createContext, useContext, useMemo, useState, type FC } from "react";
 import { Box, Text, useApp, useInput } from "ink";
-import { specUrl, t, type Issue, type Locale, type Report, type ReportEntry } from "@waxlens/core";
+import {
+  conformanceForRule,
+  specUrl,
+  t,
+  type Issue,
+  type Locale,
+  type Report,
+  type ReportEntry,
+} from "@waxlens/core";
 import { buildEntryTree, entryMarker, flattenTree, type TreeRow } from "./render/tree.js";
 import { codecName, entryIssues, expectedLabel } from "./render/detail.js";
 
@@ -217,13 +225,23 @@ const SpecLink: FC<{ issue: Issue; indent: number }> = ({ issue, indent }) => {
   );
 };
 
+/** rule が司る spec の規範レベル(MUST/SHOULD/MAY)を rule 名の後に併記。severity とは別軸。 */
+const ConfBadge: FC<{ rule: string }> = ({ rule }) => {
+  const conformance = conformanceForRule(rule);
+  if (conformance === undefined) return null;
+  return <Text color="magenta">{` ${conformance}`}</Text>;
+};
+
 const IssueLine: FC<{ issue: Issue }> = ({ issue }) => {
   const locale = useContext(LocaleContext);
   const tone = toneFor(issue.severity);
   const loc = formatLocation(issue);
   return (
     <Box flexDirection="column">
-      <Text color={tone}>{`${iconFor(issue.severity)} ${issue.rule}`}</Text>
+      <Box>
+        <Text color={tone}>{`${iconFor(issue.severity)} ${issue.rule}`}</Text>
+        <ConfBadge rule={issue.rule} />
+      </Box>
       <Box marginLeft={2}>
         <Text>
           {loc ? <Text dimColor>{`${loc} — `}</Text> : null}
@@ -285,6 +303,7 @@ const IssueRow: FC<{ issue: Issue; focused: boolean; expanded: boolean }> = ({
         <Text color={tone}>{focused ? "▶ " : "  "}</Text>
         <Text color={tone}>{`[${icon}] `}</Text>
         <Text bold>{issue.rule}</Text>
+        <ConfBadge rule={issue.rule} />
       </Box>
       <Box marginLeft={6}>
         <Text>
