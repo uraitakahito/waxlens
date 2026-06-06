@@ -133,6 +133,33 @@ export interface FixtureOptions {
    * the full pair.
    */
   producer?: "browserhive" | "webrecorder";
+  /**
+   * G1 (warc/extension-gzip-match): GZIP 済みの WARC を `.warc.gz` ではなく
+   * `archive/data.warc` という名前で格納し、拡張子と中身の gzip 状態を
+   * 不一致にする。
+   */
+  warcExtensionMismatch?: boolean;
+  /**
+   * G2 (pages/page-schema): pages.jsonl に壊れた page 行を 1 つ足す。
+   * "not-json" = JSON でない行、"missing-prop" = url/ts を欠く行。
+   */
+  pagesBadLine?: "not-json" | "missing-prop";
+  /**
+   * G3 (datapackage/digest): `datapackage-digest.json` を制御する。
+   * 既定(undefined)は datapackage.json の正しい sha256 を同梱。
+   * "absent" = 同梱しない、"bad-hash" = 誤った hash を入れる。
+   */
+  digest?: "absent" | "bad-hash";
+  /**
+   * G4 (wacz/reserved-dirs-clean): 予約ディレクトリ `archive/` に
+   * 異物ファイル(`archive/notes.txt`)を追加する。
+   */
+  reservedDirExtraFile?: boolean;
+  /**
+   * G5 (datapackage/resources-complete): resources に未宣言の孤児ファイル
+   * (`extra.bin`)を root に追加する。
+   */
+  orphanFile?: boolean;
 }
 
 interface DatapackageResource {
@@ -326,7 +353,12 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
     indexEntries.push({ name: cdxjEntryName, bytes: cdxjBytes });
   }
 
-  const pagesBody = buildPagesJsonl(taskId, pageUrl, pageTitle, capturedAt);
+  let pagesBody = buildPagesJsonl(taskId, pageUrl, pageTitle, capturedAt);
+  if (options.pagesBadLine === "not-json") {
+    pagesBody += "this is not json\n";
+  } else if (options.pagesBadLine === "missing-prop") {
+    pagesBody += `${JSON.stringify({ id: taskId, title: "no url or ts" })}\n`;
+  }
   const pagesBytes = Buffer.from(pagesBody, "utf-8");
 
   const fuzzyBody = options.fuzzyOverride ?? buildFuzzyJson();
@@ -414,8 +446,10 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
   // するとサイズが膨らむだけ)。`warcDeflate` で DEFLATE に切り替えて
   // rule #6 を動かす。
   if (!(options.omitArchive ?? false)) {
+    // 既定は archive/data.warc.gz(gzip 内容に正しい拡張子)。
+    // warcExtensionMismatch で gzip 内容のまま `.warc` 名にし、G1 を踏ませる。
     zip.append(warc.bytes, {
-      name: "archive/data.warc.gz",
+      name: options.warcExtensionMismatch === true ? "archive/data.warc" : "archive/data.warc.gz",
       store: !(options.warcDeflate ?? false),
       date: entryDate,
     });
@@ -431,6 +465,28 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
   zip.append(fuzzyBytes, { name: "fuzzy.json", date: entryDate });
   if (!options.omitDatapackage) {
     zip.append(datapackageBytes, { name: "datapackage.json", date: entryDate });
+  }
+
+  // §5.2.5 datapackage-digest.json — 既定で datapackage.json の正しい sha256 を
+  // 同梱し、黄金が datapackage/digest を pass するようにする。"absent" で省略、
+  // "bad-hash" で誤った hash を入れて rule を踏ませる。
+  if (options.digest !== "absent") {
+    const dpHash =
+      options.digest === "bad-hash" ? `sha256:${"0".repeat(64)}` : sha256Hex(datapackageBytes);
+    const digestBytes = Buffer.from(
+      `${JSON.stringify({ path: "datapackage.json", hash: dpHash }, null, 2)}\n`,
+      "utf-8",
+    );
+    zip.append(digestBytes, { name: "datapackage-digest.json", date: entryDate });
+  }
+
+  // G4: 予約ディレクトリ archive/ への異物。
+  if (options.reservedDirExtraFile === true) {
+    zip.append(Buffer.from("stray\n", "utf-8"), { name: "archive/notes.txt", date: entryDate });
+  }
+  // G5: resources に未宣言の孤児ファイル。
+  if (options.orphanFile === true) {
+    zip.append(Buffer.from("orphan\n", "utf-8"), { name: "extra.bin", date: entryDate });
   }
 
   await zip.finalize();

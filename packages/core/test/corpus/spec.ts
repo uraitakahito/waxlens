@@ -180,4 +180,42 @@ export const CORPUS: CorpusSpec[] = [
     options: { fuzzyOverride: "not json" },
     expectRules: ["fuzzy/valid-json"],
   },
+
+  // ── spec カバレッジ拡充 rule ──────────────────────────────────────
+  {
+    name: "warc-extension-mismatch",
+    description: "gzip 済み WARC を .warc.gz でなく archive/data.warc 名で格納(§5.2.1 拡張子)",
+    options: { warcExtensionMismatch: true },
+    expectRules: ["warc/extension-gzip-match"],
+  },
+  {
+    name: "pages-bad-line",
+    description: "pages.jsonl の page 行が url/ts を欠く(§5.2.3)",
+    options: { pagesBadLine: "missing-prop" },
+    expectRules: ["pages/page-schema"],
+  },
+  {
+    name: "datapackage-digest-absent",
+    description: "datapackage-digest.json が無い(§5.2.5 SHOULD)— warning",
+    options: { digest: "absent" },
+    expectRules: ["datapackage/digest"],
+  },
+  {
+    name: "datapackage-digest-bad-hash",
+    description: "datapackage-digest.json の hash が datapackage.json と不一致 — error",
+    options: { digest: "bad-hash" },
+    expectRules: ["datapackage/digest"],
+  },
+  {
+    name: "reserved-dir-extra-file",
+    description: "予約ディレクトリ archive/ に異物ファイル(archive/notes.txt)— MUST NOT",
+    options: { reservedDirExtraFile: true },
+    expectRules: ["wacz/reserved-dirs-clean"],
+  },
+  {
+    name: "datapackage-orphan-file",
+    description: "resources に未宣言の孤児ファイル(extra.bin)— MUST",
+    options: { orphanFile: true },
+    expectRules: ["datapackage/resources-complete"],
+  },
 ];

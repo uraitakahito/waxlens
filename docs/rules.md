@@ -30,6 +30,11 @@ MUST / SHOULD / MAY)を示す。severity が「waxlens の影響判断・profile
 | 12  | `cdxj/pages-mainpage`               | SHOULD      | warning | warning     | info    | `datapackage.mainPageURL` が `pages.jsonl` および/または CDXJ に存在しない         |
 | 13  | `warc/payload-digest`               | SHOULD      | warning | warning     | warning | `WARC-Payload-Digest` が payload bytes の sha256 と一致しない                      |
 | 14  | `fuzzy/valid-json`                  | MAY         | info    | info        | info    | `fuzzy.json` が壊れている (not JSON / not object / `rules` array 欠落)             |
+| 15  | `warc/extension-gzip-match`         | MUST        | warning | warning     | info    | archive の WARC の拡張子と中身の gzip 状態が不一致(GZIP なのに `.warc` / 非GZIP なのに `.warc.gz`) |
+| 16  | `pages/page-schema`                 | MUST        | warning | warning     | info    | `pages/pages.jsonl` の page 行が valid JSON でない / `url`・`ts` を欠く            |
+| 17  | `datapackage/digest`                | SHOULD      | warning | warning     | info    | `datapackage-digest.json` が不在(warning)/ `path`・`hash` 不正・hash 不一致(error) |
+| 18  | `wacz/reserved-dirs-clean`          | MUST NOT    | warning | warning     | info    | 予約ディレクトリ `archive/` `indexes/` `pages/` にカスタムファイルがある          |
+| 19  | `datapackage/resources-complete`    | MUST        | warning | warning     | info    | zip 内のファイルが `datapackage.json` の resources に未宣言(孤児)               |
 
 ## Severity の凡例
 
@@ -242,6 +247,56 @@ operator はその record が claim している resource の bytes として
 する。存在する場合、top-level が object で `rules` array を持つ valid
 JSON である必要がある。それ以外は replay engine が silent に無視する —
 replay-breaking なバグではなく informational。
+
+### `warc/extension-gzip-match` — warning
+
+archive 内の各 WARC について、中身が gzip かどうか(先頭 2 byte の magic
+`1f 8b`)と拡張子の整合を見る。GZIP なのに `.warc.gz` でない、または非 GZIP
+なのに `.warc.gz`、を warning で報告する。replay は CDXJ の `filename` 経由で
+解決されるため壊れない(命名規約)が、拡張子で圧縮状態を判断するツールが
+誤動作しうる。
+
+- **Spec**: [§5.2.1 archive](https://specs.webrecorder.net/wacz/1.1.1/#archive)
+  「非 GZIP は `.warc`(SHOULD)、GZIP は `.warc.gz`(MUST)」
+
+### `pages/page-schema` — warning
+
+`pages/pages.jsonl` の各 'Page' 行(1 行目のヘッダを除く)が valid JSON で
+`url` と `ts` を持つかを検査する(WACZ §5.2.3 の MUST)。ページ一覧
+(ReplayWeb.page のページ選択)は壊れるが、URL 単位の replay は CDXJ 経由で
+動くため severity は warning。
+
+### `datapackage/digest` — warning / error
+
+WACZ §5.2.5 の `datapackage-digest.json`。不在なら warning(SHOULD 存在)。
+存在する場合は `path` = `"datapackage.json"` と `hash` を MUST とし、`hash` が
+実際の `datapackage.json` の sha256(`datapackage/resource-hashes` と同じ計算)
+と一致しなければ error(expected/actual を `details` に出す)。
+
+### `wacz/reserved-dirs-clean` — warning
+
+予約ディレクトリ `archive/` / `indexes/` / `pages/` に、それぞれの想定
+(WARC / index / `*.jsonl`)以外の異物ファイルがあれば warning。WACZ は
+これらの予約ディレクトリにカスタムファイルを追加してはならない(MUST NOT)。
+追加ファイルは root 等に置き resources に列挙する。
+
+### `datapackage/resources-complete` — warning
+
+zip 内の実ファイルが、すべて `datapackage.json` の resources に列挙されて
+いるかを見る(WACZ MUST)。`datapackage/resource-hashes` が「宣言 → 実体」を
+見るのに対し、こちらは逆方向「実体 → 宣言」で未宣言の孤児を検出する。
+マニフェスト自身(`datapackage.json` / `datapackage-digest.json`)は対象外。
+
+## 対象外: HTTP 配信要件
+
+WACZ spec の以下は **WACZ ファイルそのもの**ではなく、それを配信する
+**web サーバ**の挙動に関する要件であり、ファイルの bytes からは検証できない
+(HTTP エンドポイントへの probe が必要)。waxlens は file validator なので
+スコープ外とする:
+
+- `Content-Length` ヘッダ(MUST)/ HTTP range requests のサポート(MUST)
+- `Accept-Ranges` ヘッダ(SHOULD)/ CORS `access-control-allow-origin`(SHOULD)
+- media type `application/wacz`(SHOULD)
 
 ## 新しい rule を追加する
 

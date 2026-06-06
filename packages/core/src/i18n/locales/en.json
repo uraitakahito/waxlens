@@ -66,5 +66,26 @@
   "fuzzy/valid-json.desc": "fuzzy.json (when present) must parse as '{' rules: [...] '}'",
   "fuzzy/valid-json.invalid-json": "{entry} is not valid JSON",
   "fuzzy/valid-json.not-object": "{entry} top level must be an object",
-  "fuzzy/valid-json.missing-rules": "{entry} is missing the \"rules\" array"
+  "fuzzy/valid-json.missing-rules": "{entry} is missing the \"rules\" array",
+
+  "warc/extension-gzip-match.desc": "archive WARCs must use .warc.gz when GZIP-encoded and .warc otherwise (WACZ §5.2.1)",
+  "warc/extension-gzip-match.gz-needs-gz-ext": "{entry} is GZIP-encoded but does not use the .warc.gz extension (WACZ §5.2.1: GZIP WARCs MUST use .warc.gz)",
+  "warc/extension-gzip-match.plain-has-gz-ext": "{entry} uses the .warc.gz extension but its content is not GZIP-encoded",
+
+  "pages/page-schema.desc": "each pages/pages.jsonl page line must be valid JSON with url and ts (WACZ §5.2.3)",
+  "pages/page-schema.not-json": "pages/pages.jsonl line {line} is not valid JSON",
+  "pages/page-schema.missing-prop": "pages/pages.jsonl line {line} is missing required properties: {props}",
+
+  "datapackage/digest.desc": "datapackage-digest.json should be present and its hash must match datapackage.json (WACZ §5.2.5)",
+  "datapackage/digest.absent": "datapackage-digest.json is absent (WACZ §5.2.5: SHOULD be included to verify datapackage.json)",
+  "datapackage/digest.invalid-json": "{entry} is not valid JSON",
+  "datapackage/digest.bad-path": "{entry} must set \"path\" to \"datapackage.json\"",
+  "datapackage/digest.no-hash": "{entry} is missing a \"hash\" for datapackage.json",
+  "datapackage/digest.hash-mismatch": "{entry} hash does not match the actual datapackage.json sha256",
+
+  "wacz/reserved-dirs-clean.desc": "no custom files may be added to the reserved archive/ indexes/ pages/ directories (WACZ MUST NOT)",
+  "wacz/reserved-dirs-clean.unexpected": "{entry} is an unexpected file in the reserved \"{dir}\" directory (WACZ MUST NOT add custom files there)",
+
+  "datapackage/resources-complete.desc": "every file in the WACZ must be listed in datapackage.json resources (WACZ MUST)",
+  "datapackage/resources-complete.orphan": "{entry} is not listed in datapackage.json resources (WACZ MUST list all additional files)"
 }
