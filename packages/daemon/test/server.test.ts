@@ -8,7 +8,7 @@
 import type { Server } from "node:http";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WebSocket } from "ws";
 import type { RpcRequest, RpcResponse } from "@waxlens/protocol";
 import { createDaemon } from "../src/server.js";
@@ -61,6 +61,36 @@ describe("daemon server (WS)", () => {
     expect(res.id).toBe(7);
     // 開けない URI は openFailed として error 枠で返る(throw ではなく)。
     expect(res.error?.code).toBe("openFailed");
+  });
+
+  it("logLevel error のとき壊れたフレームを stderr に記録する", async () => {
+    const spy = vi.spyOn(process.stderr, "write").mockReturnValue(true);
+    const logged = createDaemon({ logLevel: "error" });
+    await new Promise<void>((res) => {
+      logged.listen(0, "127.0.0.1", () => {
+        res();
+      });
+    });
+    const a = logged.address();
+    const p = typeof a === "object" && a !== null ? a.port : 0;
+    await new Promise<void>((res) => {
+      const ws = new WebSocket(`ws://127.0.0.1:${String(p)}`);
+      ws.on("open", () => {
+        ws.send("{ not json");
+        setTimeout(() => {
+          ws.close();
+          res();
+        }, 60);
+      });
+    });
+    const wrote = spy.mock.calls.some((c) => String(c[0]).includes("malformed frame"));
+    spy.mockRestore();
+    await new Promise<void>((res) => {
+      logged.close(() => {
+        res();
+      });
+    });
+    expect(wrote).toBe(true);
   });
 
   describe.skipIf(corpusDir === undefined || corpusDir === "")("with corpus fixtures", () => {

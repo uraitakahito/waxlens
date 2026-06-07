@@ -59,8 +59,27 @@ const handleRest = async (req: IncomingMessage, res: ServerResponse): Promise<vo
   }
 };
 
+export const LOG_LEVELS = ["silent", "error", "debug"] as const;
+export type LogLevel = (typeof LOG_LEVELS)[number];
+
+export interface CreateDaemonOptions {
+  /** stderr 診断ログの level(既定 "silent")。malformed frame は "error" 以上で出る。 */
+  logLevel?: LogLevel;
+}
+
+/** level に応じて stderr に書く薄い logger。 */
+const makeLogger = (level: LogLevel) => ({
+  error: (msg: string) => {
+    if (level !== "silent") process.stderr.write(`waxlens-daemon [error] ${msg}\n`);
+  },
+  debug: (msg: string) => {
+    if (level === "debug") process.stderr.write(`waxlens-daemon [debug] ${msg}\n`);
+  },
+});
+
 /** stateless な HTTP/WS サーバを組み立てて返す(listen は呼び出し側)。 */
-export const createDaemon = (): Server => {
+export const createDaemon = (opts: CreateDaemonOptions = {}): Server => {
+  const log = makeLogger(opts.logLevel ?? "silent");
   const server = createServer((req, res) => {
     void handleRest(req, res);
   });
@@ -71,8 +90,9 @@ export const createDaemon = (): Server => {
         let request: RpcRequest;
         try {
           request = JSON.parse(rawToString(raw)) as RpcRequest;
-        } catch {
-          return; // 解釈不能なフレームは無視
+        } catch (cause) {
+          log.error(`ignored malformed frame: ${cause instanceof Error ? cause.message : String(cause)}`);
+          return;
         }
         const response: RpcResponse = { id: request.id };
         try {
