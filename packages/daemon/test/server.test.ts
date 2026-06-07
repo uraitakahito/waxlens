@@ -63,6 +63,16 @@ describe("daemon server (WS)", () => {
     expect(res.error?.code).toBe("openFailed");
   });
 
+  it("不正な source(s3:// にキー無し)は openFailed を返す", async () => {
+    // parseReportSource が invalid-s3-uri で err → 境界で openFailed に。I/O 不要で hermetic。
+    const res = await call({
+      id: 8,
+      method: "waxlens/validate",
+      params: { source: { kind: "uri", uri: "s3://nokey" }, locale: "en" },
+    });
+    expect(res.error?.code).toBe("openFailed");
+  });
+
   it("logLevel error のとき壊れたフレームを stderr に記録する", async () => {
     const spy = vi.spyOn(process.stderr, "write").mockReturnValue(true);
     const logged = createDaemon({ logLevel: "error" });

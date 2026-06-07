@@ -15,6 +15,7 @@ import {
   resolveLocale,
   runValidation,
   s3Transport,
+  type ReportSource,
   type RuleProfile,
 } from "@waxlens/core";
 import type {
@@ -40,20 +41,24 @@ export class DaemonError extends Error {
   }
 }
 
-/** source URI から WaczReader を開く。失敗は openFailed の DaemonError に正規化。 */
-const openFromUri = async (uri: string, s3ForcePathStyle: boolean): Promise<WaczReader> => {
+/**
+ * wire の source URI を検証済み ReportSource に parse する(file:// 変換はここに集約)。
+ * file:// は絶対パスへ、s3:// / 絶対パスはそのまま parseReportSource に渡し、
+ * ブランド付き AbsolutePath / S3Uri を得る。推論戻り値は Result<ReportSource, ParseSourceError>。
+ */
+const parseSourceUri = (wireUri: string) =>
+  parseReportSource(wireUri.startsWith("file://") ? fileURLToPath(wireUri) : wireUri);
+
+/** 検証済み・判別済み・brand 済の source を開くだけ(失敗は I/O のみ openFailed に正規化)。 */
+const openFromSource = async (
+  source: ReportSource,
+  s3ForcePathStyle: boolean,
+): Promise<WaczReader> => {
   try {
-    // file:// は絶対パスへ。s3:// / 絶対パスはそのまま parseReportSource に渡し、
-    // ブランド付き AbsolutePath / ResolvedS3Source を得る。
-    const input = uri.startsWith("file://") ? fileURLToPath(uri) : uri;
-    const parsed = parseReportSource(input);
-    if (!parsed.ok) throw new DaemonError("openFailed", parsed.error.kind);
-    const src = parsed.value;
-    return src.kind === "s3"
-      ? await WaczReader.open(s3Transport({ ...src, forcePathStyle: s3ForcePathStyle }))
-      : await WaczReader.open(fileTransport(src.path));
+    return source.kind === "s3"
+      ? await WaczReader.open(s3Transport({ ...source, forcePathStyle: s3ForcePathStyle }))
+      : await WaczReader.open(fileTransport(source.path));
   } catch (cause) {
-    if (cause instanceof DaemonError) throw cause;
     throw new DaemonError("openFailed", cause instanceof Error ? cause.message : String(cause));
   }
 };
@@ -65,7 +70,9 @@ const toProfile = (profile: string | undefined): RuleProfile | undefined =>
 export const validate = async (params: ValidateParams): Promise<WireReport> => {
   const locale = resolveLocale(params.locale);
   const profile = toProfile(params.profile);
-  const reader = await openFromUri(params.source.uri, params.s3ForcePathStyle ?? false);
+  const parsed = parseSourceUri(params.source.uri);
+  if (!parsed.ok) throw new DaemonError("openFailed", parsed.error.kind);
+  const reader = await openFromSource(parsed.value, params.s3ForcePathStyle ?? false);
   try {
     const result = await runValidation(reader, {
       waxlensVersion: VERSION,
@@ -93,7 +100,9 @@ const formatBody = (path: string, text: string): string => {
 
 /** 1 エントリの内容を上限つきで返す(stateless・range read)。 */
 export const readEntry = async (params: ReadEntryParams): Promise<ReadEntryResult> => {
-  const reader = await openFromUri(params.source.uri, false);
+  const parsed = parseSourceUri(params.source.uri);
+  if (!parsed.ok) throw new DaemonError("openFailed", parsed.error.kind);
+  const reader = await openFromSource(parsed.value, false);
   try {
     const buf = await reader.readEntry(params.path);
     if (!buf) return { content: "", truncated: false };
