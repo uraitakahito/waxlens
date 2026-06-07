@@ -30,9 +30,6 @@ flowchart LR
 | 太線 | WS / JSON-RPC のネットワーク境界  | `tui ⇒ daemon`                                    |
 | 点線 | 将来の接続、または型のみの import | `protocol ⇢ core`(型のみ)、`browser ⇢ daemon`(将来) |
 
-`@waxlens/tui` は `@waxlens/core` に直接依存せず daemon 経由で検証する。`@waxlens/protocol`
-は core を `import type` のみで参照するため runtime 非依存(browser-safe)。
-
 このプロジェクトは 4 つの package として提供される:
 
 | Package                                     | bin                | 目的                                                                                                                                 |
