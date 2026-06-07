@@ -34,10 +34,9 @@ import {
 } from "@waxlens/protocol";
 import {
   connect,
+  DaemonSession,
   RpcCallError,
-  startDaemon,
   type DaemonClient,
-  type DaemonHandle,
 } from "./daemon-client.js";
 import { renderPlain } from "./render/plain.js";
 import { ServerEndpoint } from "./server-url.js";
@@ -104,10 +103,13 @@ program
   )
   .action(async (filePath: string, options: CliOptions) => {
     const uri = toUri(filePath);
-    let daemon: DaemonHandle | undefined;
+    let session: DaemonSession | undefined;
     try {
-      daemon = await startDaemon(options.server);
-      const client = await connect(daemon.endpoint);
+      session =
+        options.server !== undefined
+          ? DaemonSession.attach(options.server)
+          : await DaemonSession.spawn();
+      const client = await connect(session.endpoint);
       try {
         const outcome = await validateOnce(client, uri, filePath, options);
         const requestContent: RequestContent = (path) =>
@@ -115,8 +117,8 @@ program
             .request<ReadEntryResult>("waxlens/readEntry", { source: { kind: "uri", uri }, path })
             .then((r) => r.content);
         await dispatch(outcome, options, requestContent);
-        // daemon は finally で kill し、その exit を await してから process が
-        // 終わる(exitCode を確定後に child が残らないようにするため)。
+        // session は finally で release し(spawn 時は kill + exit 待ち)、その後に
+        // process が終わる(exitCode を確定後に child が残らないようにするため)。
         process.exitCode = exitCodeFor(outcome);
       } finally {
         client.close();
@@ -126,7 +128,7 @@ program
       process.stderr.write(`waxlens: ${cause instanceof Error ? cause.message : String(cause)}\n`);
       process.exitCode = 2;
     } finally {
-      await daemon?.close();
+      await session?.release();
     }
   });
 
