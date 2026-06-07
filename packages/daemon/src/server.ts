@@ -8,6 +8,7 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { WebSocketServer, type RawData } from "ws";
 import type {
+  HealthStatus,
   ReadEntryParams,
   ReadEntryResult,
   RpcError,
@@ -16,12 +17,19 @@ import type {
   ValidateParams,
   WireReport,
 } from "@waxlens/protocol";
-import { DaemonError, readEntry, validate } from "./handlers.js";
+import { DaemonError, readEntry, validate, VERSION } from "./handlers.js";
+
+const healthStatus = (): HealthStatus => ({
+  status: "ok",
+  version: VERSION,
+  uptimeSec: Math.round(process.uptime()),
+});
 
 const dispatch = async (
   method: string,
   params: unknown,
-): Promise<WireReport | ReadEntryResult> => {
+): Promise<WireReport | ReadEntryResult | HealthStatus> => {
+  if (method === "waxlens/ping") return healthStatus();
   if (method === "waxlens/validate") return validate(params as ValidateParams);
   if (method === "waxlens/readEntry") return readEntry(params as ReadEntryParams);
   throw new DaemonError("badRequest", `unknown method: ${method}`);
@@ -40,6 +48,12 @@ const rawToString = (raw: RawData): string =>
       : Buffer.from(raw).toString("utf8");
 
 const handleRest = async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
+  if (req.method === "GET" && req.url === "/healthz") {
+    res.statusCode = 200;
+    res.setHeader("content-type", "application/json");
+    res.end(JSON.stringify(healthStatus()));
+    return;
+  }
   if (req.method !== "POST" || req.url !== "/validate") {
     res.statusCode = 404;
     res.end();

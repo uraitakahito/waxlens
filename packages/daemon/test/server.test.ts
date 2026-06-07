@@ -93,6 +93,19 @@ describe("daemon server (WS)", () => {
     expect(wrote).toBe(true);
   });
 
+  it("GET /healthz は 200 で healthStatus を返す", async () => {
+    const res = await fetch(`http://127.0.0.1:${String(port)}/healthz`);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { status: string };
+    expect(body.status).toBe("ok");
+  });
+
+  it("waxlens/ping は healthStatus を返す", async () => {
+    const res = await call({ id: 9, method: "waxlens/ping", params: {} });
+    expect(res.error).toBeUndefined();
+    expect(res.result && "status" in res.result ? res.result.status : null).toBe("ok");
+  });
+
   describe.skipIf(corpusDir === undefined || corpusDir === "")("with corpus fixtures", () => {
     it("validate: good.wacz は valid な WireReport を返す", async () => {
       const res = await call({
