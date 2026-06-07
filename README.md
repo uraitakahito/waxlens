@@ -36,7 +36,7 @@ flowchart LR
 | ------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
 | [`@waxlens/core`](packages/core/)           | `waxlens-validate` | Validation engine。machine-readable な JSON report を出力する。daemon が所有するが、CI / スクリプト用途では直接も使える。            |
 | [`@waxlens/daemon`](packages/daemon/)       | `waxlens-daemon`   | stateless な HTTP/WS daemon。core を所有し、tui / 将来の browser に解決済み(message/specUrl/conformance inline)の Report を WS で返す。 |
-| [`@waxlens/tui`](packages/tui/)             | `waxlens`          | Interactive な terminal UI(daemon クライアント)。TTY 上では issue を expandable に表示し、Layout で `enter` → ファイル内容を表示。非 TTY では plain text。 |
+| [`@waxlens/tui`](packages/tui/)             | `waxlens`          | Interactive な terminal UI(daemon クライアント)。 |
 | [`@waxlens/protocol`](packages/protocol/)   | —                  | tui / daemon / browser が共有する wire 型と CLI 契約(型 + 軽量定数 / `exitCodeFor`。runtime に core 非依存で browser-safe)。 |
 
 `waxlens` は既定で `waxlens-daemon` を子プロセスとして起動して接続する。常駐 daemon に
