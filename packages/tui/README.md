@@ -10,16 +10,6 @@ waxlens --help
 waxlens FILE --profile PROFILE
 ```
 
-### Exit codes
-
-`@waxlens/core` と同じ:
-
-| Code | 意味                                        |
-| ---- | ------------------------------------------- |
-| `0`  | validation 成功                             |
-| `1`  | validation 失敗 (`error` issue 1 件以上)    |
-| `2`  | operational な失敗 (ファイルが開けないなど) |
-
 ## 実際の WACZ で試す
 
 Webrecorder が
