@@ -34,9 +34,9 @@ flowchart LR
 
 | Package                                     | bin                | 目的                                                                                                                                 |
 | ------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
-| [`@waxlens/core`](packages/core/)           | `waxlens-validate` | Validation engine。machine-readable な JSON report を出力する。daemon が所有するが、CI / スクリプト用途では直接も使える。            |
+| [`@waxlens/core`](packages/core/)           | `waxlens-validate` | Validation engine。machine-readable な JSON report を出力する。daemon が所有するが、CI / スクリプト用途では直接も使える。[`packages/core/README.md`](packages/core/README.md)            |
 | [`@waxlens/daemon`](packages/daemon/)       | `waxlens-daemon`   | stateless な HTTP/WS daemon。core を所有し、tui / 将来の browser に解決済み(message/specUrl/conformance inline)の Report を WS で返す。 |
-| [`@waxlens/tui`](packages/tui/)             | `waxlens`          | Interactive な terminal UI(daemon クライアント)。 |
+| [`@waxlens/tui`](packages/tui/)             | `waxlens`          | Interactive な terminal UI(daemon クライアント)。[`packages/tui/README.md`](packages/tui/README.md) |
 | [`@waxlens/protocol`](packages/protocol/)   | —                  | tui / daemon / browser が共有する wire 型と CLI 契約(型 + 軽量定数 / `exitCodeFor`。runtime に core 非依存で browser-safe)。 |
 
 `waxlens` は既定で `waxlens-daemon` を子プロセスとして起動して接続する。常駐 daemon に
@@ -51,17 +51,6 @@ flowchart LR
   (`--json` 出力) の wire format
 - [`docs/examples.md`](docs/examples.md) — [waxlens-corpus](https://github.com/uraitakahito/waxlens-corpus)
   を使った rule 別の事例カタログ (失敗例・profile 差)。`manifest.json` から自動生成
-
-package 個別の詳細:
-
-- [`packages/core/README.md`](packages/core/README.md) —
-  `waxlens-validate` CLI の使い方 (local / `s3://`)、exit code、
-  profile (`spec` / `browserhive` / `lenient`)、環境変数、
-  library としての import 例
-- [`packages/tui/README.md`](packages/tui/README.md) —
-  `waxlens` CLI のフラグ、TUI モードのキーバインド、
-  plain-text fallback の挙動、Webrecorder 公開 example archive での
-  動作確認手順
 
 ## 開発
 
