@@ -2,16 +2,30 @@
 
 [WACZ](https://specs.webrecorder.net/wacz/1.0.0/) archive 用のproducer 非依存な validator。
 
-検証ロジックと表示を Language Server のように分離している。**daemon** が
-`@waxlens/core` を所有して検証を行い、**tui** は薄いクライアントとして daemon に
+**daemon** が `@waxlens/core` で検証を行い、**tui** は薄いクライアントとして daemon に
 WebSocket で問い合わせて結果を描画する。daemon は **stateless**(各リクエストが
 source URI を運び `open → validate → close` するだけで状態を持たない)で、将来
 browser など別フロントエンドも同じ protocol で繋げる。
 
+```mermaid
+flowchart LR
+    tui["@waxlens/tui (bin: waxlens)"] ==>|"WS / JSON-RPC"| daemon["@waxlens/daemon (bin: waxlens-daemon)"]
+    browser(["browser (将来)"]) -.->|"WS (将来)"| daemon
+    daemon -->|"uses (検証)"| core["@waxlens/core (bin: waxlens-validate)"]
+    tui -->|import| protocol["@waxlens/protocol (型 + 軽量定数)"]
+    daemon -->|import| protocol
+    protocol -.->|"import type のみ"| core
+
+    classDef contract fill:#fff3cd,stroke:#d4a72c,color:#5c4500;
+    classDef future fill:#eeeeee,stroke:#999999,color:#666666;
+    class protocol contract;
+    class browser future;
 ```
-tui (client) ──WS/JSON-RPC──▶ daemon ──uses──▶ core
-browser (将来) ─────────────▶ daemon
-```
+
+**凡例**: 実線 = runtime 依存(import / 検証に使用)、太線 = WS / JSON-RPC の
+ネットワーク境界、点線 = 将来の接続または型のみの import。`@waxlens/tui` は
+`@waxlens/core` に直接依存せず daemon 経由で検証する。`@waxlens/protocol` は core を
+`import type` のみで参照するため runtime 非依存(browser-safe)。
 
 このプロジェクトは 4 つの package として提供される:
 
