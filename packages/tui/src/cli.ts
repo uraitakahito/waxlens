@@ -40,6 +40,7 @@ import {
   type DaemonHandle,
 } from "./daemon-client.js";
 import { renderPlain } from "./render/plain.js";
+import { ServerEndpoint } from "./server-url.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const manifestPath = join(here, "..", "package.json");
@@ -53,7 +54,7 @@ interface CliOptions {
   profile: RuleProfile;
   s3ForcePathStyle: boolean;
   lang?: string;
-  server?: string;
+  server?: ServerEndpoint;
 }
 
 type RequestContent = (path: string) => Promise<string>;
@@ -99,13 +100,14 @@ program
   .option(
     "--server <url>",
     "Connect to a running waxlens-daemon (e.g. ws://127.0.0.1:7333) instead of spawning one",
+    (raw: string) => ServerEndpoint.parse(raw),
   )
   .action(async (filePath: string, options: CliOptions) => {
     const uri = toUri(filePath);
     let daemon: DaemonHandle | undefined;
     try {
       daemon = await startDaemon(options.server);
-      const client = await connect(daemon.url);
+      const client = await connect(daemon.endpoint);
       try {
         const outcome = await validateOnce(client, uri, filePath, options);
         const requestContent: RequestContent = (path) =>
