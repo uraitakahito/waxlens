@@ -16,6 +16,7 @@ import type {
   RpcResponse,
   ValidateParams,
 } from "@waxlens/protocol";
+import { ServerEndpoint } from "./server-url.js";
 
 /** daemon が RpcError を返したときに reject する型つきエラー。 */
 export class RpcCallError extends Error {
@@ -28,7 +29,7 @@ export class RpcCallError extends Error {
 }
 
 export interface DaemonHandle {
-  url: string;
+  endpoint: ServerEndpoint;
   /** spawn した daemon を kill し、その `exit` を待つ(--server 接続時は no-op)。 */
   close: () => Promise<void>;
 }
@@ -36,16 +37,16 @@ export interface DaemonHandle {
 const DAEMON_START_TIMEOUT_MS = 8000;
 
 /** `--server URL` があれば接続のみ。無ければ daemon bin を spawn し ws URL を得る。 */
-export const startDaemon = async (serverUrl: string | undefined): Promise<DaemonHandle> => {
-  if (serverUrl !== undefined) {
-    return { url: serverUrl, close: () => Promise.resolve() };
+export const startDaemon = async (server: ServerEndpoint | undefined): Promise<DaemonHandle> => {
+  if (server !== undefined) {
+    return { endpoint: server, close: () => Promise.resolve() };
   }
   const cliPath = createRequire(import.meta.url).resolve("@waxlens/daemon/dist/cli.js");
   const child = spawn(process.execPath, [cliPath], {
     env: { ...process.env, WAXLENS_DAEMON_PORT: "0" },
     stdio: ["ignore", "ignore", "pipe"],
   });
-  const url = await new Promise<string>((resolveUrl, rejectUrl) => {
+  const endpoint = await new Promise<ServerEndpoint>((resolveEndpoint, rejectUrl) => {
     const timer = setTimeout(() => {
       rejectUrl(new Error("daemon did not become ready in time"));
     }, DAEMON_START_TIMEOUT_MS);
@@ -54,7 +55,8 @@ export const startDaemon = async (serverUrl: string | undefined): Promise<Daemon
       const match = /(ws:\/\/127\.0\.0\.1:\d+)/.exec(chunk.toString("utf8"));
       if (match?.[1] !== undefined) {
         clearTimeout(timer);
-        resolveUrl(match[1]);
+        // 正規表現が ws://127.0.0.1:port を保証するので parse は必ず成功する。
+        resolveEndpoint(ServerEndpoint.parse(match[1]));
       }
     });
     child.on("error", (cause) => {
@@ -67,7 +69,7 @@ export const startDaemon = async (serverUrl: string | undefined): Promise<Daemon
     });
   });
   return {
-    url,
+    endpoint,
     // kill して child の exit を待つ。これを待たずに親が終了処理へ進むと、
     // 死にかけの child handle が event loop に残り、exit code が確定する前に
     // 親が抜けて 0 になるレースが起きる。
@@ -99,8 +101,8 @@ const rawToString = (raw: RawData): string =>
       : Buffer.from(raw).toString("utf8");
 
 /** ws を開き、相関 id つき request を提供するクライアントを返す。 */
-export const connect = async (url: string): Promise<DaemonClient> => {
-  const ws = new WebSocket(url);
+export const connect = async (endpoint: ServerEndpoint): Promise<DaemonClient> => {
+  const ws = new WebSocket(endpoint.url);
   await new Promise<void>((resolveOpen, rejectOpen) => {
     ws.once("open", () => {
       resolveOpen();

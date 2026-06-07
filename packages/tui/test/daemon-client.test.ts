@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { WebSocketServer } from "ws";
 import type { RpcRequest } from "@waxlens/protocol";
 import { connect, RpcCallError, startDaemon } from "../src/daemon-client.js";
+import { ServerEndpoint } from "../src/server-url.js";
 
 let server: Server;
 let port = 0;
@@ -50,7 +51,7 @@ const url = (): string => `ws://127.0.0.1:${String(port)}`;
 
 describe("daemon-client", () => {
   it("request は相関 id で結果を解決する", async () => {
-    const client = await connect(url());
+    const client = await connect(ServerEndpoint.parse(url()));
     const result = await client.request<{ ok: boolean; method: string }>("waxlens/validate", {
       source: { kind: "uri", uri: "x" },
       locale: "en",
@@ -60,16 +61,17 @@ describe("daemon-client", () => {
   });
 
   it("error 応答は RpcCallError で reject し code を保持する", async () => {
-    const client = await connect(url());
+    const client = await connect(ServerEndpoint.parse(url()));
     await expect(
       client.request("waxlens/validate", { source: { kind: "uri", uri: "fail" }, locale: "en" }),
     ).rejects.toBeInstanceOf(RpcCallError);
     client.close();
   });
 
-  it("startDaemon(--server URL) は spawn せず URL をそのまま返す", async () => {
-    const handle = await startDaemon("ws://example.test:1234");
-    expect(handle.url).toBe("ws://example.test:1234");
+  it("startDaemon(--server URL) は spawn せず endpoint をそのまま返す", async () => {
+    const ep = ServerEndpoint.parse("ws://example.test:1234");
+    const handle = await startDaemon(ep);
+    expect(handle.endpoint).toBe(ep);
     await handle.close(); // no-op(spawn していない)
   });
 });

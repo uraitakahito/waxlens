@@ -40,7 +40,8 @@ flowchart LR
 | [`@waxlens/protocol`](packages/protocol/)   | —                  | tui / daemon / browser が共有する wire 型と CLI 契約(型 + 軽量定数 / `exitCodeFor`。runtime に core 非依存で browser-safe)。 |
 
 `waxlens` は既定で `waxlens-daemon` を子プロセスとして起動して接続する。常駐 daemon に
-繋ぐ場合は `waxlens --server ws://127.0.0.1:PORT <file>`(browser から繋ぐ前提の起動も
+繋ぐ場合は `waxlens --server ws://127.0.0.1:PORT <file>`(`--server` は `ws://` / `wss://`
+の URL のみ受け付け、不正な値は exit 1 で弾く。browser から繋ぐ前提の起動も
 `waxlens-daemon` 単体で可)。
 
 両 package に共通する spec / 詳細 docs:
