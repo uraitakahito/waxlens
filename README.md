@@ -2,12 +2,29 @@
 
 [WACZ](https://specs.webrecorder.net/wacz/1.0.0/) archive 用のproducer 非依存な validator。
 
-このプロジェクトは 2 つの package として提供される:
+検証ロジックと表示を Language Server のように分離している。**daemon** が
+`@waxlens/core` を所有して検証を行い、**tui** は薄いクライアントとして daemon に
+WebSocket で問い合わせて結果を描画する。daemon は **stateless**(各リクエストが
+source URI を運び `open → validate → close` するだけで状態を持たない)で、将来
+browser など別フロントエンドも同じ protocol で繋げる。
 
-| Package                           | bin                | 目的                                                                                                                                                 |
-| --------------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`@waxlens/core`](packages/core/) | `waxlens-validate` | Validation engine。machine-readable な JSON report を出力する。CI / スクリプト用途。                                                                 |
-| [`@waxlens/tui`](packages/tui/)   | `waxlens`          | Interactive な terminal UI。TTY 上では report を issue 単位の expandable な詳細つきで表示。pipe / 非 TTY な stdout では plain text に自動 fallback。 |
+```
+tui (client) ──WS/JSON-RPC──▶ daemon ──uses──▶ core
+browser (将来) ─────────────▶ daemon
+```
+
+このプロジェクトは 4 つの package として提供される:
+
+| Package                                     | bin                | 目的                                                                                                                                 |
+| ------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| [`@waxlens/core`](packages/core/)           | `waxlens-validate` | Validation engine。machine-readable な JSON report を出力する。daemon が所有するが、CI / スクリプト用途では直接も使える。            |
+| [`@waxlens/daemon`](packages/daemon/)       | `waxlens-daemon`   | stateless な HTTP/WS daemon。core を所有し、tui / 将来の browser に解決済み(message/specUrl/conformance inline)の Report を WS で返す。 |
+| [`@waxlens/tui`](packages/tui/)             | `waxlens`          | Interactive な terminal UI(daemon クライアント)。TTY 上では issue を expandable に表示し、Layout で `enter` → ファイル内容を表示。非 TTY では plain text。 |
+| [`@waxlens/protocol`](packages/protocol/)   | —                  | tui / daemon / browser が共有する wire 型と CLI 契約(型 + 軽量定数 / `exitCodeFor`。runtime に core 非依存で browser-safe)。 |
+
+`waxlens` は既定で `waxlens-daemon` を子プロセスとして起動して接続する。常駐 daemon に
+繋ぐ場合は `waxlens --server ws://127.0.0.1:PORT <file>`(browser から繋ぐ前提の起動も
+`waxlens-daemon` 単体で可)。
 
 両 package に共通する spec / 詳細 docs:
 

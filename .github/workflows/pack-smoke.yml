@@ -92,5 +92,7 @@ jobs:
         # workflow that requires the NPM_TOKEN secret — never automate
         # `pnpm publish` from a `push` / `pull_request` trigger.
         run: |
+          pnpm publish --dry-run --no-git-checks --filter @waxlens/protocol
           pnpm publish --dry-run --no-git-checks --filter @waxlens/core
+          pnpm publish --dry-run --no-git-checks --filter @waxlens/daemon
           pnpm publish --dry-run --no-git-checks --filter @waxlens/tui

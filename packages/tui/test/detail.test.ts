@@ -3,7 +3,7 @@
  * Ink に依存しないので文字列化・突合だけを決定的に検証する。
  */
 import { describe, expect, it } from "vitest";
-import type { AbsolutePath, Report } from "@waxlens/core";
+import type { AbsolutePath, WireReport } from "@waxlens/protocol";
 import { codecName, entryIssues, expectedLabel } from "../src/render/detail.js";
 
 describe("codecName", () => {
@@ -34,12 +34,12 @@ describe("entryIssues", () => {
     valid: false,
     summary: { passed: 0, failed: 2, warnings: 0, info: 0, durationMs: 1 },
     issues: [
-      { rule: "a/one", severity: "error", messageKey: "a/one.x", location: { entry: "pages/pages.jsonl" } },
-      { rule: "b/two", severity: "warning", messageKey: "b/two.x", location: { entry: "datapackage.json" } },
-      { rule: "c/three", severity: "info", messageKey: "c/three.x" }, // location 無し
+      { rule: "a/one", severity: "error", messageKey: "a/one.x", message: "one", location: { entry: "pages/pages.jsonl" } },
+      { rule: "b/two", severity: "warning", messageKey: "b/two.x", message: "two", location: { entry: "datapackage.json" } },
+      { rule: "c/three", severity: "info", messageKey: "c/three.x", message: "three" }, // location 無し
     ],
     entries: [],
-  } satisfies Report;
+  } satisfies WireReport;
 
   it("location.entry が一致する issue だけを返す", () => {
     expect(entryIssues(report, "pages/pages.jsonl").map((i) => i.rule)).toEqual(["a/one"]);

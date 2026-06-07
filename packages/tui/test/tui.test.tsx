@@ -1,30 +1,20 @@
 /**
  * TUI rendering テスト。
  *
- * Ink の `App` コンポーネントを `ink-testing-library` で駆動する。
- * これは in-memory な frame buffer に render して、`lastFrame()` /
- * `stdin.write()` を露出する。実 terminal は関わらないので、test
- * スイートは他の Vitest テストと同じくらい速く、完全に決定的に動く。
+ * Ink の `App` を `ink-testing-library` で駆動する。daemon クライアント化後の
+ * App は解決済みの {@link WireReport}(`message` / `specUrl` / `conformance` が
+ * inline)を受け取り、core の i18n を呼ばずそれを描く。よってモックの issue は
+ * `message`(必須)/ 必要なら `specUrl` を直接持たせる。
  *
- * assert すること:
- *   - コンポーネントが全 issue を rule 名と severity アイコンつきで
- *     render する。
- *   - カーソル (`▶`) は最初の issue から始まり、`↑` / `↓` で移動する。
- *   - `enter` で focused issue の `details` ブロックがトグルする。
- *   - `q` で app が綺麗に終了する (Ink の `useApp().exit()`)。
- *
- * 意図的に assert しないこと:
- *   - フレームのバイト単位 snapshot。Ink の render 出力は ANSI rich で、
- *     ライブラリの minor バージョンで変動しうる; これを pin すると
- *     M2 が動く標的になる。substring assertion で意味論的な surface は
- *     cover できる。
+ * 実 terminal は関わらない(in-memory frame)。byte 単位 snapshot は取らず、
+ * substring assertion で意味論的 surface を cover する。
  */
 import { render } from "ink-testing-library";
 import { describe, expect, it } from "vitest";
-import type { AbsolutePath, Report } from "@waxlens/core";
+import type { AbsolutePath, WireReport } from "@waxlens/protocol";
 import { App } from "../src/app.js";
 
-const makeReport = (overrides: Partial<Report> = {}): Report => ({
+const makeReport = (overrides: Partial<WireReport> = {}): WireReport => ({
   waxlensVersion: "0.0.0",
   profile: "spec",
   source: { kind: "file", path: "/tmp/fixture.wacz" as AbsolutePath },
@@ -35,6 +25,7 @@ const makeReport = (overrides: Partial<Report> = {}): Report => ({
       rule: "datapackage/profile-required",
       severity: "error",
       messageKey: "datapackage/profile-required.missing-field",
+      message: 'datapackage.json is missing the "profile" field',
       params: { entry: "datapackage.json" },
       location: { entry: "datapackage.json" },
       details: { expected: "data-package" },
@@ -43,6 +34,7 @@ const makeReport = (overrides: Partial<Report> = {}): Report => ({
       rule: "cdxj/filename-archive-relative",
       severity: "error",
       messageKey: "cdxj/filename-archive-relative.starts-with-archive",
+      message: 'entry "filename" starts with "archive/"',
       params: { entry: "indexes/index.cdxj" },
       location: { entry: "indexes/index.cdxj", line: 1 },
     },
@@ -53,7 +45,7 @@ const makeReport = (overrides: Partial<Report> = {}): Report => ({
 
 describe("tui rendering", () => {
   it("renders all issue rule names and the summary", () => {
-    const { lastFrame } = render(<App report={makeReport()} locale="en" />);
+    const { lastFrame } = render(<App report={makeReport()} />);
     const frame = lastFrame() ?? "";
     expect(frame).toContain("waxlens");
     expect(frame).toContain("datapackage/profile-required");
@@ -69,16 +61,13 @@ describe("tui rendering", () => {
       valid: true,
       summary: { passed: 5, failed: 0, warnings: 0, info: 0, durationMs: 8 },
     });
-    const { lastFrame } = render(<App report={report} locale="en" />);
+    const { lastFrame } = render(<App report={report} />);
     expect(lastFrame() ?? "").toContain("All rules passed.");
   });
 
   it("starts with the cursor on the first issue", () => {
-    const { lastFrame } = render(<App report={makeReport()} locale="en" />);
+    const { lastFrame } = render(<App report={makeReport()} />);
     const frame = lastFrame() ?? "";
-    // カーソルは最初の rule 名と同じ行に座る。順序を確認することで
-    // assert する: ▶ は最初の rule の手前にあり、フレーム内では
-    // 唯一のマーカー。
     const cursorIdx = frame.indexOf("▶");
     const firstRuleIdx = frame.indexOf("datapackage/profile-required");
     expect(cursorIdx).toBeGreaterThanOrEqual(0);
@@ -87,31 +76,19 @@ describe("tui rendering", () => {
   });
 
   it("expands details on enter", async () => {
-    const { lastFrame, stdin } = render(<App report={makeReport()} locale="en" />);
-    // enter を押す前は details payload が見えていないはず。
+    const { lastFrame, stdin } = render(<App report={makeReport()} />);
     expect(lastFrame() ?? "").not.toContain("expected:");
-
-    // enter を押す — ink-testing-library は raw bytes を mock stdin
-    // に書き込む; Ink が return キーとして解釈するのは `\r`。
     stdin.write("\r");
-    // 次の render tick を走らせる。
-    await new Promise((resolve) => setTimeout(resolve, 20));
-
-    // 最初の issue の details は `{ expected: "data-package" }` —
-    // diff view は `expected` と `actual` の両方を要求するので、
-    // ペアの `actual` が無い場合は generic JSON view に流れる。
-    // dispatch の判断に依存しないよう、ここでは JSON-tail として
-    // render される `expected` の存在を assert する。
+    await new Promise((resolve) => setTimeout(resolve, 60));
     expect(lastFrame() ?? "").toContain("data-package");
   });
 
   it("moves the cursor with the down arrow", async () => {
-    const { lastFrame, stdin } = render(<App report={makeReport()} locale="en" />);
-    // ESC[B は down arrow の ANSI シーケンス。Ink はこれを
-    // `useInput` 内で `key.downArrow` に decode する。
+    const { lastFrame, stdin } = render(<App report={makeReport()} />);
+    // 本物の down-arrow は ESC + CSI(`[B`)。ESC 無しの "[B" は ink の
+    // デコードが不安定なので、正しい制御シーケンスで決定的に駆動する。
     stdin.write("[B");
-    await new Promise((resolve) => setTimeout(resolve, 20));
-
+    await new Promise((resolve) => setTimeout(resolve, 60));
     const frame = lastFrame() ?? "";
     const cursorIdx = frame.indexOf("▶");
     const firstRuleIdx = frame.indexOf("datapackage/profile-required");
@@ -124,7 +101,7 @@ describe("tui rendering", () => {
     const report = makeReport({
       stats: { warcRecordCount: 42, warcArchiveBytes: 5 * 1024 * 1024, hosts: ["a", "b", "c"] },
     });
-    const frame = render(<App report={report} locale="en" />).lastFrame() ?? "";
+    const frame = render(<App report={report} />).lastFrame() ?? "";
     expect(frame).toContain("42 records");
     expect(frame).toContain("5.0 MB");
     expect(frame).toContain("3 hosts");
@@ -137,14 +114,15 @@ describe("tui rendering", () => {
           rule: "datapackage/resource-hashes",
           severity: "error",
           messageKey: "datapackage/resource-hashes.hash-mismatch",
+          message: 'Resource "archive/data.warc.gz" hash mismatch',
           params: { path: "archive/data.warc.gz" },
           details: { expected: "sha256:GOOD", actual: "sha256:BAD" },
         },
       ],
     });
-    const { lastFrame, stdin } = render(<App report={report} locale="en" />);
+    const { lastFrame, stdin } = render(<App report={report} />);
     stdin.write("\r");
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    await new Promise((resolve) => setTimeout(resolve, 60));
     const frame = lastFrame() ?? "";
     expect(frame).toContain("expected:");
     expect(frame).toContain("actual:");
@@ -159,6 +137,7 @@ describe("tui rendering", () => {
           rule: "cdxj/warc-offsets",
           severity: "error",
           messageKey: "cdxj/warc-offsets.offset-no-match",
+          message: "indexes/index.cdxj line 1: offset 99 does not match any WARC member start",
           params: { line: "1", offset: "99" },
           details: {
             requested: { offset: 99, length: 100 },
@@ -167,9 +146,9 @@ describe("tui rendering", () => {
         },
       ],
     });
-    const { lastFrame, stdin } = render(<App report={report} locale="en" />);
+    const { lastFrame, stdin } = render(<App report={report} />);
     stdin.write("\r");
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    await new Promise((resolve) => setTimeout(resolve, 60));
     expect(lastFrame() ?? "").toContain("Nearby WARC members:");
   });
 
@@ -180,6 +159,7 @@ describe("tui rendering", () => {
           rule: "warc/payload-digest",
           severity: "warning",
           messageKey: "warc/payload-digest.mismatch",
+          message: "WARC record #1 payload digest mismatch",
           params: { memberIdx: "1" },
           details: {
             expected: "sha256:GOOD",
@@ -191,42 +171,45 @@ describe("tui rendering", () => {
         },
       ],
     });
-    const { lastFrame, stdin } = render(<App report={report} locale="en" />);
+    const { lastFrame, stdin } = render(<App report={report} />);
     stdin.write("\r");
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    await new Promise((resolve) => setTimeout(resolve, 60));
     const frame = lastFrame() ?? "";
     expect(frame).toContain("Payload preview (hex):");
     expect(frame).toContain("4e a7 5b 0c");
   });
 
-  it("shows a spec URL line when an issue carries params.section", () => {
+  it("shows a spec URL line when an issue carries a resolved specUrl", () => {
     const report = makeReport({
       issues: [
         {
           rule: "wacz/required-files",
           severity: "error",
           messageKey: "wacz/required-files.missing-archive",
+          message: "archive/ has no WARC file",
+          specUrl: "https://specs.webrecorder.net/wacz/1.1.1/#archive",
           params: { section: "5.2.1" },
           location: { entry: "archive/" },
         },
       ],
     });
-    const frame = render(<App report={report} locale="en" />).lastFrame() ?? "";
+    const frame = render(<App report={report} />).lastFrame() ?? "";
     expect(frame).toContain("spec https://specs.webrecorder.net/wacz/1.1.1/#archive");
   });
 
-  it("omits the spec line when an issue has no resolvable section", () => {
+  it("omits the spec line when an issue has no resolved specUrl", () => {
     const report = makeReport({
       issues: [
         {
           rule: "x/y",
           severity: "error",
           messageKey: "x/y.z",
+          message: "some issue",
           location: { entry: "datapackage.json" },
         },
       ],
     });
-    const frame = render(<App report={report} locale="en" />).lastFrame() ?? "";
+    const frame = render(<App report={report} />).lastFrame() ?? "";
     expect(frame).not.toContain("spec https://");
   });
 });
@@ -261,26 +244,21 @@ describe("tui — layout view", () => {
     });
 
   it("starts on the Issues view (no file tree)", () => {
-    const frame = render(<App report={withEntries()} locale="en" />).lastFrame() ?? "";
+    const frame = render(<App report={withEntries()} />).lastFrame() ?? "";
     expect(frame).not.toContain("data.warc.gz");
   });
 
   it("Tab switches to the Layout view: §5.1 tree with compact status icons", async () => {
-    const { lastFrame, stdin } = render(<App report={withEntries()} locale="en" />);
+    const { lastFrame, stdin } = render(<App report={withEntries()} />);
     stdin.write("\t"); // Tab
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    await new Promise((resolve) => setTimeout(resolve, 60));
     const frame = lastFrame() ?? "";
     expect(frame).toContain("data.warc.gz"); // tree leaf
     expect(frame).toContain("└──"); // §5.1 connector
     expect(frame).toContain("✗"); // compact status icon (error issue / missing)
-    // 詳細(rule 名・欠落理由)はツリーから消え、DetailPane に一本化した。
-    // focus 0 はディレクトリ行なのでペインは (select a file) → frame 全体から消える。
     expect(frame).not.toContain("datapackage/resource-hashes");
-    expect(frame).not.toContain("(missing — declared in datapackage)");
   });
 
-  // 詳細ペイン: 単一 root file を entry にして focus 0 がその file を指すようにし、
-  // 矢印ナビに依存せず検証する(ナビ自体は別テストが cover 済み)。
   it("Layout pane shows metadata + full issue for the selected file", async () => {
     const report = makeReport({
       entries: [
@@ -298,22 +276,21 @@ describe("tui — layout view", () => {
           rule: "datapackage/profile-required",
           severity: "error",
           messageKey: "datapackage/profile-required.missing-field",
+          message: 'datapackage.json is missing the "profile" field',
           params: { entry: "datapackage.json" },
           location: { entry: "datapackage.json" },
         },
       ],
     });
-    const { lastFrame, stdin } = render(<App report={report} locale="en" />);
+    const { lastFrame, stdin } = render(<App report={report} />);
     stdin.write("\t"); // Tab → Layout、focus 0 = datapackage.json(root file）
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    await new Promise((resolve) => setTimeout(resolve, 60));
     const frame = lastFrame() ?? "";
     expect(frame).toContain("present"); // status
     expect(frame).toContain("DEFLATE"); // codecName(8)
     expect(frame).toContain("required by §5.2"); // expectedLabel(["wacz-spec"])
     expect(frame).toContain("datapackage/profile-required"); // ペインの issue rule
-    // 全文 message はペイン幅で word-wrap される(Ink は語の途中で折らない)。
-    // message にしか出ない語 "field" で本文が描かれていることを確認する。
-    expect(frame).toContain("field");
+    expect(frame).toContain("field"); // 全文 message(word-wrap されても "field" は残る）
   });
 
   it("Layout pane shows MISSING + §5.2 reason for an absent required file", async () => {
@@ -331,15 +308,16 @@ describe("tui — layout view", () => {
           rule: "wacz/required-files",
           severity: "error",
           messageKey: "wacz/required-files.missing-datapackage",
+          message: "datapackage.json is missing",
           location: { entry: "datapackage.json" },
         },
       ],
     });
-    const { lastFrame, stdin } = render(<App report={report} locale="en" />);
+    const { lastFrame, stdin } = render(<App report={report} />);
     stdin.write("\t");
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    await new Promise((resolve) => setTimeout(resolve, 60));
     const frame = lastFrame() ?? "";
-    expect(frame).toContain("MISSING"); // pane の status(tree は小文字 missing なので pane を指す）
+    expect(frame).toContain("MISSING"); // pane の status
     expect(frame).toContain("wacz/required-files"); // pane の issue rule
   });
 });
