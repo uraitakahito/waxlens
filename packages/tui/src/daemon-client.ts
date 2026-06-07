@@ -49,7 +49,9 @@ export class DaemonSession {
   static async spawn(): Promise<DaemonSession> {
     const cliPath = createRequire(import.meta.url).resolve("@waxlens/daemon/dist/cli.js");
     const child = spawn(process.execPath, [cliPath], {
-      env: { ...process.env, WAXLENS_DAEMON_PORT: "0" },
+      // spawn する ephemeral daemon は loopback に固定する(ambient な
+      // WAXLENS_DAEMON_HOST が漏れて全 interface に晒されるのを防ぐ)。
+      env: { ...process.env, WAXLENS_DAEMON_PORT: "0", WAXLENS_DAEMON_HOST: "127.0.0.1" },
       stdio: ["ignore", "ignore", "pipe"],
     });
     const endpoint = await new Promise<ServerEndpoint>((resolveEndpoint, rejectSpawn) => {

@@ -28,6 +28,7 @@
   "dependencies": {
     "@waxlens/core": "workspace:*",
     "@waxlens/protocol": "workspace:*",
+    "commander": "^14.0.3",
     "ws": "^8.18.0"
   },
   "devDependencies": {
