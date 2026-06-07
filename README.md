@@ -22,10 +22,16 @@ flowchart LR
     class browser future;
 ```
 
-**凡例**: 実線 = runtime 依存(import / 検証に使用)、太線 = WS / JSON-RPC の
-ネットワーク境界、点線 = 将来の接続または型のみの import。`@waxlens/tui` は
-`@waxlens/core` に直接依存せず daemon 経由で検証する。`@waxlens/protocol` は core を
-`import type` のみで参照するため runtime 非依存(browser-safe)。
+**凡例**:
+
+| 線種 | 意味                              | 図中の例                                          |
+| ---- | --------------------------------- | ------------------------------------------------- |
+| 実線 | runtime 依存(import / 検証に使用) | `daemon → core`、`tui → protocol`                 |
+| 太線 | WS / JSON-RPC のネットワーク境界  | `tui ⇒ daemon`                                    |
+| 点線 | 将来の接続、または型のみの import | `protocol ⇢ core`(型のみ)、`browser ⇢ daemon`(将来) |
+
+`@waxlens/tui` は `@waxlens/core` に直接依存せず daemon 経由で検証する。`@waxlens/protocol`
+は core を `import type` のみで参照するため runtime 非依存(browser-safe)。
 
 このプロジェクトは 4 つの package として提供される:
 
