@@ -54,9 +54,7 @@ export const t = (id: string, params: MsgParams, locale: Locale): string => {
 };
 
 /**
- * 表示ロケールを決める。優先順: 明示フラグ → `WAXLENS_LANG` →
- * 端末の `LANG` → "en"。`ja_JP.UTF-8` のような値は先頭の言語コードに
- * 正規化し、未対応なら "en" に丸める。
+ * 表示ロケールを決める。
  */
 export const resolveLocale = (flag?: string): Locale => {
   const raw = flag ?? process.env["WAXLENS_LANG"] ?? process.env["LANG"] ?? "en";
