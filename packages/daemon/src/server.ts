@@ -59,6 +59,10 @@ const handleRest = async (req: IncomingMessage, res: ServerResponse): Promise<vo
     res.end();
     return;
   }
+  // 本文はネットワーク越しに複数チャンクへ割れて届く。chunk ごとに toString せず、
+  // Buffer.concat で連結してから一度だけ decode する。マルチバイト文字(UTF-8 で複数
+  // バイト)がチャンク境界をまたぐと、半端なバイトが U+FFFD に化けて値が静かに壊れる
+  // ため(JSON 構造文字は ASCII なので JSON.parse は素通りし、例外も出ない)。
   const chunks: Buffer[] = [];
   for await (const chunk of req) chunks.push(chunk as Buffer);
   try {
