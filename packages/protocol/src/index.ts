@@ -77,15 +77,26 @@ export interface RpcError {
 }
 
 /** WS のメッセージ枠(相関 id つき request/response。セッション状態は持たない)。 */
-export type RpcMethod = "waxlens/validate" | "waxlens/readEntry";
+export type RpcMethod = "waxlens/validate" | "waxlens/readEntry" | "waxlens/ping";
+
+/** waxlens/ping は引数を取らない。 */
+export type PingParams = Record<string, never>;
+
+/** /healthz と waxlens/ping が返す生存ステータス。 */
+export interface HealthStatus {
+  status: "ok";
+  version: string;
+  uptimeSec: number;
+}
+
 export interface RpcRequest {
   id: number;
   method: RpcMethod;
-  params: ValidateParams | ReadEntryParams;
+  params: ValidateParams | ReadEntryParams | PingParams;
 }
 export interface RpcResponse {
   id: number;
-  result?: WireReport | ReadEntryResult;
+  result?: WireReport | ReadEntryResult | HealthStatus;
   error?: RpcError;
 }
 

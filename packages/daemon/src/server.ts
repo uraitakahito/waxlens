@@ -8,6 +8,7 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { WebSocketServer, type RawData } from "ws";
 import type {
+  HealthStatus,
   ReadEntryParams,
   ReadEntryResult,
   RpcError,
@@ -16,12 +17,19 @@ import type {
   ValidateParams,
   WireReport,
 } from "@waxlens/protocol";
-import { DaemonError, readEntry, validate } from "./handlers.js";
+import { DaemonError, readEntry, validate, VERSION } from "./handlers.js";
+
+const healthStatus = (): HealthStatus => ({
+  status: "ok",
+  version: VERSION,
+  uptimeSec: Math.round(process.uptime()),
+});
 
 const dispatch = async (
   method: string,
   params: unknown,
-): Promise<WireReport | ReadEntryResult> => {
+): Promise<WireReport | ReadEntryResult | HealthStatus> => {
+  if (method === "waxlens/ping") return healthStatus();
   if (method === "waxlens/validate") return validate(params as ValidateParams);
   if (method === "waxlens/readEntry") return readEntry(params as ReadEntryParams);
   throw new DaemonError("badRequest", `unknown method: ${method}`);
@@ -40,6 +48,12 @@ const rawToString = (raw: RawData): string =>
       : Buffer.from(raw).toString("utf8");
 
 const handleRest = async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
+  if (req.method === "GET" && req.url === "/healthz") {
+    res.statusCode = 200;
+    res.setHeader("content-type", "application/json");
+    res.end(JSON.stringify(healthStatus()));
+    return;
+  }
   if (req.method !== "POST" || req.url !== "/validate") {
     res.statusCode = 404;
     res.end();
@@ -59,8 +73,27 @@ const handleRest = async (req: IncomingMessage, res: ServerResponse): Promise<vo
   }
 };
 
+export const LOG_LEVELS = ["silent", "error", "debug"] as const;
+export type LogLevel = (typeof LOG_LEVELS)[number];
+
+export interface CreateDaemonOptions {
+  /** stderr 診断ログの level(既定 "silent")。malformed frame は "error" 以上で出る。 */
+  logLevel?: LogLevel;
+}
+
+/** level に応じて stderr に書く薄い logger。 */
+const makeLogger = (level: LogLevel) => ({
+  error: (msg: string) => {
+    if (level !== "silent") process.stderr.write(`waxlens-daemon [error] ${msg}\n`);
+  },
+  debug: (msg: string) => {
+    if (level === "debug") process.stderr.write(`waxlens-daemon [debug] ${msg}\n`);
+  },
+});
+
 /** stateless な HTTP/WS サーバを組み立てて返す(listen は呼び出し側)。 */
-export const createDaemon = (): Server => {
+export const createDaemon = (opts: CreateDaemonOptions = {}): Server => {
+  const log = makeLogger(opts.logLevel ?? "silent");
   const server = createServer((req, res) => {
     void handleRest(req, res);
   });
@@ -71,8 +104,9 @@ export const createDaemon = (): Server => {
         let request: RpcRequest;
         try {
           request = JSON.parse(rawToString(raw)) as RpcRequest;
-        } catch {
-          return; // 解釈不能なフレームは無視
+        } catch (cause) {
+          log.error(`ignored malformed frame: ${cause instanceof Error ? cause.message : String(cause)}`);
+          return;
         }
         const response: RpcResponse = { id: request.id };
         try {

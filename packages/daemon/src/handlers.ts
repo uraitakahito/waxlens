@@ -25,7 +25,7 @@ import type {
   WireReport,
 } from "@waxlens/protocol";
 
-const VERSION = "0.0.0";
+export const VERSION = "0.0.0";
 /** content プレビューの上限(byte 相当)。これを超えたら truncated。 */
 const PREVIEW_CAP = 64 * 1024;
 const PROFILES: readonly string[] = ["spec", "browserhive", "lenient"];
