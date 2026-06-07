@@ -2,7 +2,7 @@
  * `render/tree.ts`(flat entries → §5.1 ツリー / マーカー)の純関数テスト。
  */
 import { describe, expect, it } from "vitest";
-import type { ReportEntry } from "@waxlens/core";
+import type { ReportEntry } from "@waxlens/protocol";
 import { buildEntryTree, entryMarker, flattenTree } from "../src/render/tree.js";
 
 const entry = (path: string, over: Partial<ReportEntry> = {}): ReportEntry => ({

@@ -1,56 +1,53 @@
 #!/usr/bin/env node
 /**
- * `waxlens` — WACZ validation のための Ink TUI。
+ * `waxlens` — WACZ validation のための Ink TUI(daemon クライアント)。
  *
- * in-process で `@waxlens/core` を import し (spawn 無し)、得られた
- * `Report` を interactive に render する。stdout または stdin が TTY
- * でない場合は silent に同じ plain-text renderer
- * (`waxlens-validate --plain` が使うもの) に fallback する。
- * machine-readable JSON が欲しい場合は `waxlens-validate` を直接
- * 使う — そのコントラクトを enforce するために 2 つに分かれている。
+ * validation は自前で行わず、stateless な `@waxlens/daemon` を spawn
+ * (or `--server URL` に接続)し、WS で `waxlens/validate` を呼ぶ。daemon が
+ * core を所有し、`renderJson(report, locale)` で解決済みの `WireReport` を返す
+ * ので、tui はそれを interactive に render する。Layout で enter すると
+ * `waxlens/readEntry` でファイル内容を取り、右ペインに表示する。stdout / stdin
+ * が TTY でない場合は plain-text renderer に fallback する。machine-readable
+ * JSON が欲しい場合は `waxlens-validate`(core の bin)を直接使う。
  *
- * Exit code は `waxlens-validate` と同じ (`exitCodeFor` が単一情報源):
- *   0 — validation 成功 (error severity の issue なし)
- *   1 — validation 失敗 (error severity の issue が 1 件以上)
- *   2 — operational な失敗 (ファイルが開けない等)
+ * tui は `@waxlens/core` を import しない — 型 / 定数 / exitCodeFor はすべて
+ * `@waxlens/protocol` 由来で、validation engine も i18n カタログも読み込まない。
  *
- * 副作用の責務分担:
- *   - `runCli`   outcome を組み立てるだけ; render はしない
- *   - `dispatch` TUI / plain / stderr の発火と await をここで集約
- *   - action     最後に `process.exitCode = exitCodeFor(outcome)` で締める
+ * Exit code 契約(`exitCodeFor` が単一情報源):
+ *   0 — validation 成功 / 1 — validation 失敗 / 2 — operational な失敗
+ *
+ * daemon の寿命は action が所有する: spawn → validate → (TUI の間は接続維持で
+ * readEntry) → waitUntilExit → client.close → daemon.close(child の exit を待つ)
+ * → `process.exitCode`。child を待ってから exitCode を確定するので、死にかけの
+ * child handle と event loop が競合して exit code が 0 に化けるレースを避ける。
  */
 import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { Command, InvalidArgumentError } from "commander";
 import {
   ALL_PROFILES,
   DEFAULT_PROFILE,
-  DEFAULT_RULES,
   exitCodeFor,
-  fileTransport,
-  formatParseSourceError,
-  parseReportSource,
-  resolveLocale,
-  runValidation,
-  s3Transport,
   SUPPORTED_LOCALES,
-  WaczReader,
   type CliOutcome,
-  type Locale,
-  type Report,
-  type ReportSource,
+  type ReadEntryResult,
   type RuleProfile,
-} from "@waxlens/core";
+  type WireReport,
+} from "@waxlens/protocol";
+import {
+  connect,
+  RpcCallError,
+  startDaemon,
+  type DaemonClient,
+  type DaemonHandle,
+} from "./daemon-client.js";
 import { renderPlain } from "./render/plain.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const manifestPath = join(here, "..", "package.json");
 const manifest = JSON.parse(readFileSync(manifestPath, "utf-8")) as { version: string };
 
-// env→boolean を strict に解釈 (空文字 / "false" / その他は全部 false)。
-// CLI flag のデフォルト値として commander に渡す。flag が立てば true で
-// 上書きされる。
 const envS3ForcePathStyle = process.env["WAXLENS_S3_FORCE_PATH_STYLE"] === "true";
 
 interface CliOptions {
@@ -59,17 +56,17 @@ interface CliOptions {
   profile: RuleProfile;
   s3ForcePathStyle: boolean;
   lang?: string;
+  server?: string;
 }
 
-const openWacz = (
-  source: ReportSource,
-  s3ForcePathStyle: boolean,
-): Promise<WaczReader> =>
-  WaczReader.open(
-    source.kind === "s3"
-      ? s3Transport({ ...source, forcePathStyle: s3ForcePathStyle })
-      : fileTransport(source.path),
-  );
+type RequestContent = (path: string) => Promise<string>;
+
+/**
+ * CLI 引数を daemon に渡す source URI に正規化する。`s3://` はそのまま、
+ * ローカルパスは絶対化して `file://` URI にする(daemon は cwd 非共有でも開ける)。
+ */
+const toUri = (source: string): string =>
+  source.startsWith("s3://") ? source : pathToFileURL(resolve(source)).href;
 
 const parseProfile = (raw: string): RuleProfile => {
   if ((ALL_PROFILES as readonly string[]).includes(raw)) return raw as RuleProfile;
@@ -81,10 +78,7 @@ program
   .name("waxlens")
   .description("Interactive TUI for WACZ validation (use waxlens-validate for JSON output)")
   .version(manifest.version)
-  .argument(
-    "<source>",
-    "Local path or s3://bucket/key URI of the .wacz to validate",
-  )
+  .argument("<source>", "Local path or s3://bucket/key URI of the .wacz to validate")
   .option("--no-color", "Disable ANSI colour escapes in plain output")
   .option(
     "--no-tui",
@@ -101,41 +95,81 @@ program
     "Force path-style S3 addressing for bundled SeaweedFS / MinIO 等 (also via WAXLENS_S3_FORCE_PATH_STYLE=true)",
     envS3ForcePathStyle,
   )
-  .option("--lang <locale>", `Message language (${SUPPORTED_LOCALES.join(" | ")}). Defaults to LANG / en.`)
+  .option(
+    "--lang <locale>",
+    `Message language (${SUPPORTED_LOCALES.join(" | ")}). Defaults to LANG / en.`,
+  )
+  .option(
+    "--server <url>",
+    "Connect to a running waxlens-daemon (e.g. ws://127.0.0.1:7333) instead of spawning one",
+  )
   .action(async (filePath: string, options: CliOptions) => {
-    const outcome = await runCli(filePath, options);
-    await dispatch(outcome, options);
-    // `process.exit(N)` ではなく `process.exitCode` をセット。Ink の
-    // `instance.waitUntilExit()` は `useApp().exit()` を待つ自然な経路で、
-    // ここで強制終了すると raw-mode TTY が ANSI escape を残すなど後始末
-    // を踏み外しうる。`runCli` が reader を `finally` で閉じ、TUI 経路は
-    // `waitUntilExit` を await しているので、callback が return すれば
-    // event loop は自然に drain して Node が `exitCode` で終了する。
-    process.exitCode = exitCodeFor(outcome);
+    const uri = toUri(filePath);
+    let daemon: DaemonHandle | undefined;
+    try {
+      daemon = await startDaemon(options.server);
+      const client = await connect(daemon.url);
+      try {
+        const outcome = await validateOnce(client, uri, filePath, options);
+        const requestContent: RequestContent = (path) =>
+          client
+            .request<ReadEntryResult>("waxlens/readEntry", { source: { kind: "uri", uri }, path })
+            .then((r) => r.content);
+        await dispatch(outcome, options, requestContent);
+        // daemon は finally で kill し、その exit を await してから process が
+        // 終わる(exitCode を確定後に child が残らないようにするため)。
+        process.exitCode = exitCodeFor(outcome);
+      } finally {
+        client.close();
+      }
+    } catch (cause) {
+      // spawn / 接続 / 想定外の失敗 → operational failure。
+      process.stderr.write(`waxlens: ${cause instanceof Error ? cause.message : String(cause)}\n`);
+      process.exitCode = 2;
+    } finally {
+      await daemon?.close();
+    }
   });
 
 await program.parseAsync(process.argv);
 
-/**
- * outcome に従って副作用 (TUI render / plain stdout / stderr) を発火
- * する。`runTui` は async (Ink の `waitUntilExit` を待つ) なので、
- * この関数自身も async にして、TUI 終了前に exit code がセットされる
- * 競合を避ける。
- *
- * `engineFailed` は `Result<Report, never>` から narrowing のためだけに
- * 生まれる variant で、論理的には到達不能。万一来たら silent で抜けて
- * exit code 2 になる — 現状の挙動と同じ。
- */
-async function dispatch(outcome: CliOutcome, opts: CliOptions): Promise<void> {
-  const locale = resolveLocale(opts.lang);
+/** WS で validate し、WireReport を CliOutcome に map する(RpcError は分類)。 */
+async function validateOnce(
+  client: DaemonClient,
+  uri: string,
+  filePath: string,
+  opts: CliOptions,
+): Promise<CliOutcome> {
+  try {
+    const report = await client.request<WireReport>("waxlens/validate", {
+      source: { kind: "uri", uri },
+      profile: opts.profile,
+      locale: opts.lang ?? "",
+      ...(opts.s3ForcePathStyle && { s3ForcePathStyle: true }),
+    });
+    return report.valid ? { kind: "valid", report } : { kind: "invalid", report };
+  } catch (cause) {
+    if (cause instanceof RpcCallError && cause.code === "openFailed") {
+      return { kind: "openFailed", filePath, cause };
+    }
+    if (cause instanceof RpcCallError && cause.code === "engineFailed") {
+      return { kind: "engineFailed" };
+    }
+    throw cause; // 想定外(接続切れ等)→ action の catch で exit 2
+  }
+}
+
+/** outcome に従って TUI / plain / stderr を発火する。TUI には readEntry ブリッジを渡す。 */
+async function dispatch(
+  outcome: CliOutcome,
+  opts: CliOptions,
+  requestContent: RequestContent,
+): Promise<void> {
   switch (outcome.kind) {
     case "valid":
     case "invalid":
-      if (shouldUseTui(opts)) {
-        await runTui(outcome.report, locale);
-      } else {
-        process.stdout.write(renderPlain(outcome.report, { color: opts.color, locale }));
-      }
+      if (shouldUseTui(opts)) await runTui(outcome.report, requestContent);
+      else process.stdout.write(renderPlain(outcome.report, { color: opts.color }));
       return;
     case "openFailed": {
       const message =
@@ -148,56 +182,19 @@ async function dispatch(outcome: CliOutcome, opts: CliOptions): Promise<void> {
   }
 }
 
-async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome> {
-  const sourceResult = parseReportSource(filePath);
-  if (!sourceResult.ok) {
-    return {
-      kind: "openFailed",
-      filePath,
-      cause: new Error(formatParseSourceError(sourceResult.error)),
-    };
-  }
-
-  let reader: WaczReader;
-  try {
-    reader = await openWacz(sourceResult.value, opts.s3ForcePathStyle);
-  } catch (cause) {
-    return { kind: "openFailed", filePath, cause };
-  }
-
-  try {
-    const result = await runValidation(reader, {
-      waxlensVersion: manifest.version,
-      rules: DEFAULT_RULES,
-      profile: opts.profile,
-    });
-    if (!result.ok) return { kind: "engineFailed" };
-    const report = result.value;
-
-    return report.valid ? { kind: "valid", report } : { kind: "invalid", report };
-  } finally {
-    await reader.close();
-  }
-}
-
-// `const` の arrow ではなく `function` 宣言にしているのは、module
-// トップの `await program.parseAsync(...)` が `runCli` (これらを呼ぶ)
-// を invoke しても temporal dead zone に当たらないようにするため。
+// `const` arrow ではなく `function` 宣言なのは、module トップの top-level await
+// から呼んでも temporal dead zone に当たらないようにするため。
 function shouldUseTui(opts: CliOptions): boolean {
   if (!opts.tui) return false;
-  // 双方向に意味がある: Ink は stdout に書く (cursor 制御に TTY が
-  // 必要) し stdin から読む (navigation のために raw-mode の
-  // keystroke が必要)。どちらかでも TTY で無いと interactive surface
-  // が壊れるので、plain text に fallback する。
   return process.stdout.isTTY && process.stdin.isTTY;
 }
 
-async function runTui(report: Report, locale: Locale): Promise<void> {
+async function runTui(report: WireReport, requestContent: RequestContent): Promise<void> {
   const [{ render }, { createElement }, { App }] = await Promise.all([
     import("ink"),
     import("react"),
     import("./app.js"),
   ]);
-  const instance = render(createElement(App, { report, locale }));
+  const instance = render(createElement(App, { report, requestContent }));
   await instance.waitUntilExit();
 }

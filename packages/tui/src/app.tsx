@@ -1,59 +1,41 @@
 /**
- * Ink TUI renderer。
+ * Ink TUI renderer(daemon クライアント側の薄い表示器)。
  *
- * レイアウト:
+ * validation は daemon が行い、message / specUrl / conformance まで解決済みの
+ * {@link WireReport} を受け取るので、ここでは core の i18n も lookup も呼ばず
+ * 解決済みフィールドをそのまま描く(`@waxlens/core` を import しない)。
  *
- *   waxlens 0.0.0  /path/to/file.wacz
+ * Layout ビューでファイルを選んで `enter` を押すと、`requestContent`(daemon の
+ * `waxlens/readEntry` への薄いブリッジ)でそのファイルの内容を取得し、右ペインに
+ * 表示する。`requestContent` 未指定(テスト等)なら no-op。
  *
- *   ▶ [✗] datapackage/profile-required
- *       datapackage.json is missing the "profile" field
- *       { "expected": "data-package" }              ← expanded のときだけ表示
- *     [✗] cdxj/filename-archive-relative
- *       indexes/index.cdxj:1 — entry "filename" starts with "archive/"
- *
- *   1 passed, 2 failed, 0 warnings  · 12ms
- *   ↑↓ navigate · enter expand · q quit
- *
- * 1 行 1 issue、`▶` がカーソル、`enter` で `details` をトグル。JSON
- * renderer が emit するのと同じ `Issue.details` payload を意図的に
- * render する — human view と machine view が乖離しないため。
- *
- * Exit code の経路: CLI は `render(...)` を呼ぶ *前* に
- * `process.exitCode` をセットし、その後 `instance.waitUntilExit()`
- * を await する。TUI は `q` のときに `useApp().exit()` を呼び、Node
- * は最終的なステータスとして `process.exitCode` を使う。これによって
- * Ink の `exit(reason?)` 引数 (error object 用に予約されている) に
- * code を通さずに済む。
+ * Exit code の経路: CLI は `render(...)` の後に `instance.waitUntilExit()` を
+ * await し、その後 `process.exitCode` をセットする。
  */
-import { createContext, useContext, useMemo, useState, type FC } from "react";
+import { useMemo, useState, type FC } from "react";
 import { Box, Text, useApp, useInput } from "ink";
-import {
-  conformanceForRule,
-  specUrl,
-  t,
-  type Issue,
-  type Locale,
-  type Report,
-  type ReportEntry,
-} from "@waxlens/core";
+import type { ReportEntry, WireIssue, WireReport } from "@waxlens/protocol";
 import { buildEntryTree, entryMarker, flattenTree, type TreeRow } from "./render/tree.js";
 import { codecName, entryIssues, expectedLabel } from "./render/detail.js";
 
-/** 表示 locale。App が provide し、issue メッセージを描く子が consume する。 */
-const LocaleContext = createContext<Locale>("en");
-
 interface AppProps {
-  report: Report;
-  locale: Locale;
+  report: WireReport;
+  /** Layout で enter 時に呼ぶ内容取得ブリッジ(daemon の readEntry)。省略可。 */
+  requestContent?: (path: string) => Promise<string>;
 }
 
 type View = "issues" | "layout";
 
-export const App: FC<AppProps> = ({ report, locale }) => {
+/** 右ペインに出す content の表示上限(行)。daemon 側で byte 上限も掛かっている。 */
+const CONTENT_MAX_LINES = 40;
+
+export const App: FC<AppProps> = ({ report, requestContent }) => {
   const { exit } = useApp();
   const [view, setView] = useState<View>("issues");
   const [focused, setFocused] = useState(0);
   const [expanded, setExpanded] = useState<ReadonlySet<number>>(new Set());
+  // Layout で enter したファイルの内容(ナビゲーションで都度クリア)。
+  const [content, setContent] = useState<string | null>(null);
 
   const issues = report.issues;
   // §5.1 風ツリーの行(report が変わらない限り再計算しない)。
@@ -65,84 +47,88 @@ export const App: FC<AppProps> = ({ report, locale }) => {
       exit();
       return;
     }
-    // Tab で Issues ⇄ Layout を切替。cursor は先頭へ戻す。
     if (key.tab) {
       setView((prev) => (prev === "issues" ? "layout" : "issues"));
       setFocused(0);
+      setContent(null);
       return;
     }
     if (key.upArrow && rowCount > 0) {
       setFocused((prev) => Math.max(0, prev - 1));
+      setContent(null);
       return;
     }
     if (key.downArrow && rowCount > 0) {
       setFocused((prev) => Math.min(rowCount - 1, prev + 1));
+      setContent(null);
       return;
     }
     if (key.return && view === "issues" && issues.length > 0) {
-      // focused な issue の expansion をトグルする。set を作り直して
-      // いるのは、React の diff のために参照の同一性を安定させたいため。
+      // focused な issue の expansion をトグル(参照同一性のため set を作り直す)。
       setExpanded((prev) => {
         const next = new Set(prev);
         if (next.has(focused)) next.delete(focused);
         else next.add(focused);
         return next;
       });
+      return;
+    }
+    if (key.return && view === "layout" && requestContent) {
+      // focused 行のファイル内容を daemon から取得して右ペインに出す。
+      const entry = layoutRows[focused]?.entry;
+      if (entry?.present === true) {
+        void requestContent(entry.path).then(setContent, () => {
+          setContent("(content unavailable)");
+        });
+      }
     }
   });
 
   return (
-    <LocaleContext.Provider value={locale}>
-      <Box flexDirection="column">
-        <Header report={report} view={view} />
-        <Box marginTop={1} flexDirection="column">
-          {view === "issues" ? (
-            issues.length === 0 ? (
-              <Text color="green">All rules passed.</Text>
-            ) : (
-              issues.map((issue, i) => (
-                <IssueRow
-                  key={`${issue.rule}-${String(i)}`}
-                  issue={issue}
-                  focused={i === focused}
-                  expanded={expanded.has(i)}
-                />
-              ))
-            )
+    <Box flexDirection="column">
+      <Header report={report} view={view} />
+      <Box marginTop={1} flexDirection="column">
+        {view === "issues" ? (
+          issues.length === 0 ? (
+            <Text color="green">All rules passed.</Text>
           ) : (
-            <LayoutView rows={layoutRows} focused={focused} report={report} />
-          )}
-        </Box>
-        <Summary report={report} />
-        {report.stats ? <Stats stats={report.stats} /> : null}
-        <Help />
+            issues.map((issue, i) => (
+              <IssueRow
+                key={`${issue.rule}-${String(i)}`}
+                issue={issue}
+                focused={i === focused}
+                expanded={expanded.has(i)}
+              />
+            ))
+          )
+        ) : (
+          <LayoutView rows={layoutRows} focused={focused} report={report} content={content} />
+        )}
       </Box>
-    </LocaleContext.Provider>
+      <Summary report={report} />
+      {report.stats ? <Stats stats={report.stats} /> : null}
+      <Help />
+    </Box>
   );
 };
 
 /**
  * Layout ビュー: 左に §5.1 風ツリー(状態アイコン ✗/⚠ + size)、右に
- * 選択行(focused)の詳細ペイン。理由・rule 名・message は冗長なので
- * ツリーには出さず、すべてペインに一本化する(ツリー=概要、ペイン=詳細)。
- * 中身(bytes)は読まず Report だけで描く。
+ * 選択行(focused)の詳細ペイン。enter で取得した内容(`content`)も右ペインに出す。
  */
-const LayoutView: FC<{ rows: TreeRow[]; focused: number; report: Report }> = ({
-  rows,
-  focused,
-  report,
-}) => {
+const LayoutView: FC<{
+  rows: TreeRow[];
+  focused: number;
+  report: WireReport;
+  content: string | null;
+}> = ({ rows, focused, report, content }) => {
   if (rows.length === 0) return <Text dimColor>(no entries)</Text>;
   const selected = rows[focused]?.entry;
   return (
     <Box>
-      {/* 左: 既存ツリー。flexShrink={0} で自然幅を保ち、右ペインに場所を空ける。 */}
       <Box flexDirection="column" flexShrink={0}>
         {rows.map((row, i) => {
           const mk = entryMarker(row.entry);
-          // ツリーは状態アイコンだけ(error/missing → ✗、warning → ⚠)。理由・
-          // rule 名・message は DetailPane が持つ。glyph があるときだけ描画する
-          // ので color は常に具体値(undefined は exactOptionalPropertyTypes に弾かれる)。
           const glyph = mk.tone === "error" ? "✗" : mk.tone === "warning" ? "⚠" : "";
           const color = mk.tone === "warning" ? "yellow" : "red";
           const size =
@@ -159,7 +145,6 @@ const LayoutView: FC<{ rows: TreeRow[]; focused: number; report: Report }> = ({
           );
         })}
       </Box>
-      {/* 右: 選択ファイルの詳細。 */}
       <Box
         flexDirection="column"
         flexGrow={1}
@@ -168,14 +153,18 @@ const LayoutView: FC<{ rows: TreeRow[]; focused: number; report: Report }> = ({
         borderDimColor
         paddingX={1}
       >
-        <DetailPane entry={selected} report={report} />
+        <DetailPane entry={selected} report={report} content={content} />
       </Box>
     </Box>
   );
 };
 
-/** 右ペイン: 選択 entry のメタ情報(path/status/size/expected)+ 紐づく issue 全文。 */
-const DetailPane: FC<{ entry: ReportEntry | undefined; report: Report }> = ({ entry, report }) => {
+/** 右ペイン: 選択 entry のメタ情報 + 紐づく issue + enter で取得した内容。 */
+const DetailPane: FC<{
+  entry: ReportEntry | undefined;
+  report: WireReport;
+  content: string | null;
+}> = ({ entry, report, content }) => {
   if (!entry) return <Text dimColor>(select a file)</Text>;
   return (
     <Box flexDirection="column">
@@ -195,12 +184,34 @@ const DetailPane: FC<{ entry: ReportEntry | undefined; report: Report }> = ({ en
         <Text>{expectedLabel(entry.expectedBy)}</Text>
       </Box>
       <IssueList entry={entry} report={report} />
+      {content !== null ? <ContentView content={content} /> : null}
+      {content === null && entry.present ? (
+        <Box marginTop={1}>
+          <Text dimColor>enter で内容を表示</Text>
+        </Box>
+      ) : null}
+    </Box>
+  );
+};
+
+/** enter で取得したファイル内容を表示(行数上限で打ち切り)。 */
+const ContentView: FC<{ content: string }> = ({ content }) => {
+  const lines = content.split("\n");
+  const shown = lines.slice(0, CONTENT_MAX_LINES);
+  const truncated = lines.length > CONTENT_MAX_LINES;
+  return (
+    <Box flexDirection="column" marginTop={1}>
+      <Text dimColor>content</Text>
+      {shown.map((line, i) => (
+        <Text key={`content-${String(i)}`}>{line}</Text>
+      ))}
+      {truncated ? <Text dimColor>{`… (+${String(lines.length - CONTENT_MAX_LINES)} more lines)`}</Text> : null}
     </Box>
   );
 };
 
 /** 選択 file に紐づく issue を全文(icon + rule + message + location)で列挙。 */
-const IssueList: FC<{ entry: ReportEntry; report: Report }> = ({ entry, report }) => {
+const IssueList: FC<{ entry: ReportEntry; report: WireReport }> = ({ entry, report }) => {
   const issues = entryIssues(report, entry.path);
   return (
     <Box flexDirection="column" marginTop={1}>
@@ -214,38 +225,35 @@ const IssueList: FC<{ entry: ReportEntry; report: Report }> = ({ entry, report }
   );
 };
 
-/** issue の params.section が表で解決できれば spec への直リンク行を出す(dimmed)。 */
-const SpecLink: FC<{ issue: Issue; indent: number }> = ({ issue, indent }) => {
-  const url = specUrl(issue.params?.["section"]);
-  if (url === undefined) return null;
+/** daemon が解決した specUrl があれば spec への直リンク行を出す(dimmed)。 */
+const SpecLink: FC<{ issue: WireIssue; indent: number }> = ({ issue, indent }) => {
+  if (issue.specUrl === undefined) return null;
   return (
     <Box marginLeft={indent}>
-      <Text dimColor>{`spec ${url}`}</Text>
+      <Text dimColor>{`spec ${issue.specUrl}`}</Text>
     </Box>
   );
 };
 
-/** rule が司る spec の規範レベル(MUST/SHOULD/MAY)を rule 名の後に併記。severity とは別軸。 */
-const ConfBadge: FC<{ rule: string }> = ({ rule }) => {
-  const conformance = conformanceForRule(rule);
+/** spec の規範レベル(MUST/SHOULD/MAY)を rule 名の後に併記。severity とは別軸。 */
+const ConfBadge: FC<{ conformance: string | undefined }> = ({ conformance }) => {
   if (conformance === undefined) return null;
   return <Text color="magenta">{` ${conformance}`}</Text>;
 };
 
-const IssueLine: FC<{ issue: Issue }> = ({ issue }) => {
-  const locale = useContext(LocaleContext);
+const IssueLine: FC<{ issue: WireIssue }> = ({ issue }) => {
   const tone = toneFor(issue.severity);
   const loc = formatLocation(issue);
   return (
     <Box flexDirection="column">
       <Box>
         <Text color={tone}>{`${iconFor(issue.severity)} ${issue.rule}`}</Text>
-        <ConfBadge rule={issue.rule} />
+        <ConfBadge conformance={issue.conformance} />
       </Box>
       <Box marginLeft={2}>
         <Text>
           {loc ? <Text dimColor>{`${loc} — `}</Text> : null}
-          {t(issue.messageKey, issue.params ?? {}, locale)}
+          {issue.message}
         </Text>
       </Box>
       <SpecLink issue={issue} indent={2} />
@@ -253,7 +261,7 @@ const IssueLine: FC<{ issue: Issue }> = ({ issue }) => {
   );
 };
 
-const Stats: FC<{ stats: NonNullable<Report["stats"]> }> = ({ stats }) => {
+const Stats: FC<{ stats: NonNullable<WireReport["stats"]> }> = ({ stats }) => {
   const recordsLabel = `${String(stats.warcRecordCount)} record${stats.warcRecordCount === 1 ? "" : "s"}`;
   const hostsLabel = `${String(stats.hosts.length)} host${stats.hosts.length === 1 ? "" : "s"}`;
   return (
@@ -272,9 +280,8 @@ const formatBytes = (n: number): string => {
   return `${(n / 1024 / 1024 / 1024).toFixed(1)} GB`;
 };
 
-const Header: FC<{ report: Report; view: View }> = ({ report, view }) => {
-  const sourceLabel =
-    report.source.kind === "file" ? report.source.path : report.source.uri;
+const Header: FC<{ report: WireReport; view: View }> = ({ report, view }) => {
+  const sourceLabel = report.source.kind === "file" ? report.source.path : report.source.uri;
   return (
     <Box>
       <Text bold>waxlens</Text>
@@ -287,12 +294,11 @@ const Header: FC<{ report: Report; view: View }> = ({ report, view }) => {
   );
 };
 
-const IssueRow: FC<{ issue: Issue; focused: boolean; expanded: boolean }> = ({
+const IssueRow: FC<{ issue: WireIssue; focused: boolean; expanded: boolean }> = ({
   issue,
   focused,
   expanded,
 }) => {
-  const locale = useContext(LocaleContext);
   const tone = toneFor(issue.severity);
   const icon = iconFor(issue.severity);
   const location = formatLocation(issue);
@@ -303,12 +309,12 @@ const IssueRow: FC<{ issue: Issue; focused: boolean; expanded: boolean }> = ({
         <Text color={tone}>{focused ? "▶ " : "  "}</Text>
         <Text color={tone}>{`[${icon}] `}</Text>
         <Text bold>{issue.rule}</Text>
-        <ConfBadge rule={issue.rule} />
+        <ConfBadge conformance={issue.conformance} />
       </Box>
       <Box marginLeft={6}>
         <Text>
           {location ? <Text dimColor>{`${location} — `}</Text> : null}
-          {t(issue.messageKey, issue.params ?? {}, locale)}
+          {issue.message}
         </Text>
       </Box>
       <SpecLink issue={issue} indent={6} />
@@ -323,9 +329,7 @@ const IssueRow: FC<{ issue: Issue; focused: boolean; expanded: boolean }> = ({
 
 /**
  * `details` payload を、当てはまる shape 専用 view で render し、
- * それ以外は JSON pretty に fallback する。dispatch 順序が重要:
- * `expected/actual` と `hexPreview` の両方を持つ issue (例:
- * payload-digest mismatch) は diff と hex dump がこの順で積まれる。
+ * それ以外は JSON pretty に fallback する。
  */
 const ExpandedDetails: FC<{ details: unknown }> = ({ details }) => {
   if (typeof details !== "object" || details === null) {
@@ -338,11 +342,6 @@ const ExpandedDetails: FC<{ details: unknown }> = ({ details }) => {
   const hexPreview = Array.isArray(d["hexPreview"]) ? (d["hexPreview"] as unknown[]) : null;
   const candidates = Array.isArray(d["candidates"]) ? (d["candidates"] as unknown[]) : null;
 
-  // 実際に発火した specialised view だけが field を消費するので、
-  // pair の無い `expected` 単独 (`actual` 無し) は silent に drop
-  // されず JSON-pretty の末尾 fallback に流れる。これが無いと、
-  // `details: { expected: "data-package" }` の issue を expanded
-  // view で開いたときに *何も* 表示されない。
   const consumed = new Set<string>();
   if (hasDiff) {
     consumed.add("expected");
@@ -419,11 +418,8 @@ const formatValue = (v: unknown): string => {
   return JSON.stringify(v);
 };
 
-const Summary: FC<{ report: Report }> = ({ report }) => {
+const Summary: FC<{ report: WireReport }> = ({ report }) => {
   const s = report.summary;
-  // exactOptionalPropertyTypes は `color={... ? "red" : undefined}` を
-  // 禁じる — prop 自体を省くのが等価。call site の見通しを保つため
-  // 空オブジェクトを条件付きで spread する。
   const failedColor = s.failed > 0 ? { color: "red" as const } : {};
   const warningsColor = s.warnings > 0 ? { color: "yellow" as const } : {};
   return (
@@ -440,33 +436,33 @@ const Summary: FC<{ report: Report }> = ({ report }) => {
 
 const Help: FC = () => (
   <Box marginTop={1}>
-    <Text dimColor>↑↓ navigate · enter expand · tab issues/layout · q quit</Text>
+    <Text dimColor>↑↓ navigate · enter expand/show · tab issues/layout · q quit</Text>
   </Box>
 );
 
-const toneFor = (severity: Issue["severity"]): "red" | "yellow" | "cyan" => {
+const toneFor = (severity: WireIssue["severity"]): "red" | "yellow" | "cyan" => {
   switch (severity) {
     case "error":
       return "red";
     case "warning":
       return "yellow";
-    case "info":
+    default:
       return "cyan";
   }
 };
 
-const iconFor = (severity: Issue["severity"]): string => {
+const iconFor = (severity: WireIssue["severity"]): string => {
   switch (severity) {
     case "error":
       return "✗";
     case "warning":
       return "!";
-    case "info":
+    default:
       return "i";
   }
 };
 
-const formatLocation = (issue: Issue): string => {
+const formatLocation = (issue: WireIssue): string => {
   const loc = issue.location;
   if (!loc) return "";
   let result = loc.entry ?? "";

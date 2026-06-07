@@ -5,7 +5,7 @@
  * マーカーの「色」は tone を返すだけにして、各 renderer 側で
  * picocolors / Ink の color に対応づける。
  */
-import type { ReportEntry, Severity } from "@waxlens/core";
+import type { ReportEntry, Severity } from "@waxlens/protocol";
 
 export interface TreeNode {
   /** セグメント名("archive" / "data.warc.gz")。root は ""。 */

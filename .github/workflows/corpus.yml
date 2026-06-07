@@ -21,6 +21,9 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # daemon のテストは @waxlens/core / @waxlens/protocol を package として
+      # import する(dist 解決)ため、test 前に全 workspace を build しておく。
+      - run: pnpm build
 
       # corpus を sibling に clone。git-lfs は ubuntu-latest にプリインストール
       # 済みで、clone 時に LFS 実体まで smudge される (念のため pull も明示)。
@@ -39,3 +42,8 @@ jobs:
 
       - name: Run corpus-driven regression
         run: CORPUS_DIR="$(cd ../waxlens-corpus && pwd)" pnpm --filter @waxlens/core test:corpus
+
+      # daemon の validate / readEntry を実 WACZ(file:// URI)で end-to-end に
+      # 検証する。CORPUS_DIR 未設定の `pnpm check` 側では skip される gated test。
+      - name: Run daemon handler/server tests against fixtures
+        run: CORPUS_DIR="$(cd ../waxlens-corpus && pwd)" pnpm --filter @waxlens/daemon test

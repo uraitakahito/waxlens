@@ -1,0 +1,29 @@
+{
+  "name": "@waxlens/protocol",
+  "version": "0.0.0",
+  "description": "Shared wire types for the waxlens daemon protocol (tui / daemon / future browser).",
+  "license": "Unlicense",
+  "type": "module",
+  "engines": {
+    "node": ">=24.15.0"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "check": "pnpm typecheck && pnpm lint && pnpm build"
+  },
+  "dependencies": {
+    "@waxlens/core": "workspace:*"
+  },
+  "devDependencies": {
+    "eslint": "^10.3.0",
+    "typescript": "^6.0.3"
+  }
+}

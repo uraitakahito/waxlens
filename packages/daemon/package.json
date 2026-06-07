@@ -1,21 +1,19 @@
 {
-  "name": "@waxlens/tui",
+  "name": "@waxlens/daemon",
   "version": "0.0.0",
-  "description": "Ink TUI for waxlens — a thin client that renders the WireReport served by @waxlens/daemon.",
+  "description": "Stateless HTTP/WS validation daemon — owns @waxlens/core, serves the tui and (future) browser clients.",
   "license": "Unlicense",
   "type": "module",
   "engines": {
     "node": ">=24.15.0"
   },
-  "main": "dist/app.js",
-  "types": "dist/app.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
-    "waxlens": "dist/cli.js"
+    "waxlens-daemon": "dist/cli.js"
   },
   "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
+    "dist"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
@@ -25,24 +23,17 @@
     "test:watch": "vitest",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "check": "pnpm typecheck && pnpm lint && pnpm build && pnpm test",
-    "prepublishOnly": "pnpm check && pnpm build"
+    "check": "pnpm typecheck && pnpm lint && pnpm build && pnpm test"
   },
   "dependencies": {
-    "@waxlens/daemon": "workspace:*",
+    "@waxlens/core": "workspace:*",
     "@waxlens/protocol": "workspace:*",
-    "commander": "^14.0.3",
-    "ink": "^7.0.2",
-    "picocolors": "^1.1.1",
-    "react": "^19.2.6",
     "ws": "^8.18.0"
   },
   "devDependencies": {
     "@types/node": "^25.6.2",
-    "@types/react": "^19.2.14",
     "@types/ws": "^8.5.12",
     "eslint": "^10.3.0",
-    "ink-testing-library": "^4.0.0",
     "typescript": "^6.0.3",
     "vitest": "^4.1.5"
   }

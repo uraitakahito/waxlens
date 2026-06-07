@@ -18,7 +18,7 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
-    "check": "pnpm audit --audit-level=moderate && pnpm --filter @waxlens/core check && pnpm --filter @waxlens/tui check"
+    "check": "pnpm audit --audit-level=moderate && pnpm --filter @waxlens/core check && pnpm --filter @waxlens/protocol check && pnpm --filter @waxlens/daemon check && pnpm --filter @waxlens/tui check"
   },
   "//@types/node": [
     "Root-level eslint.config.js uses `// @ts-check` plus `import.meta.dirname`",
