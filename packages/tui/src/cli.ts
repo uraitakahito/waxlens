@@ -13,9 +13,6 @@
  * tui は `@waxlens/core` を import しない — 型 / 定数 / exitCodeFor はすべて
  * `@waxlens/protocol` 由来で、validation engine も i18n カタログも読み込まない。
  *
- * Exit code 契約(`exitCodeFor` が単一情報源):
- *   0 — validation 成功 / 1 — validation 失敗 / 2 — operational な失敗
- *
  * daemon の寿命は action が所有する: spawn → validate → (TUI の間は接続維持で
  * readEntry) → waitUntilExit → client.close → daemon.close(child の exit を待つ)
  * → `process.exitCode`。child を待ってから exitCode を確定するので、死にかけの
