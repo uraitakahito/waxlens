@@ -1,7 +1,7 @@
 /**
  * `--server <url>` の値オブジェクト。`ServerEndpoint.parse` だけが生成でき
  * (private constructor で封印)、`ws://` / `wss://` + host を持つ URL のみを通す。
- * これにより startDaemon / connect は「検証済み ServerEndpoint」だけを受け取り、
+ * これにより DaemonSession / connect は「検証済み ServerEndpoint」だけを受け取り、
  * 未検証の文字列はコンパイル時に弾かれる(core の AbsolutePath と同じ発想を class で)。
  */
 import { InvalidArgumentError } from "commander";

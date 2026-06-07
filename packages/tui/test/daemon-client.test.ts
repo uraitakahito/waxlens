@@ -4,13 +4,13 @@
  * 偽の ws サーバを立てて hermetic に検証する(実 daemon も WACZ も不要):
  *   - request が相関 id で結果を解決する
  *   - error 応答は RpcCallError で reject し code を保持する
- *   - startDaemon(--server URL) は spawn せず URL をそのまま返す
+ *   - DaemonSession.attach は spawn せず endpoint をそのまま返す
  */
 import { createServer, type Server } from "node:http";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { WebSocketServer } from "ws";
 import type { RpcRequest } from "@waxlens/protocol";
-import { connect, RpcCallError, startDaemon } from "../src/daemon-client.js";
+import { connect, DaemonSession, RpcCallError } from "../src/daemon-client.js";
 import { ServerEndpoint } from "../src/server-url.js";
 
 let server: Server;
@@ -68,10 +68,10 @@ describe("daemon-client", () => {
     client.close();
   });
 
-  it("startDaemon(--server URL) は spawn せず endpoint をそのまま返す", async () => {
+  it("DaemonSession.attach は spawn せず endpoint をそのまま返す", async () => {
     const ep = ServerEndpoint.parse("ws://example.test:1234");
-    const handle = await startDaemon(ep);
-    expect(handle.endpoint).toBe(ep);
-    await handle.close(); // no-op(spawn していない)
+    const session = DaemonSession.attach(ep);
+    expect(session.endpoint).toBe(ep);
+    await session.release(); // no-op(spawn していない)
   });
 });

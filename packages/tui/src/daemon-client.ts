@@ -28,60 +28,70 @@ export class RpcCallError extends Error {
   }
 }
 
-export interface DaemonHandle {
-  endpoint: ServerEndpoint;
-  /** spawn した daemon を kill し、その `exit` を待つ(--server 接続時は no-op)。 */
-  close: () => Promise<void>;
-}
-
 const DAEMON_START_TIMEOUT_MS = 8000;
 
-/** `--server URL` があれば接続のみ。無ければ daemon bin を spawn し ws URL を得る。 */
-export const startDaemon = async (server: ServerEndpoint | undefined): Promise<DaemonHandle> => {
-  if (server !== undefined) {
-    return { endpoint: server, close: () => Promise.resolve() };
+/** daemon への接続セッション。spawn / attach で取得し、release で後始末する。 */
+export class DaemonSession {
+  readonly endpoint: ServerEndpoint;
+  private readonly disposer: () => Promise<void>;
+
+  private constructor(endpoint: ServerEndpoint, disposer: () => Promise<void>) {
+    this.endpoint = endpoint;
+    this.disposer = disposer;
   }
-  const cliPath = createRequire(import.meta.url).resolve("@waxlens/daemon/dist/cli.js");
-  const child = spawn(process.execPath, [cliPath], {
-    env: { ...process.env, WAXLENS_DAEMON_PORT: "0" },
-    stdio: ["ignore", "ignore", "pipe"],
-  });
-  const endpoint = await new Promise<ServerEndpoint>((resolveEndpoint, rejectUrl) => {
-    const timer = setTimeout(() => {
-      rejectUrl(new Error("daemon did not become ready in time"));
-    }, DAEMON_START_TIMEOUT_MS);
-    // stdio: ["ignore","ignore","pipe"] により stderr は Readable(非 null)。
-    child.stderr.on("data", (chunk: Buffer) => {
-      const match = /(ws:\/\/127\.0\.0\.1:\d+)/.exec(chunk.toString("utf8"));
-      if (match?.[1] !== undefined) {
+
+  /** 既に起動している daemon に接続する(spawn しない・release は no-op)。 */
+  static attach(endpoint: ServerEndpoint): DaemonSession {
+    return new DaemonSession(endpoint, () => Promise.resolve());
+  }
+
+  /** daemon bin を spawn して endpoint を得る(release で kill し exit を待つ)。 */
+  static async spawn(): Promise<DaemonSession> {
+    const cliPath = createRequire(import.meta.url).resolve("@waxlens/daemon/dist/cli.js");
+    const child = spawn(process.execPath, [cliPath], {
+      env: { ...process.env, WAXLENS_DAEMON_PORT: "0" },
+      stdio: ["ignore", "ignore", "pipe"],
+    });
+    const endpoint = await new Promise<ServerEndpoint>((resolveEndpoint, rejectSpawn) => {
+      const timer = setTimeout(() => {
+        rejectSpawn(new Error("daemon did not become ready in time"));
+      }, DAEMON_START_TIMEOUT_MS);
+      // stdio: ["ignore","ignore","pipe"] により stderr は Readable(非 null)。
+      child.stderr.on("data", (chunk: Buffer) => {
+        const match = /(ws:\/\/127\.0\.0\.1:\d+)/.exec(chunk.toString("utf8"));
+        if (match?.[1] !== undefined) {
+          clearTimeout(timer);
+          // 正規表現が ws://127.0.0.1:port を保証するので parse は必ず成功する。
+          resolveEndpoint(ServerEndpoint.parse(match[1]));
+        }
+      });
+      child.on("error", (cause) => {
         clearTimeout(timer);
-        // 正規表現が ws://127.0.0.1:port を保証するので parse は必ず成功する。
-        resolveEndpoint(ServerEndpoint.parse(match[1]));
-      }
+        rejectSpawn(cause);
+      });
+      child.on("exit", () => {
+        clearTimeout(timer);
+        rejectSpawn(new Error("daemon exited before becoming ready"));
+      });
     });
-    child.on("error", (cause) => {
-      clearTimeout(timer);
-      rejectUrl(cause);
-    });
-    child.on("exit", () => {
-      clearTimeout(timer);
-      rejectUrl(new Error("daemon exited before becoming ready"));
-    });
-  });
-  return {
-    endpoint,
     // kill して child の exit を待つ。これを待たずに親が終了処理へ進むと、
     // 死にかけの child handle が event loop に残り、exit code が確定する前に
     // 親が抜けて 0 になるレースが起きる。
-    close: () =>
-      new Promise<void>((resolveClose) => {
+    return new DaemonSession(endpoint, () =>
+      new Promise<void>((resolveRelease) => {
         child.once("exit", () => {
-          resolveClose();
+          resolveRelease();
         });
         child.kill();
       }),
-  };
-};
+    );
+  }
+
+  /** spawn した daemon を kill し exit を待つ(attach 時は no-op)。 */
+  release(): Promise<void> {
+    return this.disposer();
+  }
+}
 
 interface Pending {
   resolve: (value: unknown) => void;
