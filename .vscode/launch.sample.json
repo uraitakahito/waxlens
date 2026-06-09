@@ -22,10 +22,10 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "A: waxlens TUI plain (built dist)",
+      "name": "A: waxlens TUI (built dist)",
       "preLaunchTask": "pnpm: build @waxlens/tui",
       "program": "${workspaceFolder}/packages/tui/dist/cli.js",
-      "args": ["${input:waczPath}", "--no-tui"],
+      "args": ["${input:waczPath}"],
       "cwd": "${workspaceFolder}",
       "sourceMaps": true,
       "outFiles": [
