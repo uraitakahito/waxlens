@@ -3,8 +3,7 @@
 [WACZ](https://specs.webrecorder.net/wacz/1.0.0/) archive 用のproducer 非依存な validator。
 
 **daemon** が `@waxlens/core` で検証を行い、**tui** は薄いクライアントとして daemon に
-WebSocket で問い合わせて結果を描画する。daemon は **stateless**(各リクエストが
-source URI を運び `open → validate → close` するだけで状態を持たない)で、将来
+WebSocket で問い合わせて結果を描画する。daemon は **stateless**で、将来
 browser など別フロントエンドも同じ protocol で繋げる。
 
 ```mermaid
