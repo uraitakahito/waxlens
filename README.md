@@ -11,7 +11,7 @@ flowchart LR
     tui["@waxlens/tui (bin: waxlens)"] ==>|"WS / JSON-RPC"| daemon["@waxlens/daemon (bin: waxlens-daemon)"]
     browser(["browser (将来)"]) -.->|"WS (将来)"| daemon
     daemon -->|"uses (検証)"| core["@waxlens/core (bin: waxlens-validate)"]
-    tui -->|import| protocol["@waxlens/protocol (型 + 軽量定数)"]
+    tui -->|import| protocol["@waxlens/protocol"]
     daemon -->|import| protocol
     protocol -.->|"import type のみ"| core
 
@@ -20,14 +20,6 @@ flowchart LR
     class protocol contract;
     class browser future;
 ```
-
-**凡例**:
-
-| 線種 | 意味                              | 図中の例                                          |
-| ---- | --------------------------------- | ------------------------------------------------- |
-| 実線 | runtime 依存(import / 検証に使用) | `daemon → core`、`tui → protocol`                 |
-| 太線 | WS / JSON-RPC のネットワーク境界  | `tui ⇒ daemon`                                    |
-| 点線 | 将来の接続、または型のみの import | `protocol ⇢ core`(型のみ)、`browser ⇢ daemon`(将来) |
 
 このプロジェクトは 4 つの package として提供される:
 
