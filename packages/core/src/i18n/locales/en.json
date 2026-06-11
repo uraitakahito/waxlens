@@ -27,6 +27,10 @@
 
   "datapackage/frictionless-schema.desc": "datapackage.json should conform to the Frictionless v1 schema (auxiliary)",
   "datapackage/frictionless-schema.violation": "Frictionless schema: {at} {detail}",
+  "datapackage/frictionless-structure.desc": "datapackage.json must declare a non-empty resources array; each resource needs name and path (or data)",
+  "datapackage/frictionless-structure.no-resources": "datapackage.json has no resources (a non-empty resources array is required)",
+  "datapackage/frictionless-structure.resource-missing-name": "resources[{index}] is missing name",
+  "datapackage/frictionless-structure.resource-missing-path-or-data": "resources[{index}] is missing path (or data)",
 
   "cdxj/index-recognised-by-wabac.desc": "WACZ must contain a wabac-recognised index (.cdx / .cdxj / .idx)",
   "cdxj/index-recognised-by-wabac.no-index": "No wabac-recognised index file found under indexes/ — wabac.js needs at least one .cdx / .cdxj / .idx entry to serve any URL",
