@@ -27,6 +27,10 @@
 
   "datapackage/frictionless-schema.desc": "datapackage.json は Frictionless v1 スキーマに準拠すべき(補助検証)",
   "datapackage/frictionless-schema.violation": "Frictionless スキーマ: {at} {detail}",
+  "datapackage/frictionless-structure.desc": "datapackage.json は空でない resources 配列を持ち、各 resource は name と path(または data)を持つ必要がある",
+  "datapackage/frictionless-structure.no-resources": "datapackage.json に resources が無い(空でない resources 配列が必須)",
+  "datapackage/frictionless-structure.resource-missing-name": "resources[{index}] に name が無い",
+  "datapackage/frictionless-structure.resource-missing-path-or-data": "resources[{index}] に path(または data)が無い",
 
   "cdxj/index-recognised-by-wabac.desc": "WACZ は wabac が認識できる index(.cdx / .cdxj / .idx)を含む必要がある",
   "cdxj/index-recognised-by-wabac.no-index": "indexes/ 配下に wabac が認識できる index ファイルがありません — URL を提供するには .cdx / .cdxj / .idx エントリが少なくとも 1 つ必要です",

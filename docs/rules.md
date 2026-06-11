@@ -35,6 +35,7 @@ MUST / SHOULD / MAY)を示す。severity が「waxlens の影響判断・profile
 | 17  | `datapackage/digest`                | SHOULD      | warning | warning     | info    | `datapackage-digest.json` が不在(warning)/ `path`・`hash` 不正・hash 不一致(error) |
 | 18  | `wacz/reserved-dirs-clean`          | MUST NOT    | warning | warning     | info    | 予約ディレクトリ `archive/` `indexes/` `pages/` にカスタムファイルがある          |
 | 19  | `datapackage/resources-complete`    | MUST        | warning | warning     | info    | zip 内のファイルが `datapackage.json` の resources に未宣言(孤児)               |
+| 20  | `datapackage/frictionless-structure` | MUST       | error   | error       | —       | Frictionless の構造 MUST 違反: `resources` が空でない配列でない / resource に `name` と `path`(か `data`)が無い(#5 の error 版。lenient では除外) |
 
 ## Severity の凡例
 
@@ -140,6 +141,25 @@ expected/actual の hash として上げる (TUI では diff として表示さ�
 WACZ より厳しい箇所があるので severity は `error` ではなく `warning` とし、
 legacy トリアージ用の `lenient` profile では除外する。スキーマ更新は
 `scripts/update-frictionless-schema.sh`、改ざん検知は pin テストで担保。
+
+### `datapackage/frictionless-structure` — error
+
+WACZ 1.1.1 は「`datapackage` は FRICTIONLESS-DATA-PACKAGE に **MUST** 準拠」と
+定める。そのうち**正当な WACZ なら必ず満たす構造要件だけ**を `error` で見る:
+
+- 最上位 `resources` が**空でない配列**であること
+  (<https://specs.frictionlessdata.io/data-package/#required-properties>)
+- 各 resource が **`name`** と、**`path`(または `data`)** を持つこと
+  (<https://specs.frictionlessdata.io/data-resource/>)
+
+`parseDatapackage` で object に shape できたときだけ動き、`datapackage.json` の
+不在 / JSON 不正は #2 `datapackage/profile-required` に委譲する。
+
+補助 rule #5 `frictionless-schema`(warning)との関係: あちらは公式スキーマ全体
+(`name` の小文字パターン等、WACZ より厳しい stylistic を含む)を warning で見る
+catch-all。こちらは誤検知しない構造 MUST だけを切り出して `error`(= validity を
+落とす)にしたもの。構造違反は両方に出るが、`error` = 必ず直す / `warning` =
+スキーマ注記、と役割が異なる。legacy トリアージ用の `lenient` では除外する。
 
 ### `cdxj/index-recognised-by-wabac` — error (すべての profile)
 

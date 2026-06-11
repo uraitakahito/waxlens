@@ -98,6 +98,20 @@ export const CORPUS: CorpusSpec[] = [
     },
     expectRules: ["datapackage/frictionless-schema"],
   },
+  {
+    name: "datapackage-empty-resources",
+    description:
+      "resources を空配列に。frictionless-structure が構造 MUST 違反を error 検出 (resource-hashes・frictionless-schema・resources-complete も連鎖)。lenient では structure/schema は除外されるが resource-hashes が残るので valid:false のまま",
+    options: {
+      // resources を空配列に。minItems:1 違反 = 構造 MUST 違反。frictionless-structure
+      // が error を出す。実 WACZ で空 resources は多重に壊れているので、resource-hashes
+      // (MUST ファイル未宣言) や resources-complete (全ファイル未宣言) も連鎖発火する。
+      // 単一分岐の精密な検証は unit test 側 (datapackage-frictionless-structure.test.ts)。
+      // expectRules は部分集合判定なので frictionless-structure が含まれれば成立。
+      mutateResources: () => [],
+    },
+    expectRules: ["datapackage/frictionless-structure"],
+  },
 
   // ── wacz/* (§5.2 構造的な MUST の欠落) ────────────────────────────
   {

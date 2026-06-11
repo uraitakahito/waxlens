@@ -17,6 +17,7 @@ import { cdxjPagesMainpageRule } from "./cdxj-pages-mainpage.js";
 import { cdxjWarcOffsetsRule } from "./cdxj-warc-offsets.js";
 import { datapackageDigestRule } from "./datapackage-digest.js";
 import { datapackageFrictionlessSchemaRule } from "./datapackage-frictionless-schema.js";
+import { datapackageFrictionlessStructureRule } from "./datapackage-frictionless-structure.js";
 import { datapackageHashesRule } from "./datapackage-hashes.js";
 import { datapackageProfileRule } from "./datapackage-profile.js";
 import { datapackageResourcesCompleteRule } from "./datapackage-resources-complete.js";
@@ -50,6 +51,8 @@ export const DEFAULT_RULES: readonly ValidationRule[] = [
   datapackageHashesRule,
   // 補助: 汎用 descriptor の整形式を公式 Frictionless スキーマで検証 (warning)。
   datapackageFrictionlessSchemaRule,
+  // Frictionless の構造 MUST (resources 必須・各 resource に name と path|data) を error で。
+  datapackageFrictionlessStructureRule,
   // §5.2.5 digest(SHOULD)+ 全ファイルが resources に列挙されているか(MUST)。
   datapackageDigestRule,
   datapackageResourcesCompleteRule,
@@ -93,6 +96,7 @@ export {
   cdxjWarcOffsetsRule,
   datapackageDigestRule,
   datapackageFrictionlessSchemaRule,
+  datapackageFrictionlessStructureRule,
   datapackageHashesRule,
   datapackageProfileRule,
   datapackageResourcesCompleteRule,
