@@ -45,8 +45,31 @@ describe("daemon handlers", () => {
         source: { kind: "uri", uri: fixtureUri("fixtures/good.wacz") },
         path: "datapackage.json",
       });
-      expect(res.content).toContain('"profile": "data-package"');
-      expect(res.truncated).toBe(false);
+      expect(res.kind).toBe("text");
+      if (res.kind === "text") {
+        expect(res.content).toContain('"profile": "data-package"');
+        expect(res.truncated).toBe(false);
+      }
+    });
+
+    it("readEntry: .warc.gz は展開した WARC テキストを返す", async () => {
+      // 内部パスは固定せず、validate 結果から .warc.gz エントリを 1 つ拾う。
+      const report = await validate({
+        source: { kind: "uri", uri: fixtureUri("fixtures/good.wacz") },
+        locale: "en",
+      });
+      const warc = report.entries.find((e) => e.present && e.path.endsWith(".warc.gz"));
+      expect(warc).toBeDefined();
+      if (!warc) return;
+      const res = await readEntry({
+        source: { kind: "uri", uri: fixtureUri("fixtures/good.wacz") },
+        path: warc.path,
+      });
+      expect(res.kind).toBe("text");
+      if (res.kind === "text") {
+        expect(res.gunzipped).toBe(true);
+        expect(res.content).toContain("WARC/");
+      }
     });
   });
 });

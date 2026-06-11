@@ -9,10 +9,74 @@
  * 実 terminal は関わらない(in-memory frame)。byte 単位 snapshot は取らず、
  * substring assertion で意味論的 surface を cover する。
  */
+import { EventEmitter } from "node:events";
 import { render } from "ink-testing-library";
+import { render as inkRender } from "ink";
 import { describe, expect, it } from "vitest";
-import type { AbsolutePath, WireReport } from "@waxlens/protocol";
+import type { ReactElement } from "react";
+import type { AbsolutePath, ReadEntryResult, WireReport } from "@waxlens/protocol";
 import { App } from "../src/app.js";
+
+/**
+ * 端末サイズ(columns × rows)を明示して App を描く小さなハーネス。
+ * ink-testing-library の stdout は rows を持たず、Ink の getWindowSize が実端末サイズ
+ * (terminal-size)へフォールバックする。「frame ≤ 端末行数」を決定論的に検証するには
+ * rows を固定する必要があるので、ink 本体の render に固定サイズの stdout を渡す。
+ */
+class FakeOut extends EventEmitter {
+  readonly columns: number;
+  readonly rows: number;
+  last = "";
+  constructor(columns: number, rows: number) {
+    super();
+    this.columns = columns;
+    this.rows = rows;
+  }
+  write = (frame: string): void => {
+    this.last = frame;
+  };
+}
+/** Ink が stdin に対して呼ぶが、テストでは何もしなくてよいメソッド群の共有 no-op。 */
+const noop = (): void => {
+  /* unused stdin stub */
+};
+class FakeIn extends EventEmitter {
+  isTTY = true;
+  data: string | null = null;
+  setEncoding = noop;
+  setRawMode = noop;
+  resume = noop;
+  pause = noop;
+  ref = noop;
+  unref = noop;
+  read = (): string | null => {
+    const d = this.data;
+    this.data = null;
+    return d;
+  };
+  write = (d: string): void => {
+    this.data = d;
+    this.emit("readable");
+    this.emit("data", d);
+  };
+}
+const renderAt = (
+  columns: number,
+  rows: number,
+  el: ReactElement,
+): { stdin: FakeIn; lastFrame: () => string; unmount: () => void } => {
+  const stdout = new FakeOut(columns, rows);
+  const stdin = new FakeIn();
+  const instance = inkRender(el, {
+    stdout: stdout as never,
+    stderr: new FakeOut(columns, rows) as never,
+    stdin: stdin as never,
+    debug: true,
+    exitOnCtrlC: false,
+    patchConsole: false,
+  });
+  return { stdin, lastFrame: (): string => stdout.last, unmount: instance.unmount };
+};
 
 const makeReport = (overrides: Partial<WireReport> = {}): WireReport => ({
   waxlensVersion: "0.0.0",
@@ -44,8 +108,11 @@ const makeReport = (overrides: Partial<WireReport> = {}): WireReport => ({
 });
 
 describe("tui rendering", () => {
-  it("renders all issue rule names and the summary", () => {
+  it("renders all issue rule names and the summary", async () => {
     const { lastFrame } = render(<App report={makeReport()} />);
+    // ビューポートは useBoxMetrics で高さを実測してから可視ぶんを描くので、初回 layout
+    // パスが終わるまで 1 tick 待つ(以降のスクロール系テストも同様)。
+    await new Promise((resolve) => setTimeout(resolve, 60));
     const frame = lastFrame() ?? "";
     expect(frame).toContain("waxlens");
     expect(frame).toContain("datapackage/profile-required");
@@ -320,4 +387,120 @@ describe("tui — layout view", () => {
     expect(frame).toContain("MISSING"); // pane の status
     expect(frame).toContain("wacz/required-files"); // pane の issue rule
   });
+
+  it("長いファイル名でも端末幅(100)を超えない(左ツリーが折り返さない)", async () => {
+    // ink-testing-library は columns=100 固定。100 桁超のファイル名を入れ、左ツリーが
+    // maxWidth で頭打ちされて端末幅を超えない(=折り返して崩れない)ことを確かめる。
+    const longName = `archive/rec-${"0".repeat(90)}.warc.gz`;
+    const report = makeReport({
+      entries: [
+        {
+          path: longName,
+          present: true,
+          uncompressedSize: 100,
+          compressionMethod: 0,
+          expectedBy: ["datapackage"],
+          issues: [],
+        },
+      ],
+    });
+    const { lastFrame, stdin } = render(<App report={report} />);
+    stdin.write("\t"); // → Layout
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    const max = Math.max(...(lastFrame() ?? "").split("\n").map((l) => l.length));
+    expect(max).toBeLessThanOrEqual(100);
+  });
+});
+
+describe("tui — content view (実測スクロール)", () => {
+  // ルート直下のファイル 1 つ。tab→Layout 直後の focus=0 がこのファイル行になる。
+  const reportWithFile = (): WireReport =>
+    makeReport({
+      entries: [
+        {
+          path: "data.warc.gz",
+          present: true,
+          uncompressedSize: 92700,
+          compressionMethod: 0,
+          expectedBy: ["datapackage"],
+          issues: [],
+        },
+      ],
+    });
+
+  const warcText =
+    "WARC/1.0\nWARC-Type: response\nWARC-Target-URI: https://en.wikipedia.org/wiki/World_Wide_Web";
+  const requestContent = (): Promise<ReadEntryResult> =>
+    Promise.resolve({ kind: "text", content: warcText, truncated: false, gunzipped: true });
+
+  const tick = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 60));
+
+  it("Layout で enter: 全幅 content view に開く(ツリーは消える)", async () => {
+    const { lastFrame, stdin } = render(
+      <App report={reportWithFile()} requestContent={requestContent} />,
+    );
+    stdin.write("\t"); // → Layout
+    await tick();
+    stdin.write("\r"); // enter → 全幅 content view(取得 + 遷移)
+    await tick();
+    const frame = lastFrame() ?? "";
+    expect(frame).toContain("content (gzip 展開)"); // content ビューのヘッダ
+    expect(frame).toContain("WARC/1.0"); // 内容(スクロール窓内)
+    expect(frame).not.toContain("data.warc.gz"); // ツリーは別ビューなので描かれない
+  });
+
+  it("content view で esc: Layout に戻る", async () => {
+    const { lastFrame, stdin } = render(
+      <App report={reportWithFile()} requestContent={requestContent} />,
+    );
+    stdin.write("\t");
+    await tick();
+    stdin.write("\r"); // → content view
+    await tick();
+    stdin.write(""); // esc → Layout
+    await tick();
+    expect(lastFrame() ?? "").toContain("data.warc.gz"); // ツリーが戻る
+  });
+
+  it("content をスクロールできる(G で末尾へ・先頭行が窓から外れる)", async () => {
+    const many = Array.from({ length: 100 }, (_, i) => `row-${String(i).padStart(3, "0")}`).join("\n");
+    const reqMany = (): Promise<ReadEntryResult> =>
+      Promise.resolve({ kind: "text", content: many, truncated: false, gunzipped: true });
+    const { lastFrame, stdin } = render(<App report={reportWithFile()} requestContent={reqMany} />);
+    stdin.write("\t");
+    await tick();
+    stdin.write("\r"); // → content view(先頭行が窓内)
+    await tick();
+    expect(lastFrame() ?? "").toContain("row-000");
+    stdin.write("G"); // 末尾へジャンプ
+    await tick();
+    const frame = lastFrame() ?? "";
+    expect(frame).toContain("row-099"); // 末尾行が見える
+    expect(frame).not.toContain("row-000"); // 先頭行は窓から外れた
+  });
+
+  // どの端末高でも、Layout でも content(100 行ロード)でも、App のフレーム行数が
+  // 端末行数を超えないこと(=Ink の縦はみ出し崩れが起きない)を、rows を固定して検証。
+  // ※ ink-testing-library は rows を持たず実端末サイズへフォールバックするので renderAt を使う。
+  for (const rows of [20, 30, 50]) {
+    it(`端末 ${String(rows)} 行: App はその行数を超えない`, async () => {
+      const many = Array.from({ length: 100 }, (_, i) => `line-${String(i)}`).join("\n");
+      const reqMany = (): Promise<ReadEntryResult> =>
+        Promise.resolve({ kind: "text", content: many, truncated: false, gunzipped: true });
+      const { lastFrame, stdin, unmount } = renderAt(
+        120,
+        rows,
+        <App report={reportWithFile()} requestContent={reqMany} />,
+      );
+      stdin.write("\t"); // → Layout
+      await tick();
+      const layoutH = lastFrame().split("\n").length;
+      stdin.write("\r"); // → content view(100 行ロード)
+      await tick();
+      const contentH = lastFrame().split("\n").length;
+      unmount();
+      expect(layoutH).toBeLessThanOrEqual(rows);
+      expect(contentH).toBeLessThanOrEqual(rows);
+    });
+  }
 });

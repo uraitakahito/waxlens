@@ -6,9 +6,10 @@
  * (or `--server URL` に接続)し、WS で `waxlens/validate` を呼ぶ。daemon が
  * core を所有し、`renderJson(report, locale)` で解決済みの `WireReport` を返す
  * ので、tui はそれを interactive に render する。Layout で enter すると
- * `waxlens/readEntry` でファイル内容を取り、右ペインに表示する。stdout / stdin
- * が TTY でない場合は plain-text renderer に fallback する。machine-readable
- * JSON が欲しい場合は `waxlens-validate`(core の bin)を直接使う。
+ * `waxlens/readEntry` でファイル内容を取り、右ペインに表示する。waxlens は対話 TUI
+ * 専用で、stdout / stdin が TTY でない(パイプ / CI 等)場合は描画できないので、
+ * daemon を起動する前に `waxlens-validate`(core の bin)を案内して exit 2 で終わる。
+ * 非対話・機械可読な出力は `waxlens-validate` の領分。
  *
  * tui は `@waxlens/core` を import しない — 型 / 定数 / exitCodeFor はすべて
  * `@waxlens/protocol` 由来で、validation engine も i18n カタログも読み込まない。
@@ -38,7 +39,6 @@ import {
   RpcCallError,
   type DaemonClient,
 } from "./daemon-client.js";
-import { renderPlain } from "./render/plain.js";
 import { ServerEndpoint } from "./server-url.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -48,15 +48,13 @@ const manifest = JSON.parse(readFileSync(manifestPath, "utf-8")) as { version: s
 const envS3ForcePathStyle = process.env["WAXLENS_S3_FORCE_PATH_STYLE"] === "true";
 
 interface CliOptions {
-  color: boolean;
-  tui: boolean;
   profile: RuleProfile;
   s3ForcePathStyle: boolean;
   lang?: string;
   server?: ServerEndpoint;
 }
 
-type RequestContent = (path: string) => Promise<string>;
+type RequestContent = (path: string) => Promise<ReadEntryResult>;
 
 /**
  * CLI 引数を daemon に渡す source URI に正規化する。`s3://` はそのまま、
@@ -76,11 +74,6 @@ program
   .description("Interactive TUI for WACZ validation (use waxlens-validate for JSON output)")
   .version(manifest.version)
   .argument("<source>", "Local path or s3://bucket/key URI of the .wacz to validate")
-  .option("--no-color", "Disable ANSI colour escapes in plain output")
-  .option(
-    "--no-tui",
-    "Force plain output even when stdout is a TTY (default chooses based on isTTY)",
-  )
   .option(
     "--profile <name>",
     `Rule profile (${ALL_PROFILES.join(" | ")}). Defaults to "${DEFAULT_PROFILE}".`,
@@ -102,6 +95,15 @@ program
     (raw: string) => ServerEndpoint.parse(raw),
   )
   .action(async (filePath: string, options: CliOptions) => {
+    // waxlens は対話 TUI 専用。非 TTY(パイプ / CI 等)では描画できないので、daemon を
+    // 起動する前に fail-fast し、非対話・機械可読な出力は waxlens-validate に委ねる。
+    if (!process.stdout.isTTY || !process.stdin.isTTY) {
+      process.stderr.write(
+        "waxlens: interactive TUI only. Use waxlens-validate for non-interactive or machine-readable output.\n",
+      );
+      process.exitCode = 2;
+      return;
+    }
     const uri = toUri(filePath);
     let session: DaemonSession | undefined;
     try {
@@ -113,10 +115,8 @@ program
       try {
         const outcome = await validateOnce(client, uri, filePath, options);
         const requestContent: RequestContent = (path) =>
-          client
-            .request<ReadEntryResult>("waxlens/readEntry", { source: { kind: "uri", uri }, path })
-            .then((r) => r.content);
-        await dispatch(outcome, options, requestContent);
+          client.request<ReadEntryResult>("waxlens/readEntry", { source: { kind: "uri", uri }, path });
+        await dispatch(outcome, requestContent);
         // session は finally で release し(spawn 時は kill + exit 待ち)、その後に
         // process が終わる(exitCode を確定後に child が残らないようにするため)。
         process.exitCode = exitCodeFor(outcome);
@@ -160,17 +160,12 @@ async function validateOnce(
   }
 }
 
-/** outcome に従って TUI / plain / stderr を発火する。TUI には readEntry ブリッジを渡す。 */
-async function dispatch(
-  outcome: CliOutcome,
-  opts: CliOptions,
-  requestContent: RequestContent,
-): Promise<void> {
+/** outcome に従って TUI / stderr を発火する。TUI には readEntry ブリッジを渡す。 */
+async function dispatch(outcome: CliOutcome, requestContent: RequestContent): Promise<void> {
   switch (outcome.kind) {
     case "valid":
     case "invalid":
-      if (shouldUseTui(opts)) await runTui(outcome.report, requestContent);
-      else process.stdout.write(renderPlain(outcome.report, { color: opts.color }));
+      await runTui(outcome.report, requestContent);
       return;
     case "openFailed": {
       const message =
@@ -181,13 +176,6 @@ async function dispatch(
     case "engineFailed":
       return;
   }
-}
-
-// `const` arrow ではなく `function` 宣言なのは、module トップの top-level await
-// から呼んでも temporal dead zone に当たらないようにするため。
-function shouldUseTui(opts: CliOptions): boolean {
-  if (!opts.tui) return false;
-  return process.stdout.isTTY && process.stdin.isTTY;
 }
 
 async function runTui(report: WireReport, requestContent: RequestContent): Promise<void> {

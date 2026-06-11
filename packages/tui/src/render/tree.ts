@@ -1,9 +1,8 @@
 /**
  * `Report.entries`(flat なファイル一覧)を WACZ spec §5.1 風の
- * ディレクトリツリーに組み直す純関数群。Ink ビュー(app.tsx)と
- * plain renderer(plain.ts)の両方が共用する。UI には依存しない —
- * マーカーの「色」は tone を返すだけにして、各 renderer 側で
- * picocolors / Ink の color に対応づける。
+ * ディレクトリツリーに組み直す純関数群。Ink ビュー(app.tsx)が使う。
+ * UI には依存しない — マーカーの「色」は tone を返すだけにして、
+ * app.tsx 側で Ink の color に対応づける。
  */
 import type { ReportEntry, Severity } from "@waxlens/protocol";
 
