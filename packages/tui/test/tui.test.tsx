@@ -135,11 +135,11 @@ describe("tui rendering", () => {
   it("starts with the cursor on the first issue", () => {
     const { lastFrame } = render(<App report={makeReport()} />);
     const frame = lastFrame() ?? "";
-    const cursorIdx = frame.indexOf("▶");
+    const cursorIdx = frame.indexOf("▸");
     const firstRuleIdx = frame.indexOf("datapackage/profile-required");
     expect(cursorIdx).toBeGreaterThanOrEqual(0);
     expect(cursorIdx).toBeLessThan(firstRuleIdx);
-    expect(frame.match(/▶/g)?.length ?? 0).toBe(1);
+    expect(frame.match(/▸/g)?.length ?? 0).toBe(1);
   });
 
   it("expands details on enter", async () => {
@@ -157,11 +157,29 @@ describe("tui rendering", () => {
     stdin.write("[B");
     await new Promise((resolve) => setTimeout(resolve, 60));
     const frame = lastFrame() ?? "";
-    const cursorIdx = frame.indexOf("▶");
+    const cursorIdx = frame.indexOf("▸");
     const firstRuleIdx = frame.indexOf("datapackage/profile-required");
     const secondRuleIdx = frame.indexOf("cdxj/filename-archive-relative");
     expect(cursorIdx).toBeGreaterThan(firstRuleIdx);
     expect(cursorIdx).toBeLessThan(secondRuleIdx);
+  });
+
+  it("detail-less issue を enter すると『これ以上の詳細はありません』を出す", async () => {
+    const rep = makeReport({
+      issues: [{ rule: "x/y", severity: "error", messageKey: "x/y.z", message: "no details here" }],
+    });
+    const { lastFrame, stdin } = render(<App report={rep} />);
+    stdin.write("\r");
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    expect(lastFrame() ?? "").toContain("これ以上の詳細はありません");
+  });
+
+  it("enter で開閉マーカーが ▸ から ▾ に変わる", async () => {
+    const { lastFrame, stdin } = render(<App report={makeReport()} />);
+    expect(lastFrame() ?? "").toContain("▸");
+    stdin.write("\r");
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    expect(lastFrame() ?? "").toContain("▾");
   });
 
   it("renders the stats footer when report.stats is present", () => {
