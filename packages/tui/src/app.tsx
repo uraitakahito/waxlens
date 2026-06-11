@@ -428,11 +428,16 @@ const IssueRow: FC<{ issue: WireIssue; focused: boolean; expanded: boolean }> = 
   const tone = toneFor(issue.severity);
   const icon = iconFor(issue.severity);
   const location = formatLocation(issue);
+  // 開閉マーカー: 展開中は ▾、focused は ▸、それ以外は空白(2 桁・インデント不変)。
+  // focused は明るく、focus を外れた展開行は dim の ▾ で「開いたまま」が分かる。
+  const marker = expanded ? "▾ " : focused ? "▸ " : "  ";
 
   return (
     <Box flexDirection="column">
       <Box>
-        <Text color={tone}>{focused ? "▶ " : "  "}</Text>
+        <Text color={tone} dimColor={!focused}>
+          {marker}
+        </Text>
         <Text color={tone}>{`[${icon}] `}</Text>
         <Text bold>{issue.rule}</Text>
         <ConfBadge conformance={issue.conformance} />
@@ -444,9 +449,13 @@ const IssueRow: FC<{ issue: WireIssue; focused: boolean; expanded: boolean }> = 
         </Text>
       </Box>
       <SpecLink issue={issue} indent={6} />
-      {expanded && issue.details !== undefined ? (
+      {expanded ? (
         <Box marginLeft={6} flexDirection="column">
-          <ExpandedDetails details={issue.details} />
+          {issue.details !== undefined ? (
+            <ExpandedDetails details={issue.details} />
+          ) : (
+            <Text dimColor>(これ以上の詳細はありません)</Text>
+          )}
         </Box>
       ) : null}
     </Box>
@@ -565,7 +574,9 @@ const Help: FC<{ view: View }> = ({ view }) => (
     <Text dimColor>
       {view === "content"
         ? "↑↓/jk PgUp/PgDn g/G scroll · esc back · q quit"
-        : "↑↓ navigate · enter show · tab issues/layout · q quit"}
+        : view === "issues"
+          ? "↑↓ navigate · enter expand · tab issues/layout · q quit"
+          : "↑↓ navigate · enter open · tab issues/layout · q quit"}
     </Text>
   </Box>
 );
