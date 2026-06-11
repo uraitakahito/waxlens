@@ -25,6 +25,7 @@ import type {
   ValidateParams,
   WireReport,
 } from "@waxlens/protocol";
+import { previewEntry } from "./entry-preview.js";
 
 export const VERSION = "0.0.0";
 /** content プレビューの上限(byte 相当)。これを超えたら truncated。 */
@@ -86,18 +87,6 @@ export const validate = async (params: ValidateParams): Promise<WireReport> => {
   }
 };
 
-/** 拡張子で内容を整形する(.json は pretty-print)。 */
-const formatBody = (path: string, text: string): string => {
-  if (path.endsWith(".json")) {
-    try {
-      return JSON.stringify(JSON.parse(text) as unknown, null, 2);
-    } catch {
-      return text;
-    }
-  }
-  return text;
-};
-
 /** 1 エントリの内容を上限つきで返す(stateless・range read)。 */
 export const readEntry = async (params: ReadEntryParams): Promise<ReadEntryResult> => {
   const parsed = parseSourceUri(params.source.uri);
@@ -105,13 +94,8 @@ export const readEntry = async (params: ReadEntryParams): Promise<ReadEntryResul
   const reader = await openFromSource(parsed.value, false);
   try {
     const buf = await reader.readEntry(params.path);
-    if (!buf) return { content: "", truncated: false };
-    const raw = buf.toString("utf-8");
-    const truncated = raw.length > PREVIEW_CAP;
-    return {
-      content: formatBody(params.path, truncated ? raw.slice(0, PREVIEW_CAP) : raw),
-      truncated,
-    };
+    if (!buf) return { kind: "text", content: "", truncated: false, gunzipped: false };
+    return await previewEntry(params.path, buf, PREVIEW_CAP);
   } finally {
     await reader.close();
   }

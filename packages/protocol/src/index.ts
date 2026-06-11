@@ -52,11 +52,13 @@ export interface ReadEntryParams {
   path: string;
 }
 
-export interface ReadEntryResult {
-  content: string;
-  /** サイズ上限で打ち切ったか。 */
-  truncated: boolean;
-}
+/**
+ * readEntry の結果。テキストはプレビュー文字列、非テキスト(画像・展開不能な
+ * バイナリ等)はサイズだけを返す判別 union。文字化けを構造的に防ぐ。
+ */
+export type ReadEntryResult =
+  | { kind: "text"; content: string; truncated: boolean; gunzipped: boolean }
+  | { kind: "binary"; byteLength: number };
 
 /** renderJson が解決した issue(`message` / `specUrl` / `conformance` が inline)。 */
 export interface WireIssue extends Issue {

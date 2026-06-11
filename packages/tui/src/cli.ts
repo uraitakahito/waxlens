@@ -54,7 +54,7 @@ interface CliOptions {
   server?: ServerEndpoint;
 }
 
-type RequestContent = (path: string) => Promise<string>;
+type RequestContent = (path: string) => Promise<ReadEntryResult>;
 
 /**
  * CLI 引数を daemon に渡す source URI に正規化する。`s3://` はそのまま、
@@ -115,9 +115,7 @@ program
       try {
         const outcome = await validateOnce(client, uri, filePath, options);
         const requestContent: RequestContent = (path) =>
-          client
-            .request<ReadEntryResult>("waxlens/readEntry", { source: { kind: "uri", uri }, path })
-            .then((r) => r.content);
+          client.request<ReadEntryResult>("waxlens/readEntry", { source: { kind: "uri", uri }, path });
         await dispatch(outcome, requestContent);
         // session は finally で release し(spawn 時は kill + exit 待ち)、その後に
         // process が終わる(exitCode を確定後に child が残らないようにするため)。

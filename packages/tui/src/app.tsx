@@ -12,37 +12,103 @@
  * Exit code の経路: CLI は `render(...)` の後に `instance.waitUntilExit()` を
  * await し、その後 `process.exitCode` をセットする。
  */
-import { useMemo, useState, type FC } from "react";
-import { Box, Text, useApp, useInput } from "ink";
-import type { ReportEntry, WireIssue, WireReport } from "@waxlens/protocol";
+import { useEffect, useMemo, useRef, useState, type FC, type ReactNode } from "react";
+import {
+  Box,
+  Text,
+  useApp,
+  useBoxMetrics,
+  useInput,
+  useStdout,
+  useWindowSize,
+  type DOMElement,
+} from "ink";
+import type { ReadEntryResult, ReportEntry, WireIssue, WireReport } from "@waxlens/protocol";
 import { buildEntryTree, entryMarker, flattenTree, type TreeRow } from "./render/tree.js";
 import { codecName, entryIssues, expectedLabel } from "./render/detail.js";
+import { clampOffset, scrollWindow } from "./scroll.js";
 
 interface AppProps {
   report: WireReport;
   /** Layout で enter 時に呼ぶ内容取得ブリッジ(daemon の readEntry)。省略可。 */
-  requestContent?: (path: string) => Promise<string>;
+  requestContent?: (path: string) => Promise<ReadEntryResult>;
 }
 
-type View = "issues" | "layout";
+type View = "issues" | "layout" | "content";
 
-/** 右ペインに出す content の表示上限(行)。daemon 側で byte 上限も掛かっている。 */
-const CONTENT_MAX_LINES = 40;
+/** Layout の右ペイン(詳細)に最低限残す桁数(枠 + 余白 + 内容)。 */
+const MIN_DETAIL_WIDTH = 30;
+/** 極端に狭い端末でも左ツリーに確保する最小桁数。 */
+const MIN_TREE_WIDTH = 16;
+/** issues ビューの 1 issue あたりの概算行数(可視 issue 数の見積りに使う・保守的に多め)。 */
+const EST_ISSUE_ROWS = 4;
+
+/**
+ * 自分の高さを useBoxMetrics で実測し、可視スライス [start,end) だけを描く。
+ * focused 指定でカーソル追従、未指定で offset 自由スクロール。推定 reserve は使わない。
+ */
+const ScrollList: FC<{
+  count: number;
+  offset: number;
+  focused?: number;
+  onHeight?: (h: number) => void;
+  renderRange: (start: number, end: number) => ReactNode;
+}> = ({ count, offset, focused, onHeight, renderRange }) => {
+  const ref = useRef<DOMElement | null>(null);
+  const { height } = useBoxMetrics(ref);
+  useEffect(() => {
+    onHeight?.(height);
+  }, [height, onHeight]);
+  const win = scrollWindow(offset, count, height, focused);
+  return (
+    <Box ref={ref} flexDirection="column" flexGrow={1} minHeight={0}>
+      {renderRange(win.start, win.end)}
+    </Box>
+  );
+};
 
 export const App: FC<AppProps> = ({ report, requestContent }) => {
   const { exit } = useApp();
+  // root を端末サイズに固定(resize 追従)。これと body の flexGrow + 各ビューの実測
+  // スクロールにより、フレーム行数が端末を超えない=Ink の縦はみ出し崩れが起きない。
+  const { columns, rows } = useWindowSize();
   const [view, setView] = useState<View>("issues");
   const [focused, setFocused] = useState(0);
   const [expanded, setExpanded] = useState<ReadonlySet<number>>(new Set());
-  // Layout で enter したファイルの内容(ナビゲーションで都度クリア)。
-  const [content, setContent] = useState<string | null>(null);
+  // enter で開いたファイル内容と、その content ビューのスクロール位置・実測高。
+  const [content, setContent] = useState<ReadEntryResult | null>(null);
+  const [contentOffset, setContentOffset] = useState(0);
+  const [contentH, setContentH] = useState(0);
 
   const issues = report.issues;
   // §5.1 風ツリーの行(report が変わらない限り再計算しない)。
   const layoutRows = useMemo(() => flattenTree(buildEntryTree(report.entries)), [report.entries]);
   const rowCount = view === "issues" ? issues.length : layoutRows.length;
+  const contentLines = content?.kind === "text" ? content.content.split("\n").length : 0;
 
   useInput((input, key) => {
+    // content ビュー: キーでスクロール、esc で Layout に戻る。
+    if (view === "content") {
+      if (key.escape) {
+        setView("layout");
+        return;
+      }
+      if (input === "q") {
+        exit();
+        return;
+      }
+      const page = Math.max(1, contentH - 1);
+      const move = (d: number): void => {
+        setContentOffset((o) => clampOffset(o, d, contentLines, contentH));
+      };
+      if (key.downArrow || input === "j") move(1);
+      else if (key.upArrow || input === "k") move(-1);
+      else if (key.pageDown || input === " ") move(page);
+      else if (key.pageUp) move(-page);
+      else if (input === "g") setContentOffset(0);
+      else if (input === "G") setContentOffset(Math.max(0, contentLines - contentH));
+      return;
+    }
     if (input === "q" || key.escape) {
       exit();
       return;
@@ -55,12 +121,10 @@ export const App: FC<AppProps> = ({ report, requestContent }) => {
     }
     if (key.upArrow && rowCount > 0) {
       setFocused((prev) => Math.max(0, prev - 1));
-      setContent(null);
       return;
     }
     if (key.downArrow && rowCount > 0) {
       setFocused((prev) => Math.min(rowCount - 1, prev + 1));
-      setContent(null);
       return;
     }
     if (key.return && view === "issues" && issues.length > 0) {
@@ -74,101 +138,139 @@ export const App: FC<AppProps> = ({ report, requestContent }) => {
       return;
     }
     if (key.return && view === "layout" && requestContent) {
-      // focused 行のファイル内容を daemon から取得して右ペインに出す。
       const entry = layoutRows[focused]?.entry;
-      if (entry?.present === true) {
-        void requestContent(entry.path).then(setContent, () => {
-          setContent("(content unavailable)");
-        });
-      }
+      if (entry?.present !== true) return;
+      // enter で全幅スクロール content ビューへ(インラインプレビューは廃止)。
+      const show = (r: ReadEntryResult): void => {
+        setContent(r);
+        setContentOffset(0);
+        setView("content");
+      };
+      void requestContent(entry.path).then(show, () => {
+        show({ kind: "text", content: "(content unavailable)", truncated: false, gunzipped: false });
+      });
     }
   });
 
   return (
-    <Box flexDirection="column">
+    <Box flexDirection="column" width={columns} height={rows}>
       <Header report={report} view={view} />
-      <Box marginTop={1} flexDirection="column">
-        {view === "issues" ? (
-          issues.length === 0 ? (
-            <Text color="green">All rules passed.</Text>
-          ) : (
-            issues.map((issue, i) => (
-              <IssueRow
-                key={`${issue.rule}-${String(i)}`}
-                issue={issue}
-                focused={i === focused}
-                expanded={expanded.has(i)}
-              />
-            ))
-          )
+      <Box flexGrow={1} minHeight={0} marginTop={1}>
+        {view === "content" && content !== null ? (
+          <ContentView result={content} offset={contentOffset} onHeight={setContentH} />
+        ) : view === "issues" ? (
+          <IssuesView issues={issues} focused={focused} expanded={expanded} />
         ) : (
-          <LayoutView rows={layoutRows} focused={focused} report={report} content={content} />
+          <LayoutView rows={layoutRows} focused={focused} report={report} />
         )}
       </Box>
       <Summary report={report} />
       {report.stats ? <Stats stats={report.stats} /> : null}
-      <Help />
+      <Help view={view} />
+    </Box>
+  );
+};
+
+/** issues ビュー: focused 追従の index 窓で、可視ぶんの IssueRow だけ描く(縦はみ出し防止)。 */
+const IssuesView: FC<{
+  issues: WireIssue[];
+  focused: number;
+  expanded: ReadonlySet<number>;
+}> = ({ issues, focused, expanded }) => {
+  const ref = useRef<DOMElement | null>(null);
+  const { height } = useBoxMetrics(ref);
+  const visibleIssues = Math.max(1, Math.floor(height / EST_ISSUE_ROWS));
+  const win = scrollWindow(0, issues.length, visibleIssues, focused);
+  return (
+    <Box ref={ref} flexDirection="column" flexGrow={1} minHeight={0}>
+      {issues.length === 0 ? (
+        <Text color="green">All rules passed.</Text>
+      ) : (
+        issues.slice(win.start, win.end).map((issue, k) => {
+          const i = win.start + k;
+          return (
+            <IssueRow
+              key={`${issue.rule}-${String(i)}`}
+              issue={issue}
+              focused={i === focused}
+              expanded={expanded.has(i)}
+            />
+          );
+        })
+      )}
     </Box>
   );
 };
 
 /**
- * Layout ビュー: 左に §5.1 風ツリー(状態アイコン ✗/⚠ + size)、右に
- * 選択行(focused)の詳細ペイン。enter で取得した内容(`content`)も右ペインに出す。
+ * Layout ビュー: 左に §5.1 風ツリー(実測スクロール・focused 追従)、右に選択行の詳細。
+ * その内容は enter で全幅 content ビューに開く(右ペインには出さない)。
  */
 const LayoutView: FC<{
   rows: TreeRow[];
   focused: number;
   report: WireReport;
-  content: string | null;
-}> = ({ rows, focused, report, content }) => {
+}> = ({ rows, focused, report }) => {
+  // 左ツリーは端末幅 − 右ペイン確保分 を上限に(横の崩れ対策)。縦は ScrollList が実測スクロール。
+  const { stdout } = useStdout();
+  const treeMaxWidth = Math.max(MIN_TREE_WIDTH, stdout.columns - MIN_DETAIL_WIDTH);
   if (rows.length === 0) return <Text dimColor>(no entries)</Text>;
   const selected = rows[focused]?.entry;
   return (
     <Box>
-      <Box flexDirection="column" flexShrink={0}>
-        {rows.map((row, i) => {
-          const mk = entryMarker(row.entry);
-          const glyph = mk.tone === "error" ? "✗" : mk.tone === "warning" ? "⚠" : "";
-          const color = mk.tone === "warning" ? "yellow" : "red";
-          const size =
-            row.entry?.present === true && row.entry.uncompressedSize !== undefined
-              ? `  ${formatBytes(row.entry.uncompressedSize)}`
-              : "";
-          return (
-            <Text key={row.path} inverse={i === focused}>
-              {row.connector}
-              {row.name}
-              <Text dimColor>{size}</Text>
-              {glyph ? <Text color={color}>{`  ${glyph}`}</Text> : null}
-            </Text>
-          );
-        })}
+      <Box flexDirection="column" flexShrink={0} maxWidth={treeMaxWidth}>
+        <ScrollList
+          count={rows.length}
+          offset={0}
+          focused={focused}
+          renderRange={(start, end) =>
+            rows.slice(start, end).map((row, k) => {
+              const i = start + k;
+              const mk = entryMarker(row.entry);
+              const glyph = mk.tone === "error" ? "✗" : mk.tone === "warning" ? "⚠" : "";
+              const color = mk.tone === "warning" ? "yellow" : "red";
+              const size =
+                row.entry?.present === true && row.entry.uncompressedSize !== undefined
+                  ? `  ${formatBytes(row.entry.uncompressedSize)}`
+                  : "";
+              return (
+                <Text key={row.path} inverse={i === focused} wrap="truncate-middle">
+                  {row.connector}
+                  {row.name}
+                  <Text dimColor>{size}</Text>
+                  {glyph ? <Text color={color}>{`  ${glyph}`}</Text> : null}
+                </Text>
+              );
+            })
+          }
+        />
       </Box>
       <Box
         flexDirection="column"
         flexGrow={1}
+        minWidth={0}
         marginLeft={2}
         borderStyle="round"
         borderDimColor
         paddingX={1}
       >
-        <DetailPane entry={selected} report={report} content={content} />
+        <DetailPane entry={selected} report={report} />
       </Box>
     </Box>
   );
 };
 
-/** 右ペイン: 選択 entry のメタ情報 + 紐づく issue + enter で取得した内容。 */
+/** 右ペイン: 選択 entry のメタ情報 + 紐づく issue。内容は enter で全幅ビューに開く。 */
 const DetailPane: FC<{
   entry: ReportEntry | undefined;
   report: WireReport;
-  content: string | null;
-}> = ({ entry, report, content }) => {
+}> = ({ entry, report }) => {
   if (!entry) return <Text dimColor>(select a file)</Text>;
   return (
     <Box flexDirection="column">
-      <Text bold>{entry.path}</Text>
+      <Text bold wrap="truncate-end">
+        {entry.path}
+      </Text>
       <Box>
         <Text dimColor>status </Text>
         {entry.present ? <Text color="green">present</Text> : <Text color="red">MISSING</Text>}
@@ -184,8 +286,7 @@ const DetailPane: FC<{
         <Text>{expectedLabel(entry.expectedBy)}</Text>
       </Box>
       <IssueList entry={entry} report={report} />
-      {content !== null ? <ContentView content={content} /> : null}
-      {content === null && entry.present ? (
+      {entry.present ? (
         <Box marginTop={1}>
           <Text dimColor>enter で内容を表示</Text>
         </Box>
@@ -194,18 +295,36 @@ const DetailPane: FC<{
   );
 };
 
-/** enter で取得したファイル内容を表示(行数上限で打ち切り)。 */
-const ContentView: FC<{ content: string }> = ({ content }) => {
-  const lines = content.split("\n");
-  const shown = lines.slice(0, CONTENT_MAX_LINES);
-  const truncated = lines.length > CONTENT_MAX_LINES;
+/** enter で取得したファイル内容を、全幅・実測スクロールで表示する(縦はみ出ししない)。 */
+const ContentView: FC<{
+  result: ReadEntryResult;
+  offset: number;
+  onHeight: (h: number) => void;
+}> = ({ result, offset, onHeight }) => {
+  if (result.kind === "binary") {
+    return (
+      <Box>
+        <Text dimColor>{`(バイナリ · ${formatBytes(result.byteLength)} · プレビュー不可)`}</Text>
+      </Box>
+    );
+  }
+  const lines = result.content.split("\n");
+  const head = result.gunzipped ? "content (gzip 展開)" : "content";
   return (
-    <Box flexDirection="column" marginTop={1}>
-      <Text dimColor>content</Text>
-      {shown.map((line, i) => (
-        <Text key={`content-${String(i)}`}>{line}</Text>
-      ))}
-      {truncated ? <Text dimColor>{`… (+${String(lines.length - CONTENT_MAX_LINES)} more lines)`}</Text> : null}
+    <Box flexDirection="column" flexGrow={1} minHeight={0} width="100%">
+      <Text dimColor>{`${head}  ↑↓/jk PgUp/PgDn g/G scroll · esc back`}</Text>
+      <ScrollList
+        count={lines.length}
+        offset={offset}
+        onHeight={onHeight}
+        renderRange={(start, end) =>
+          lines.slice(start, end).map((line, k) => (
+            <Text key={`content-${String(start + k)}`} wrap="truncate-end">
+              {line === "" ? " " : line}
+            </Text>
+          ))
+        }
+      />
     </Box>
   );
 };
@@ -434,9 +553,13 @@ const Summary: FC<{ report: WireReport }> = ({ report }) => {
   );
 };
 
-const Help: FC = () => (
+const Help: FC<{ view: View }> = ({ view }) => (
   <Box marginTop={1}>
-    <Text dimColor>↑↓ navigate · enter expand/show · tab issues/layout · q quit</Text>
+    <Text dimColor>
+      {view === "content"
+        ? "↑↓/jk PgUp/PgDn g/G scroll · esc back · q quit"
+        : "↑↓ navigate · enter show · tab issues/layout · q quit"}
+    </Text>
   </Box>
 );
 
