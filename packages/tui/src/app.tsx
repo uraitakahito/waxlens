@@ -19,7 +19,6 @@ import {
   useApp,
   useBoxMetrics,
   useInput,
-  useStdout,
   useWindowSize,
   type DOMElement,
 } from "ink";
@@ -40,6 +39,10 @@ type View = "issues" | "layout" | "content";
 const MIN_DETAIL_WIDTH = 30;
 /** 極端に狭い端末でも左ツリーに確保する最小桁数。 */
 const MIN_TREE_WIDTH = 16;
+/** 左ツリーに割く端末幅の目安(割合)。固定幅 treeWidth の基準。 */
+const TREE_WIDTH_RATIO = 0.32;
+/** 広い端末でも左ツリーがこれ以上は伸びない上限桁数。 */
+const TREE_MAX_WIDTH = 44;
 /** issues ビューの 1 issue あたりの概算行数(可視 issue 数の見積りに使う・保守的に多め)。 */
 const EST_ISSUE_ROWS = 4;
 
@@ -211,14 +214,18 @@ const LayoutView: FC<{
   focused: number;
   report: WireReport;
 }> = ({ rows, focused, report }) => {
-  // 左ツリーは端末幅 − 右ペイン確保分 を上限に(横の崩れ対策)。縦は ScrollList が実測スクロール。
-  const { stdout } = useStdout();
-  const treeMaxWidth = Math.max(MIN_TREE_WIDTH, stdout.columns - MIN_DETAIL_WIDTH);
+  // 左ツリー幅は端末幅だけから決める固定値。選択ファイルに依存しないので、全幅 root と
+  // 右枠の flexGrow と合わせて「枠幅 = columns − treeWidth − margin」が常に一定になる。縦は ScrollList が実測スクロール。
+  const { columns } = useWindowSize();
+  const treeWidth = Math.max(
+    MIN_TREE_WIDTH,
+    Math.min(TREE_MAX_WIDTH, Math.round(columns * TREE_WIDTH_RATIO), columns - MIN_DETAIL_WIDTH),
+  );
   if (rows.length === 0) return <Text dimColor>(no entries)</Text>;
   const selected = rows[focused]?.entry;
   return (
-    <Box>
-      <Box flexDirection="column" flexShrink={0} maxWidth={treeMaxWidth}>
+    <Box width="100%">
+      <Box flexDirection="column" flexShrink={0} width={treeWidth}>
         <ScrollList
           count={rows.length}
           offset={0}
