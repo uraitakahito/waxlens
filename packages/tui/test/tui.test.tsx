@@ -14,7 +14,7 @@ import { render } from "ink-testing-library";
 import { render as inkRender } from "ink";
 import { describe, expect, it } from "vitest";
 import type { ReactElement } from "react";
-import type { AbsolutePath, ReadEntryResult, WireReport } from "@waxlens/protocol";
+import type { AbsolutePath, ExpectedBy, ReadEntryResult, WireReport } from "@waxlens/protocol";
 import { App } from "../src/app.js";
 
 /**
@@ -503,4 +503,31 @@ describe("tui — content view (実測スクロール)", () => {
       expect(contentH).toBeLessThanOrEqual(rows);
     });
   }
+});
+
+describe("tui — layout view: 右枠の幅はコンテンツに依存しない", () => {
+  // 枠線 ─ の最長連続数 = 枠の内側幅。端末幅が同じなら短/長メタで一致するはず。
+  const boxWidth = (frame: string): number =>
+    Math.max(0, ...frame.split("\n").map((l) => (l.match(/─/g) ?? []).length));
+
+  const reportWith = (path: string, expectedBy: ExpectedBy[]): WireReport =>
+    makeReport({
+      entries: [{ path, present: true, uncompressedSize: 10, compressionMethod: 0, expectedBy, issues: [] }],
+    });
+
+  const widthAfterTab = async (report: WireReport): Promise<number> => {
+    const { stdin, lastFrame, unmount } = renderAt(120, 24, <App report={report} />);
+    stdin.write("\t"); // → Layout
+    await new Promise((resolve) => setTimeout(resolve, 60)); // 実測 layout パス待ち
+    const w = boxWidth(lastFrame());
+    unmount();
+    return w;
+  };
+
+  it("短いメタと長いメタで右枠の横幅が一致する(端末幅 120 固定)", async () => {
+    const wShort = await widthAfterTab(reportWith("a.json", []));
+    const wLong = await widthAfterTab(reportWith("data.warc.gz", ["datapackage"]));
+    expect(wShort).toBeGreaterThan(0);
+    expect(wShort).toBe(wLong); // 改修前: 22 ≠ 36 で失敗 / 改修後: 一致
+  });
 });
