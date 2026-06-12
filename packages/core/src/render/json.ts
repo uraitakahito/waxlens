@@ -11,6 +11,7 @@
  */
 import { t, type Locale } from "../i18n/translate.js";
 import { conformanceForRule } from "../validate/rules/index.js";
+import { docsForRule } from "../validate/rule-docs.js";
 import { specUrl } from "../validate/spec-sections.js";
 import type { Report } from "../validate/domain.js";
 
@@ -19,11 +20,14 @@ export const renderJson = (report: Report, locale: Locale): string => {
     const url = specUrl(issue.params?.["section"]);
     // rule が宣言する spec 規範レベル(MUST/SHOULD/MAY)。severity とは独立。
     const conformance = conformanceForRule(issue.rule);
+    // rule の出典(公式ドキュメント)リンク群。conformance と同じく rule 名で解決。
+    const docs = docsForRule(issue.rule);
     return {
       ...issue,
       message: t(issue.messageKey, issue.params ?? {}, locale),
       // params.section が表で解決できたときだけ spec への直リンクを同梱。
       ...(url !== undefined && { specUrl: url }),
+      ...(docs !== undefined && { docs }),
       ...(conformance !== undefined && { conformance }),
     };
   });

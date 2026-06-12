@@ -81,6 +81,12 @@ exports[`cli — JSON output shape (default) > gzipped CDXJ JSON snapshot 1`] = 
           "indexes/index.cdxj.gz",
         ],
       },
+      "docs": [
+        {
+          "label": "WACZ §indexes",
+          "url": "https://specs.webrecorder.net/wacz/1.1.1/#indexes",
+        },
+      ],
       "location": {
         "entry": "indexes/",
       },
@@ -91,6 +97,12 @@ exports[`cli — JSON output shape (default) > gzipped CDXJ JSON snapshot 1`] = 
     },
     {
       "conformance": "MAY",
+      "docs": [
+        {
+          "label": "WACZ §indexes",
+          "url": "https://specs.webrecorder.net/wacz/1.1.1/#indexes",
+        },
+      ],
       "location": {
         "entry": "indexes/index.cdxj.gz",
       },
@@ -199,6 +211,16 @@ exports[`cli — JSON output shape (default) > missing-profile JSON snapshot 1`]
       "details": {
         "expected": "data-package",
       },
+      "docs": [
+        {
+          "label": "WACZ §datapackage.json",
+          "url": "https://specs.webrecorder.net/wacz/1.1.1/#datapackage-json",
+        },
+        {
+          "label": "Frictionless Data Package",
+          "url": "https://specs.frictionlessdata.io/data-package/",
+        },
+      ],
       "location": {
         "entry": "datapackage.json",
       },
