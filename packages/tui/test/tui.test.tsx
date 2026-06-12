@@ -182,6 +182,26 @@ describe("tui rendering", () => {
     expect(lastFrame() ?? "").toContain("▾");
   });
 
+  it("展開すると docs のラベルと URL を表示する", async () => {
+    const rep = makeReport({
+      issues: [
+        {
+          rule: "x/y",
+          severity: "error",
+          messageKey: "x/y.z",
+          message: "m",
+          docs: [{ label: "WACZ §archive", url: "https://specs.webrecorder.net/wacz/1.1.1/#archive" }],
+        },
+      ],
+    });
+    const { lastFrame, stdin } = render(<App report={rep} />);
+    stdin.write("\r");
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    const frame = lastFrame() ?? "";
+    expect(frame).toContain("WACZ §archive");
+    expect(frame).toContain("specs.webrecorder.net/wacz/1.1.1/#archive");
+  });
+
   it("renders the stats footer when report.stats is present", () => {
     const report = makeReport({
       stats: { warcRecordCount: 42, warcArchiveBytes: 5 * 1024 * 1024, hosts: ["a", "b", "c"] },

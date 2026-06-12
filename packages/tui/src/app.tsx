@@ -22,7 +22,7 @@ import {
   useWindowSize,
   type DOMElement,
 } from "ink";
-import type { ReadEntryResult, ReportEntry, WireIssue, WireReport } from "@waxlens/protocol";
+import type { DocLink, ReadEntryResult, ReportEntry, WireIssue, WireReport } from "@waxlens/protocol";
 import { buildEntryTree, entryMarker, flattenTree, type TreeRow } from "./render/tree.js";
 import { codecName, entryIssues, expectedLabel } from "./render/detail.js";
 import { clampOffset, scrollWindow } from "./scroll.js";
@@ -361,6 +361,20 @@ const SpecLink: FC<{ issue: WireIssue; indent: number }> = ({ issue, indent }) =
   );
 };
 
+/** rule の出典(公式ドキュメント)リンク群を、ラベル付きで展開ビューに列挙する。 */
+const IssueDocs: FC<{ docs: readonly DocLink[] }> = ({ docs }) => (
+  <Box flexDirection="column" marginTop={1}>
+    <Text dimColor>docs:</Text>
+    {docs.map((d) => (
+      <Text key={d.url} wrap="truncate-end">
+        {"  "}
+        <Text color="cyan">{d.label}</Text>
+        <Text dimColor>{` ${d.url}`}</Text>
+      </Text>
+    ))}
+  </Box>
+);
+
 /** spec の規範レベル(MUST/SHOULD/MAY)を rule 名の後に併記。severity とは別軸。 */
 const ConfBadge: FC<{ conformance: string | undefined }> = ({ conformance }) => {
   if (conformance === undefined) return null;
@@ -451,11 +465,11 @@ const IssueRow: FC<{ issue: WireIssue; focused: boolean; expanded: boolean }> = 
       <SpecLink issue={issue} indent={6} />
       {expanded ? (
         <Box marginLeft={6} flexDirection="column">
-          {issue.details !== undefined ? (
-            <ExpandedDetails details={issue.details} />
-          ) : (
+          {issue.details !== undefined ? <ExpandedDetails details={issue.details} /> : null}
+          {issue.docs !== undefined && issue.docs.length > 0 ? <IssueDocs docs={issue.docs} /> : null}
+          {issue.details === undefined && !(issue.docs && issue.docs.length > 0) ? (
             <Text dimColor>(これ以上の詳細はありません)</Text>
-          )}
+          ) : null}
         </Box>
       ) : null}
     </Box>
