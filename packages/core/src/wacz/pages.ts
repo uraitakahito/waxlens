@@ -4,7 +4,7 @@
  * ファイルは JSON-lines: 最初の行は header object (`format`、`id`、
  * `title` を持つ)、それ以降の非空行は entry で、少なくとも
  * `{ url, ts }` を持ち、`id` / `title` は optional。producer は
- * 1 ページ capture では 1 つの entry を出すのが普通だが、replay
+ * 1 Page capture では 1 つの entry を出すのが普通だが、replay
  * ツールは multi-page archive のために多数の entry をサポートする。
  *
  * `datapackage.ts` と同じ思想: ここは緩く parse して、semantics は

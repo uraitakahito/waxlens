@@ -1,5 +1,5 @@
 /**
- * zip エントリの生バイトを「プレビュー用 {@link ReadEntryResult}」に変換する純ロジック。
+ * ZIP エントリの生バイトを「プレビュー用 {@link ReadEntryResult}」に変換する純ロジック。
  *
  * 方針: gzip(`.warc.gz` / `.cdx.gz` 等)は展開してから中身を見せ、テキストでない
  * バイトは文字化けさせずサイズだけ返す。実 WARC は「テキストの WARC/HTTP ヘッダ +

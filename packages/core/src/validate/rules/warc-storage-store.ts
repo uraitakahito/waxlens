@@ -1,12 +1,12 @@
 /**
  * Rule: warc/storage-store
  *
- * `archive/data.warc.gz` は WACZ zip の中で STORE 方式 (compression
+ * `archive/data.warc.gz` は WACZ ZIP の中で STORE 方式 (compression
  * method 0) で格納すべきで、DEFLATE では駄目。WARC spec に従って
  * 内側の WARC はすでに gzip 圧縮されているので、その gzip wrapper
  * を更に deflate してもサイズが膨らむだけで展開メリットがなく、
  * downstream ツールが依存する offset / length コントラクトを壊す
- * (CDXJ index の offset は *uncompressed* な zip entry を指していて、
+ * (CDXJ index の offset は *uncompressed* な ZIP entry を指していて、
  * ここでの "uncompressed" は STORE 格納を意味する)。
  *
  * Spec / 慣習: WACZ は厳密には STORE を mandate しないが、フォーマット
@@ -18,9 +18,9 @@
  *       以外は DEFLATE。
  *
  * Severity は `error` ではなく `warning`: DEFLATE で格納された
- * warc.gz でも標準的な zip reader で問題なく解凍できるので、entry
+ * warc.gz でも標準的な ZIP reader で問題なく解凍できるので、entry
  * 全体をメモリに読んでから scan する replay ツールは動く。問題は、
- * CDXJ offset で zip の raw bytes に直接 seek するツールにとってで、
+ * CDXJ offset で ZIP の raw bytes に直接 seek するツールにとってで、
  * 全 record を miss する。downstream consumer がどちらのクラスかは
  * 判定できないので、抑止するのではなく表面化する側に倒している。
  */

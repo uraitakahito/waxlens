@@ -24,7 +24,7 @@ MUST / SHOULD / MAY)を示す。severity が「waxlens の影響判断・profile
 | 6   | `cdxj/index-recognised-by-wabac`    | MUST        | error   | error       | error   | `indexes/` 配下の index を wabac.js がロードできない(存在は #1、ロード可否はこちら) |
 | 7   | `cdxj/index-not-gzipped`            | MAY         | warning | error       | info    | gzip された CDXJ が `.idx` とペアになっていない (browserhive では producer-strict) |
 | 8   | `cdxj/filename-archive-relative`    | MUST        | error   | error       | warning | CDXJ の `filename` field が `archive/` で始まっている                              |
-| 9   | `warc/storage-store`                | SHOULD      | warning | warning     | info    | `archive/data.warc.gz` が STORE ではなく DEFLATE で zip 格納されている             |
+| 9   | `warc/storage-store`                | SHOULD      | warning | warning     | info    | `archive/data.warc.gz` が STORE ではなく DEFLATE で ZIP 格納されている             |
 | 10  | `warc/members-independent`          | MUST        | error   | error       | error   | `.warc.gz` を独立した gzip member の連結としてデコードできない                     |
 | 11  | `cdxj/warc-offsets`                 | MUST        | error   | error       | warning | CDXJ の offset/length が member 境界に当たらない                                   |
 | 12  | `cdxj/pages-mainpage`               | SHOULD      | warning | warning     | info    | `datapackage.mainPageURL` が `pages.jsonl` および/または CDXJ に存在しない         |
@@ -34,7 +34,7 @@ MUST / SHOULD / MAY)を示す。severity が「waxlens の影響判断・profile
 | 16  | `pages/page-schema`                 | MUST        | warning | warning     | info    | `pages/pages.jsonl` の page 行が valid JSON でない / `url`・`ts` を欠く            |
 | 17  | `datapackage/digest`                | SHOULD      | warning | warning     | info    | `datapackage-digest.json` が不在(warning)/ `path`・`hash` 不正・hash 不一致(error) |
 | 18  | `wacz/reserved-dirs-clean`          | MUST NOT    | warning | warning     | info    | 予約ディレクトリ `archive/` `indexes/` `pages/` にカスタムファイルがある          |
-| 19  | `datapackage/resources-complete`    | MUST        | warning | warning     | info    | zip 内のファイルが `datapackage.json` の resources に未宣言(孤児)               |
+| 19  | `datapackage/resources-complete`    | MUST        | warning | warning     | info    | ZIP 内のファイルが `datapackage.json` の resources に未宣言(孤児)               |
 | 20  | `datapackage/frictionless-structure` | MUST       | error   | error       | —       | Frictionless の構造 MUST 違反: `resources` が空でない配列でない / resource に `name` と `path`(か `data`)が無い(#5 の error 版。lenient では除外) |
 
 ## Severity の凡例
@@ -121,7 +121,7 @@ issue として上げて、operator が waxlens を更新するか未知バー�
 
 ### `datapackage/resource-hashes` — error
 
-`datapackage.json#resources[]` の各エントリは、他のいずれかの zip
+`datapackage.json#resources[]` の各エントリは、他のいずれかの ZIP
 エントリの `sha256:<hex>` hash と byte length を宣言する。この rule は
 両方を実際の bytes から再計算して、ミスマッチを `details` に
 expected/actual の hash として上げる (TUI では diff として表示される)。
@@ -172,7 +172,7 @@ wabac.js に silent に skip されるため、replay が index を得られず
 すべての URL lookup が失敗する。この rule は producer に依存せず
 replay-breaking な問題なので、すべての profile で `error` 発火する。
 
-`.idx` が存在するがそれが指すファイルが zip に無い場合は `warning` を
+`.idx` が存在するがそれが指すファイルが ZIP に無い場合は `warning` を
 発火する (`.idx` 自体はロードされるが、すべての lookup が miss する)。
 
 - **Replay engine**: [wabac.js `multiwacz.ts:loadIndex`](https://github.com/webrecorder/wabac.js/blob/main/src/wacz/multiwacz.ts)
@@ -208,9 +208,9 @@ commit しているため `error` に escalate する。
 
 ### `warc/storage-store` — warning
 
-`archive/data.warc.gz` は STORE 方式 (zip レベルでは無圧縮) で格納する
+`archive/data.warc.gz` は STORE 方式 (ZIP レベルでは無圧縮) で格納する
 べきである。内側の WARC は既に gzip 済みなので、その上から zip 圧縮
-すると展開のメリットゼロで size が膨らみ、CDXJ offset を通じて zip
+すると展開のメリットゼロで size が膨らみ、CDXJ offset を通じて ZIP
 の raw bytes に seek する indexer を壊す。エントリ全体をメモリに読む
 タイプのツールはまだ動くため、これは `error` ではなく `warning`。
 どちらのタイプの downstream consumer が来るか判定できないので、抑止
@@ -282,8 +282,8 @@ archive 内の各 WARC について、中身が gzip かどうか(先頭 2 byte 
 ### `pages/page-schema` — warning
 
 `pages/pages.jsonl` の各 'Page' 行(1 行目のヘッダを除く)が valid JSON で
-`url` と `ts` を持つかを検査する(WACZ §5.2.3 の MUST)。ページ一覧
-(ReplayWeb.page のページ選択)は壊れるが、URL 単位の replay は CDXJ 経由で
+`url` と `ts` を持つかを検査する(WACZ §5.2.3 の MUST)。Page 一覧
+(ReplayWeb.page の Page 選択)は壊れるが、URL 単位の replay は CDXJ 経由で
 動くため severity は warning。
 
 ### `datapackage/digest` — warning / error
@@ -302,7 +302,7 @@ WACZ §5.2.5 の `datapackage-digest.json`。不在なら warning(SHOULD 存在)
 
 ### `datapackage/resources-complete` — warning
 
-zip 内の実ファイルが、すべて `datapackage.json` の resources に列挙されて
+ZIP 内の実ファイルが、すべて `datapackage.json` の resources に列挙されて
 いるかを見る(WACZ MUST)。`datapackage/resource-hashes` が「宣言 → 実体」を
 見るのに対し、こちらは逆方向「実体 → 宣言」で未宣言の孤児を検出する。
 マニフェスト自身(`datapackage.json` / `datapackage-digest.json`)は対象外。
@@ -316,7 +316,7 @@ WACZ spec の以下は **WACZ ファイルそのもの**ではなく、それを
 
 - `Content-Length` ヘッダ(MUST)/ HTTP range requests のサポート(MUST)
 - `Accept-Ranges` ヘッダ(SHOULD)/ CORS `access-control-allow-origin`(SHOULD)
-- media type `application/wacz`(SHOULD)
+- Media Type `application/wacz`(SHOULD)
 
 ## 新しい rule を追加する
 

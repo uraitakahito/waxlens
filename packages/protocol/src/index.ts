@@ -49,7 +49,7 @@ export interface ValidateParams {
 
 export interface ReadEntryParams {
   source: SourceRef;
-  /** zip エントリのパス(例 `datapackage.json`)。 */
+  /** ZIP エントリのパス(例 `datapackage.json`)。 */
   path: string;
 }
 

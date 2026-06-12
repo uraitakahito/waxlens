@@ -1,6 +1,7 @@
 # waxlens
 
-[WACZ](https://specs.webrecorder.net/wacz/1.0.0/) archive 用のproducer 非依存な validator。
+[WACZ](https://specs.webrecorder.net/wacz/1.1.1/)(WARC データとメタデータを ZIP file に
+パッケージ化した Web Archive)の producer 非依存な validator。
 
 **daemon** が `@waxlens/core` で検証を行い、**tui** は薄いクライアントとして daemon に
 WebSocket で問い合わせて結果を描画する。daemon は **stateless**で、将来
@@ -41,7 +42,8 @@ flowchart LR
   (`--json` 出力) の wire format
 - [`docs/examples.md`](docs/examples.md) — [waxlens-corpus](https://github.com/uraitakahito/waxlens-corpus)
   を使った rule 別の事例カタログ (失敗例・profile 差)。`manifest.json` から自動生成
-- [`Terminology`](https://specs.webrecorder.net/wacz/1.1.1/#terminology) - `ウェブアーカイブ基盤全体で用いられる用語`
+- [`docs/terminology.md`](docs/terminology.md) — Terminology。WACZ 1.1.1 で定義された
+  Web Archive 基盤の用語を、日本語文中でも英語で揃える方針
 
 ## 開発
 

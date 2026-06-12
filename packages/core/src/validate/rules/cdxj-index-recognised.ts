@@ -22,7 +22,7 @@
  *
  * 何を報告するか:
  *   - WACZ 内に認識可能な index ファイルが無い → error。
- *   - `.idx` はあるが `!meta.filename` が zip に存在しない → warning
+ *   - `.idx` はあるが `!meta.filename` が ZIP に存在しない → warning
  *     (`.idx` 自体はロードされるが、lookup が miss する)。
  *
  * "index 欠落" 分岐の severity は全 profile で `error` — 読めない
@@ -84,7 +84,7 @@ export const cdxjIndexRecognisedRule: ValidationRule = {
       return ok(issues);
     }
 
-    // すべての `.idx` entry について、`!meta.filename` のペアが zip
+    // すべての `.idx` entry について、`!meta.filename` のペアが ZIP
     // に存在するかを確認する。ペアが壊れていると wabac.js は `.idx`
     // 自体は見えるが、圧縮 CDXJ が無いのですべての lookup が miss
     // する。
@@ -97,7 +97,7 @@ export const cdxjIndexRecognisedRule: ValidationRule = {
       //                              プロジェクトの早い段階で別個の
       //                              "no claim" diagnostic を出すのは
       //                              かえって混乱するので silent にする。
-      // `.idx` は CDXJ ペアを名前のみで参照していて、zip は同じ
+      // `.idx` は CDXJ ペアを名前のみで参照していて、ZIP は同じ
       // ディレクトリ (通常 `indexes/`) に保存している。直接と
       // `indexes/` 配下の両方を見る。
       const candidates = [pair, `${INDEXES_PREFIX}${pair}`];

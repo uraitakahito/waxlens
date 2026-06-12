@@ -63,7 +63,7 @@ export interface RuleApplicability {
 }
 
 export interface IssueLocation {
-  /** 問題が見つかった zip entry 名 (該当する場合)。 */
+  /** 問題が見つかった ZIP entry 名 (該当する場合)。 */
   entry?: string;
   /** text entry (CDXJ、pages.jsonl) 内の 1-based 行番号。 */
   line?: number;
@@ -140,7 +140,7 @@ export interface ReportSummary {
 export interface ReportStats {
   /** WARC iterator が yield した独立 gzip member 数。 */
   warcRecordCount: number;
-  /** `archive/data.warc.gz` の byte 長 (zip 解凍後)。 */
+  /** `archive/data.warc.gz` の byte 長 (ZIP 解凍後)。 */
   warcArchiveBytes: number;
   /** CDXJ entry の `url` field に現れる distinct な host。 */
   hosts: string[];
@@ -245,11 +245,11 @@ export const formatParseSourceError = (e: ParseSourceError): string => {
 };
 
 /**
- * WACZ 内の 1 ファイル(zip エントリ)の一覧用レコード。renderer は
+ * WACZ 内の 1 ファイル(ZIP エントリ)の一覧用レコード。renderer は
  * これを §5.1 風のディレクトリツリーに組み直し、issue を file に重ねて
  * 表示する。flat に持つことで JSON consumer がそのまま扱える。
  *
- * `present: false` は「期待されるが zip に実在しない」file を表す。
+ * `present: false` は「期待されるが ZIP に実在しない」file を表す。
  * 「なぜ期待されるか」は {@link ReportEntry.expectedBy} が持つ — datapackage の
  * 宣言由来か、WACZ §5.2 の MUST 由来か。その場合 size / 圧縮は無い。
  */
@@ -259,18 +259,18 @@ export const formatParseSourceError = (e: ParseSourceError): string => {
  *   - `"datapackage"`: datapackage.json の `resources[].path` に宣言されている。
  *   - `"wacz-spec"`: WACZ §5.2 が MUST とする(datapackage.json / pages/pages.jsonl /
  *     archive/ の WARC / indexes/ の index)。
- * 両方に該当することもある。空配列 = zip に実在するだけで、特に「期待」はされていない。
+ * 両方に該当することもある。空配列 = ZIP に実在するだけで、特に「期待」はされていない。
  */
 export type ExpectedBy = "datapackage" | "wacz-spec";
 
 export interface ReportEntry {
-  /** zip エントリ path。例: `archive/data.warc.gz`。 */
+  /** ZIP エントリ path。例: `archive/data.warc.gz`。 */
   path: string;
-  /** zip に実在するか。false = 期待されるが実在しない(欠落)。 */
+  /** ZIP に実在するか。false = 期待されるが実在しない(欠落)。 */
   present: boolean;
   /** 解凍後のバイト数(present のみ)。 */
   uncompressedSize?: number;
-  /** zip の圧縮方式(0=STORE / 8=DEFLATE)(present のみ)。 */
+  /** ZIP の圧縮方式(0=STORE / 8=DEFLATE)(present のみ)。 */
   compressionMethod?: number;
   /** なぜ「あるべき」か。{@link ExpectedBy} を参照。空 = 実在するだけ。 */
   expectedBy: ExpectedBy[];

@@ -1,9 +1,9 @@
 /**
  * `Report.entries`(ファイル一覧 + 検証の紐付け)のテスト。
  *
- * - zip の実エントリを present:true で網羅し、size / expectedBy が取れる
+ * - ZIP の実エントリを present:true で網羅し、size / expectedBy が取れる
  * - hash 不一致は該当 file の issues に紐付く
- * - datapackage が宣言するが zip に無い path は present:false で出る
+ * - datapackage が宣言するが ZIP に無い path は present:false で出る
  * - §5.2 MUST が不在なら present:false / expectedBy:[wacz-spec] で出る
  */
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
@@ -46,7 +46,7 @@ describe("Report.entries", () => {
     await rm(tmpDir, { recursive: true, force: true });
   });
 
-  it("zip の実エントリを present:true で網羅し、size / expectedBy が取れる", async () => {
+  it("ZIP の実エントリを present:true で網羅し、size / expectedBy が取れる", async () => {
     const report = await reportFor(tmpDir);
     const paths = report.entries.map((e) => e.path);
     expect(paths).toContain("archive/data.warc.gz");
@@ -83,7 +83,7 @@ describe("Report.entries", () => {
     ).toBe(true);
   });
 
-  it("datapackage が宣言するが zip に無い path は present:false", async () => {
+  it("datapackage が宣言するが ZIP に無い path は present:false", async () => {
     const report = await reportFor(tmpDir, {
       mutateResources: (rs) => [
         ...rs,
@@ -96,7 +96,7 @@ describe("Report.entries", () => {
   });
 
   it("§5.2 MUST が不在(未宣言)でも present:false / expectedBy:[wacz-spec] で出る", async () => {
-    // omitPages は zip からも resources[] からも pages.jsonl を落とす
+    // omitPages は ZIP からも resources[] からも pages.jsonl を落とす
     // (= 不在かつ未宣言)。それでも §5.2.3 の MUST としてツリーに出るべき。
     const report = await reportFor(tmpDir, { omitPages: true });
     const pages = report.entries.find((e) => e.path === "pages/pages.jsonl");

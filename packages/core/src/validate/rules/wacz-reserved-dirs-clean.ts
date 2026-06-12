@@ -42,7 +42,7 @@ export const waczReservedDirsCleanRule: ValidationRule = {
     const issues: Issue[] = [];
 
     for (const name of wacz.entryNames()) {
-      // zip のディレクトリエントリ(末尾 /)は対象外。
+      // ZIP のディレクトリエントリ(末尾 /)は対象外。
       if (name.endsWith("/")) continue;
       for (const { dir, allow } of RESERVED) {
         if (name.startsWith(dir) && !allow.test(name)) {

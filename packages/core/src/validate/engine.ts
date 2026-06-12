@@ -6,7 +6,7 @@
  * に畳み込む。engine 自体は throw しない — rule の失敗は
  * `Result<Issue[], never>` として返る。
  *
- * 並列性: 各 rule は 1 〜 2 個の zip entry を読む。yauzl-promise は
+ * 並列性: 各 rule は 1 〜 2 個の ZIP entry を読む。yauzl-promise は
  * 単一の ZipFile handle から並行 read stream を提供できるので、rule
  * を並列に走らせるのは安全であり、小さい WACZ では実時間も短くなる。
  * 将来 profiler ベースで予算を支配する rule を直列化することはあり

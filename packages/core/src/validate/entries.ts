@@ -3,14 +3,14 @@
  *
  * 「期待されるファイル集合」を **実在 ∪ datapackage 宣言 ∪ §5.2 MUST** の
  * 和として作り、各 path に
- *   - present: zip に実在するか
+ *   - present: ZIP に実在するか
  *   - expectedBy: なぜ「あるべき」か(datapackage 宣言 / §5.2 MUST)
  *   - getEntryMeta() の size / 圧縮方式(present のみ)
  *   - その path を `location.entry` に持つ issue
  * を紐付けた flat なリストを返す。renderer (tui) がこれを §5.1 風の
  * ディレクトリツリーへ組み直す。
  *
- * 期待されるが zip に無い path は `present: false` の entry として出る
+ * 期待されるが ZIP に無い path は `present: false` の entry として出る
  * (欠落の可視化)。これにより「datapackage 宣言済みだが無い」だけでなく
  * 「§5.2 が MUST とするのに無い(未宣言でも)」ファイルもツリーに現れる。
  * archive/ ・ indexes/ の「≥1」は特定 path が無いので、未充足のときだけ
