@@ -6,13 +6,13 @@
  */
 import type { ExpectedBy, WireIssue, WireReport } from "@waxlens/protocol";
 
-/** zip の圧縮方式コード → 表示名(0=STORE / 8=DEFLATE / 他=?)。 */
+/** ZIP の圧縮方式コード → 表示名(0=STORE / 8=DEFLATE / 他=?)。 */
 export const codecName = (method?: number): string =>
   method === 0 ? "STORE" : method === 8 ? "DEFLATE" : "?";
 
 /**
  * expectedBy → 「なぜ期待されるか」の一文。両方該当も表現する。
- * 空(= zip に実在するだけ)は "—"。
+ * 空(= ZIP に実在するだけ)は "—"。
  */
 export const expectedLabel = (expectedBy: ExpectedBy[]): string => {
   const parts: string[] = [];

@@ -14,7 +14,7 @@
  *       形で出力していて、wabac.js は `archive/` prefix を自前で
  *       入れている。
  * Replay engine: wabac.js の WACZ file resolver (`wacz/multiwacz.ts`
- *       の loadFileFromNamedWACZ 参照) は、zip から fetch する前に
+ *       の loadFileFromNamedWACZ 参照) は、ZIP から fetch する前に
  *       CDXJ の filename に `archive/` を付ける。
  * Reference producer: browserhive/src/storage/wacz/packager.ts:36-44
  *       で定数名が `WARC_FILENAME_FOR_CDX` で、コメントに同じ落とし

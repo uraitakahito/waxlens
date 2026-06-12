@@ -3,7 +3,7 @@
  *
  * WACZ に合わせた accessor を提供する。
  *
- * reader は `close()` が呼ばれるまで zip handle を開きっぱなしにする
+ * reader は `close()` が呼ばれるまで ZIP handle を開きっぱなしにする
  * — rule runner はこれを `finally` で行うので、validation 失敗で fd
  * を漏らさない。
  *
@@ -16,7 +16,7 @@ import type { ReportSource } from "../validate/domain.js";
 import type { WaczTransport } from "./transport.js";
 
 /**
- * zip spec (PKWARE APPNOTE.TXT §4.4.5) の compression method 番号。
+ * ZIP spec (PKWARE APPNOTE.TXT §4.4.5) の compression method 番号。
  * WACZ では今のところ STORE (無圧縮) と DEFLATE の 2 つしか登場しない。
  */
 export const ZIP_COMPRESSION_STORE = 0;
@@ -57,8 +57,8 @@ export class WaczReader {
 
   /**
    * 開いた `ZipFile` から entries map を作って `WaczReader` を組み立てる
-   * 共通処理。file / s3 の 2 path どちらでも、 zip handle 取得まで終われば
-   * あとは同じ手順 (zip の async iterator を 1 回 drain して filename →
+   * 共通処理。file / s3 の 2 path どちらでも、 ZIP handle 取得まで終われば
+   * あとは同じ手順 (ZIP の async iterator を 1 回 drain して filename →
    * Entry の Map にする) になるので、ここに集約する。
    */
   private static async fromZipHandle(
@@ -81,7 +81,7 @@ export class WaczReader {
   }
 
   /**
-   * payload を読まずに entry ごとの metadata を返す。entry が zip
+   * payload を読まずに entry ごとの metadata を返す。entry が ZIP
    * にどう格納されているかだけを気にする rule が使う (例: rule #6 —
    * WARC は STORE であるべきで、内側の gzip を二重圧縮しないため)。
    */

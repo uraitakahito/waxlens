@@ -5,7 +5,7 @@
  * (archive/data.warc.gz、indexes/index.cdxj、pages/pages.jsonl、
  * fuzzy.json …) のいずれかに対する `path` + `hash` + `bytes` を
  * 宣言する。hash は entry の *非圧縮* payload に対する
- * `sha256:<hex>`、bytes はそれに対応する length。我々は zip の実際
+ * `sha256:<hex>`、bytes はそれに対応する length。我々は ZIP の実際
  * の中身からどちらも再計算し、不一致を flag する。
  *
  * Spec: Frictionless Data Package descriptor (WACZ が
@@ -16,7 +16,7 @@
  *       様子が直接読める。
  *
  * report で区別する価値のある失敗モード:
- *   - resource が zip から欠落           → error
+ *   - resource が ZIP から欠落           → error
  *   - resource はあるが hash が不一致   → error (expected/actual 付き)
  *   - resource はあるが bytes が不一致  → error (別 issue)
  *   - resources[] が空 / 非配列          → error (producer バグの兆候)

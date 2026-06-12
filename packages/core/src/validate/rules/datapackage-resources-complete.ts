@@ -5,10 +5,10 @@
  * ため `datapackage.json` の resources セクションに列挙されなければならない
  * (MUST)。`datapackage/resource-hashes` が「宣言 → 実体」(宣言したリソースが
  * 実在し hash 一致)を見るのに対し、この rule は逆方向「実体 → 宣言」
- * (zip 内の実ファイルがすべて宣言されているか)を見る。未宣言の孤児を warning。
+ * (ZIP 内の実ファイルがすべて宣言されているか)を見る。未宣言の孤児を warning。
  *
  * マニフェスト自身(`datapackage.json` / `datapackage-digest.json`)は
- * resources に自己列挙しないため対象外。zip のディレクトリエントリも除外。
+ * resources に自己列挙しないため対象外。ZIP のディレクトリエントリも除外。
  *
  * Spec: https://specs.webrecorder.net/wacz/1.1.1/#directories-and-files
  */

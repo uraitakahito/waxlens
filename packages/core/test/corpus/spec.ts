@@ -9,7 +9,7 @@
  *
  * `options` の各フィールドの意味は `../fixtures/generator.ts` の
  * `FixtureOptions` を参照。 時刻系 (`capturedAt` 等) は default が固定値
- * かつ zip entry 日時も固定されるので、 生成は決定的 (LFS churn なし)。
+ * かつ ZIP entry 日時も固定されるので、 生成は決定的 (LFS churn なし)。
  */
 import type { FixtureOptions } from "../fixtures/generator.js";
 

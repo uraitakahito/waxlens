@@ -2,16 +2,16 @@
  * Rule: pages/page-schema
  *
  * WACZ §5.2.3: pages/pages.jsonl は [[JSON-Lines]] で、各 'Page' 行は
- * 少なくとも `url`(ページの URL)と `ts`(タイムスタンプ)を持た
+ * 少なくとも `url`(Page の URL)と `ts`(タイムスタンプ)を持た
  * なければならない(MUST)。
  *
  * pages.jsonl の 1 行目は `{ "format": "json-pages-1.0", ... }` の
- * ヘッダ行なので、ページ行(2 行目以降)だけを検査する。各行が
+ * ヘッダ行なので、Page 行(2 行目以降)だけを検査する。各行が
  *   - valid JSON のオブジェクトであること
  *   - `url` と `ts` を持つこと
  * を確認し、違反を行番号つきで報告する。
  *
- * severity は warning: ページ一覧(ReplayWeb.page のページ選択)は
+ * severity は warning: Page 一覧(ReplayWeb.page の Page 選択)は
  * 壊れるが、URL 単位の replay は CDXJ 経由で動くため。lenient では info。
  *
  * Spec: https://specs.webrecorder.net/wacz/1.1.1/#pages

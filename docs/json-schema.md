@@ -87,7 +87,7 @@ interface Issue {
 }
 
 interface IssueLocation {
-  /** zip entry name where the problem was found, when applicable. */
+  /** ZIP entry name where the problem was found, when applicable. */
   entry?: string;
   /** 1-based line number inside a text entry (CDXJ, pages.jsonl). */
   line?: number;
@@ -119,7 +119,7 @@ human view と machine view の信頼性が崩れるため。
 interface ReportStats {
   /** Number of independent gzip members the WARC iterator yielded. */
   warcRecordCount: number;
-  /** Byte length of `archive/data.warc.gz` (zip-uncompressed). */
+  /** Byte length of `archive/data.warc.gz` (ZIP-uncompressed). */
   warcArchiveBytes: number;
   /** Distinct hosts mentioned in CDXJ entries' `url` field (sorted). */
   hosts: string[];

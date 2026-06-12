@@ -129,7 +129,7 @@ Layout
 
 ### producer 差 — `good-webrecorder.wacz` で profile を切り替える
 
-同じアーカイブでも profile で結果が変わる典型。webrecorder producer は
+同じ WACZ でも profile で結果が変わる典型。webrecorder producer は
 gzip 済み CDXJ(`.cdx.gz` + `.idx`)を出す。`spec` では replay 可能なので
 `warning`(exit 0)だが、plain な `.cdxj` を強制する `browserhive` では
 `error`(exit 1)に escalate する。

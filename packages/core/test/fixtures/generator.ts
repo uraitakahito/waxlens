@@ -59,7 +59,7 @@ export interface FixtureOptions {
   cdxjFilenameOverride?: string;
   /**
    * When true, gzip the cdxj body and rename to `index.cdxj.gz` (rule #4).
-   * The generator switches the zip entry name accordingly.
+   * The generator switches the ZIP entry name accordingly.
    */
   cdxjGzipped?: boolean;
   /**
@@ -69,7 +69,7 @@ export interface FixtureOptions {
   omitDatapackage?: boolean;
   /**
    * §5.2 の MUST ファイルを欠落させる(`wacz/required-files` 用)。entry を
-   * zip から落とすだけでなく、対応する `datapackage.json#resources[]` の宣言も
+   * ZIP から落とすだけでなく、対応する `datapackage.json#resources[]` の宣言も
    * 落とす — 「不在かつ未宣言」を再現し、required-files を単独で踏ませる
    * (resource-hashes の "missing" と二重にならない)。
    */
@@ -289,7 +289,7 @@ export interface BuiltFixture {
   bytes: Buffer;
 }
 
-/** WACZ を完全にメモリ上で組み立てる。zip の bytes を返す。 */
+/** WACZ を完全にメモリ上で組み立てる。ZIP の bytes を返す。 */
 export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixture> => {
   const taskId = options.taskId ?? "00000000-0000-0000-0000-000000000001";
   const pageUrl = options.pageUrl ?? "https://example.com/";
@@ -297,7 +297,7 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
   const capturedAt = options.capturedAt ?? "2026-05-13T00:00:00.000Z";
   const software = options.software ?? "waxlens-fixture/0.0.0";
   const waczVersion = options.waczVersion ?? "1.1.1";
-  // zip entry の mtime を固定する。archiver は date 未指定だと現在時刻を
+  // ZIP entry の mtime を固定する。archiver は date 未指定だと現在時刻を
   // 刻むため、決定的な byte 出力 (corpus を Git LFS に置く際の churn 回避)
   // には capturedAt 由来の固定値を全 entry に渡す必要がある。
   const entryDate = new Date(capturedAt);
@@ -419,7 +419,7 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
   const datapackageBytes = Buffer.from(`${JSON.stringify(datapackage, null, 2)}\n`, "utf-8");
 
   // `archiver` を Buffer-collecting な Writable に pipe してメモリ上
-  // で zip を組み立てる。tmp ファイルに書いてから読む方式ではなく
+  // で ZIP を組み立てる。tmp ファイルに書いてから読む方式ではなく
   // こうしているのは、test を hermetic に保つため — ケース間で
   // ファイルシステム状態が残らない。
   const chunks: Buffer[] = [];
