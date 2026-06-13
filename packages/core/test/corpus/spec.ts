@@ -166,6 +166,25 @@ export const CORPUS: CorpusSpec[] = [
     options: { mainPageUrlOverride: "https://orphan.example/" },
     expectRules: ["cdxj/pages-mainpage"],
   },
+  {
+    name: "cdxj-index-not-cdxj",
+    description:
+      "indexes/index.cdxj の中身が CDXJ でない(§5.2.2 MUST contain CDXJ data)。index-valid-data が error。CDXJ entry が無いので pages-mainpage の no-cdxj-record warning も連鎖する",
+    // cdxjOverride で index 本文を非CDXJ に丸ごと差し替え。resource hash は
+    // 実体から計算されるので resource-hashes は通り、index-valid-data だけが
+    // parse 失敗を error にする。expectRules は部分集合判定なので新 rule だけ列挙。
+    options: { cdxjOverride: "not cdxj at all\n" },
+    expectRules: ["cdxj/index-valid-data"],
+  },
+  {
+    name: "cdxj-gzip-index-not-cdxj",
+    description:
+      "webrecorder layout の index.cdx.gz を gunzip すると非CDXJ(§5.2.2 後半 MAY be gzip compressed の中身検証)。index-valid-data が error、webrecorder layout 由来の index-not-gzipped も連鎖",
+    // producer: webrecorder → index.cdx.gz + index.idx(cdxj-gzip-1.0)。cdxjOverride で
+    // 圧縮前の本文を非CDXJ に。.idx の宣言から .cdx.gz を CDXJ と確定 → gunzip → parse 失敗。
+    options: { producer: "webrecorder", cdxjOverride: "not cdxj at all\n" },
+    expectRules: ["cdxj/index-valid-data"],
+  },
 
   // ── warc/* ────────────────────────────────────────────────────────
   {

@@ -36,6 +36,7 @@ MUST / SHOULD / MAY)を示す。severity が「waxlens の影響判断・profile
 | 18  | `wacz/reserved-dirs-clean`          | MUST NOT    | warning | warning     | info    | 予約ディレクトリ `archive/` `indexes/` `pages/` にカスタムファイルがある          |
 | 19  | `datapackage/resources-complete`    | MUST        | warning | warning     | info    | ZIP 内のファイルが `datapackage.json` の resources に未宣言(孤児)               |
 | 20  | `datapackage/frictionless-structure` | MUST       | error   | error       | —       | Frictionless の構造 MUST 違反: `resources` が空でない配列でない / resource に `name` と `path`(か `data`)が無い(#5 の error 版。lenient では除外) |
+| 21  | `cdxj/index-valid-data`             | MUST        | error   | error       | error   | `indexes/` の CDXJ(平文 `.cdxj` / gzip `.cdxj.gz` / `.idx` 経由の `.cdx.gz`)の中身が CDXJ として parse できない / gzip 展開できない(§5.2.2 MUST contain CDXJ data, MAY be gzip compressed) |
 
 ## Severity の凡例
 
@@ -179,6 +180,35 @@ replay-breaking な問題なので、すべての profile で `error` 発火す�
   — 直接ロードは `endsWith(".cdx") || endsWith(".cdxj")`、加えて
   compressed index 用に `endsWith(".idx")`。
 
+### `cdxj/index-valid-data` — error (すべての profile)
+
+WACZ §5.2.2 は「Index files MUST contain CDXJ data and MAY be gzip
+compressed」と定める。`indexes/` 配下の CDXJ を `parseCdxj` に通し、
+CDXJ として読めない行(`invalid-json` / `json-not-object` /
+`missing-fields` / `empty-surt-or-timestamp`)を行ごとに `error` で
+報告する。対象は **平文 `.cdxj`**、**gzip された `.cdxj.gz`**、および
+**`.idx` が `!meta.format: "cdxj-gzip-1.0"` で名指す `.cdx.gz`**(pywb /
+webrecorder layout)で、gzip 系は `gunzipSync` で展開してから検証する。
+`.gz` と名乗るのに展開できない場合も `error`(中身を CDXJ として読めない
+以上 §5.2.2 違反)。
+
+平文 `.cdx`(`.gz` 無し)は legacy の列指向 CDX で JSON でないため対象外
+(誤検知回避)。`.cdx.gz` は `.idx` の宣言があるときだけ CDXJ と確定する。
+index の **存在 / ロード可否** は `cdxj/index-recognised-by-wabac`、
+**gzip 状態の妥当性** は `cdxj/index-not-gzipped`、**中身が CDXJ か** は
+この rule、と観点を分担する。中身が壊れた index は wabac.js が index を
+構築できず replay-breaking なので、producer に依存せず全 profile で `error`。
+
+この parse 妥当性チェックは元々 `cdxj/filename-archive-relative` に
+併発報告として紛れ込んでいた(ハードコードした `indexes/index.cdxj`
+1 本のみ・lenient で warning 降格)。本 rule に集約し、`indexes/` 配下の
+CDXJ(平文・gzip 問わず)を全 profile で `error` に統一した。なお pywb の
+sparse な block 単位 `.cdx.gz` は entry 全体を `gunzipSync`(単一/連結
+member)で展開する実装で、`.idx` の offset による部分展開は将来拡張。
+
+- **Spec**: [§5.2.2 indexes](https://specs.webrecorder.net/wacz/1.1.1/#indexes)
+  「Index files MUST contain CDXJ data and MAY be gzip compressed [PYWB-CDXJ]」
+
 ### `cdxj/index-not-gzipped` — warning (spec) / error (browserhive) / info (lenient)
 
 wabac-recognition コントラクトの producer-strict バリアント。producer
@@ -201,6 +231,10 @@ commit しているため `error` に escalate する。
 `archive/data.warc.gz` ではない)。wabac.js は `archive/` を自分で先頭に
 付けるため、フルパスを書くと `archive/archive/data.warc.gz` を探しに
 行って全 URL が 404 になる。
+
+CDXJ が **そもそも parse できるか**(§5.2.2 MUST contain CDXJ data)は
+`cdxj/index-valid-data` の専任。この rule は parse 済み entry の `filename`
+だけを見る。
 
 - **Reference producer**: [browserhive `wacz/packager.ts:36-44`](https://github.com/uraitakahito/browserhive/blob/main/src/storage/wacz/packager.ts)
   で定数名が `WARC_FILENAME_FOR_CDX` で、コメントに同じ落とし穴が説明

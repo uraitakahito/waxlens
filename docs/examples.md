@@ -45,6 +45,7 @@ CORPUS_DIR=../waxlens-corpus pnpm --filter @waxlens/core corpus:build
 | `datapackage-bad-hash.wacz` | datapackage.json の resource hash が実体と不一致 | `datapackage/resource-hashes` (error) | 1 |
 | `datapackage-absent.wacz` | datapackage.json を丸ごと欠落 (§5.2.4 の MUST 欠落 → required-files) | `wacz/required-files` (error) | 1 |
 | `datapackage-frictionless-bad-name.wacz` | resource.name が Frictionless の許容パターン外 (大文字)。WACZ 固有 rule は通り、frictionless-schema だけが warning (lenient では除外) | `datapackage/frictionless-schema` (warning) | 0 |
+| `datapackage-empty-resources.wacz` | resources を空配列に。frictionless-structure が構造 MUST 違反を error 検出 (resource-hashes・frictionless-schema・resources-complete も連鎖)。lenient では structure/schema は除外されるが resource-hashes が残るので valid:false のまま | `datapackage/resource-hashes` (error), `datapackage/frictionless-schema` (warning), `datapackage/frictionless-structure` (error), `datapackage/resources-complete` (warning) | 1 |
 | `wacz-missing-pages.wacz` | pages/pages.jsonl が欠落 (§5.2.3 の MUST 欠落)。宣言も落とすので required-files 単独 | `wacz/required-files` (error) | 1 |
 | `wacz-missing-archive.wacz` | archive/ に WARC が無い (§5.2.1 の MUST 欠落)。宣言も落とすので required-files 単独 | `wacz/required-files` (error) | 1 |
 | `wacz-missing-indexes.wacz` | indexes/ に index が無い (§5.2.2 の MUST 欠落)。required-files に加え index-recognised-by-wabac も発火 (相補的) | `wacz/required-files` (error), `cdxj/index-recognised-by-wabac` (error) | 1 |
@@ -53,6 +54,8 @@ CORPUS_DIR=../waxlens-corpus pnpm --filter @waxlens/core corpus:build
 | `cdxj-offset-wrong.wacz` | CDXJ の offset が WARC 実体とずれている | `cdxj/warc-offsets` (error) | 1 |
 | `cdxj-length-mismatch.wacz` | CDXJ の length が WARC member 長と不一致 (length 分岐) | `cdxj/warc-offsets` (error) | 1 |
 | `cdxj-mainpage-orphan.wacz` | mainPageURL が CDXJ/pages に存在しない URL — warning | `cdxj/pages-mainpage` (warning) | 0 |
+| `cdxj-index-not-cdxj.wacz` | indexes/index.cdxj の中身が CDXJ でない(§5.2.2 MUST contain CDXJ data)。index-valid-data が error。CDXJ entry が無いので pages-mainpage の no-cdxj-record warning も連鎖する | `cdxj/index-valid-data` (error), `cdxj/pages-mainpage` (warning) | 1 |
+| `cdxj-gzip-index-not-cdxj.wacz` | webrecorder layout の index.cdx.gz を gunzip すると非CDXJ(§5.2.2 後半 MAY be gzip compressed の中身検証)。index-valid-data が error、webrecorder layout 由来の index-not-gzipped も連鎖 | `cdxj/index-valid-data` (error), `cdxj/index-not-gzipped` (warning) | 1 |
 | `warc-deflate.wacz` | WARC を DEFLATE 格納 (STORE であるべき) — warning | `warc/storage-store` (warning) | 0 |
 | `warc-corrupt-member.wacz` | WARC.gz の deflate stream を 1 byte 破壊 (decode 不能) | `warc/members-independent` (error), `cdxj/warc-offsets` (error) | 1 |
 | `warc-payload-digest-bad.wacz` | WARC-Payload-Digest header が実体と不一致 — warning | `warc/payload-digest` (warning) | 0 |
@@ -70,12 +73,20 @@ CORPUS_DIR=../waxlens-corpus pnpm --filter @waxlens/core corpus:build
 | --- | --- | --- | --- | --- |
 | `good-webrecorder.wacz` | `cdxj/index-not-gzipped` | warning | error | info |
 | `datapackage-frictionless-bad-name.wacz` | `datapackage/frictionless-schema` | warning | warning | — |
+| `datapackage-empty-resources.wacz` | `datapackage/resource-hashes` | error | error | error |
+| `datapackage-empty-resources.wacz` | `datapackage/frictionless-schema` | warning | warning | — |
+| `datapackage-empty-resources.wacz` | `datapackage/frictionless-structure` | error | error | — |
+| `datapackage-empty-resources.wacz` | `datapackage/resources-complete` | warning | warning | info |
 | `cdxj-filename-absolute.wacz` | `cdxj/filename-archive-relative` | error | error | warning |
 | `cdxj-index-gzipped.wacz` | `cdxj/index-recognised-by-wabac` | error | error | error |
 | `cdxj-index-gzipped.wacz` | `cdxj/index-not-gzipped` | warning | error | info |
 | `cdxj-offset-wrong.wacz` | `cdxj/warc-offsets` | error | error | warning |
 | `cdxj-length-mismatch.wacz` | `cdxj/warc-offsets` | error | error | warning |
 | `cdxj-mainpage-orphan.wacz` | `cdxj/pages-mainpage` | warning | warning | info |
+| `cdxj-index-not-cdxj.wacz` | `cdxj/index-valid-data` | error | error | error |
+| `cdxj-index-not-cdxj.wacz` | `cdxj/pages-mainpage` | warning | warning | info |
+| `cdxj-gzip-index-not-cdxj.wacz` | `cdxj/index-valid-data` | error | error | error |
+| `cdxj-gzip-index-not-cdxj.wacz` | `cdxj/index-not-gzipped` | warning | error | info |
 | `warc-deflate.wacz` | `warc/storage-store` | warning | warning | info |
 | `warc-corrupt-member.wacz` | `warc/members-independent` | error | error | error |
 | `warc-corrupt-member.wacz` | `cdxj/warc-offsets` | error | error | warning |

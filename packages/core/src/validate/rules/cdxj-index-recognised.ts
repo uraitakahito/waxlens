@@ -29,32 +29,19 @@
  * index は producer に依存せず replay-breaking なバグだから。
  */
 import { ok } from "../../result.js";
+import { parseIdxMeta } from "../../wacz/idx-parser.js";
 import type { Issue, ValidationRule } from "../domain.js";
 
 const INDEXES_PREFIX = "indexes/";
 const ACCEPTED_SUFFIXES = [".cdx", ".cdxj", ".idx"] as const;
 
 /**
- * `.idx` の先頭行を読み、pywb / wacz-creator が emit する
- * `!meta { format, filename }` header から `filename` field を取り
- * 出す。header が無い / 壊れている場合は null を返し、呼び出し側は
- * これを "ペア未宣言" として扱う。
+ * `.idx` の先頭 `!meta { format, filename }` header から `filename` を
+ * 取り出す (header 無し / 壊れ / filename 無しは null = "ペア未宣言")。
+ * header parse 自体は {@link parseIdxMeta} に一本化している。
  */
-const parseIdxPairFilename = (text: string): string | null => {
-  const firstLine = text.split("\n", 1)[0] ?? "";
-  if (!firstLine.startsWith("!meta")) return null;
-  const braceIdx = firstLine.indexOf("{");
-  if (braceIdx < 0) return null;
-  let meta: unknown;
-  try {
-    meta = JSON.parse(firstLine.slice(braceIdx));
-  } catch {
-    return null;
-  }
-  if (typeof meta !== "object" || meta === null) return null;
-  const filename = (meta as Record<string, unknown>)["filename"];
-  return typeof filename === "string" && filename.length > 0 ? filename : null;
-};
+const parseIdxPairFilename = (text: string): string | null =>
+  parseIdxMeta(text)?.filename ?? null;
 
 export const cdxjIndexRecognisedRule: ValidationRule = {
   name: "cdxj/index-recognised-by-wabac",

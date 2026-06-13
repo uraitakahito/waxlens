@@ -58,10 +58,26 @@ export interface FixtureOptions {
   /** Replace the CDXJ filename field on every entry (rule #3). */
   cdxjFilenameOverride?: string;
   /**
+   * Replace the entire body of `indexes/index.cdxj` with this raw string,
+   * bypassing the well-formed CDXJ builder. Used to exercise
+   * `cdxj/index-valid-data` (§5.2.2 "Index files MUST contain CDXJ data"):
+   * e.g. `"not cdxj at all\n"` makes the index unparseable. The resource
+   * hash is still computed from the actual bytes, so `resource-hashes`
+   * stays green and only the parse-validity rule fires.
+   */
+  cdxjOverride?: string;
+  /**
    * When true, gzip the cdxj body and rename to `index.cdxj.gz` (rule #4).
    * The generator switches the ZIP entry name accordingly.
    */
   cdxjGzipped?: boolean;
+  /**
+   * When true, name the index `indexes/index.cdxj.gz` but store the body as
+   * raw (un-gzipped) bytes — i.e. it claims to be gzip but is not. Used to
+   * exercise the `gzip-error` branch of `cdxj/index-valid-data` (a `.gz`
+   * index that cannot be decompressed). Takes precedence over `cdxjGzipped`.
+   */
+  cdxjGzipBroken?: boolean;
   /**
    * When true, omit `datapackage.json` entirely. Lets rule #1 / #5 see the
    * "absent" branch.
@@ -311,14 +327,18 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
   // CDXJ "url" field は replay ツールが lookup する URL。何も
   // override しないとき rule #9 が mainPageURL を cover できるよう、
   // pageUrl を使う。
-  const cdxjBody = buildCdxjLine(cdxjFilename, warc.recordLength, warc.offset, pageUrl, {
-    ...(options.cdxjOffsetOverride !== undefined && {
-      offsetOverride: options.cdxjOffsetOverride,
-    }),
-    ...(options.cdxjLengthMismatch !== undefined && {
-      lengthMismatch: options.cdxjLengthMismatch,
-    }),
-  });
+  // cdxjOverride が指定されたら、well-formed な CDXJ 組み立てを丸ごと
+  // バイパスして生の文字列を本文にする(非CDXJ を再現 → index-valid-data)。
+  const cdxjBody =
+    options.cdxjOverride ??
+    buildCdxjLine(cdxjFilename, warc.recordLength, warc.offset, pageUrl, {
+      ...(options.cdxjOffsetOverride !== undefined && {
+        offsetOverride: options.cdxjOffsetOverride,
+      }),
+      ...(options.cdxjLengthMismatch !== undefined && {
+        lengthMismatch: options.cdxjLengthMismatch,
+      }),
+    });
   const cdxjBytesPlain = Buffer.from(cdxjBody, "utf-8");
 
   // Index レイアウト — producer + legacy な `cdxjGzipped` knob に依存。
@@ -348,8 +368,16 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
       `!meta ${JSON.stringify({ format: "cdxj-gzip-1.0", filename: "index.cdx.gz" })}\n` + cdxjBody;
     indexEntries.push({ name: "indexes/index.idx", bytes: Buffer.from(idxText, "utf-8") });
   } else {
-    const cdxjEntryName = options.cdxjGzipped ? "indexes/index.cdxj.gz" : "indexes/index.cdxj";
-    const cdxjBytes = options.cdxjGzipped ? gzipSync(cdxjBytesPlain) : cdxjBytesPlain;
+    // cdxjGzipBroken は `.cdxj.gz` と名乗りつつ中身を未圧縮の生バイトにして
+    // gunzip 失敗(index-valid-data の gzip-error 分岐)を再現する。
+    const gzNamed = (options.cdxjGzipped ?? false) || (options.cdxjGzipBroken ?? false);
+    const cdxjEntryName = gzNamed ? "indexes/index.cdxj.gz" : "indexes/index.cdxj";
+    const cdxjBytes =
+      options.cdxjGzipBroken === true
+        ? cdxjBytesPlain
+        : options.cdxjGzipped
+          ? gzipSync(cdxjBytesPlain)
+          : cdxjBytesPlain;
     indexEntries.push({ name: cdxjEntryName, bytes: cdxjBytes });
   }
 

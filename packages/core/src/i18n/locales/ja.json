@@ -36,12 +36,15 @@
   "cdxj/index-recognised-by-wabac.no-index": "indexes/ 配下に wabac が認識できる index ファイルがありません — URL を提供するには .cdx / .cdxj / .idx エントリが少なくとも 1 つ必要です",
   "cdxj/index-recognised-by-wabac.missing-pair": "{name} は \"{pair}\" を参照していますが、そのエントリが WACZ に存在しません",
 
+  "cdxj/index-valid-data.desc": "index の CDXJ(平文/gzip)は正しい CDXJ データを含む必要がある(WACZ §5.2.2)",
+  "cdxj/index-valid-data.invalid": "{entry} の {line} 行目が CDXJ として不正です({reason})(WACZ §5.2.2: index は CDXJ データを含む必要があります)",
+  "cdxj/index-valid-data.gzip-error": "{entry} は gzip と名乗っていますが展開できません(WACZ §5.2.2: index は CDXJ データを含む必要があります)",
+
   "cdxj/index-not-gzipped.desc": "indexes/index.cdxj は gzip 圧縮してはならない(wabac.js は .cdxj.gz を黙って無視する)",
   "cdxj/index-not-gzipped.gzipped-entry": "エントリ \"{name}\" は gzip 圧縮された CDXJ です — wabac.js は .cdxj.gz / .cdx.gz を認識しません",
   "cdxj/index-not-gzipped.gzip-magic": "{entry} は gzip のマジックバイトで始まっています — ファイル名は正しいが内容が圧縮されています",
 
   "cdxj/filename-archive-relative.desc": "indexes/index.cdxj のエントリは archive 相対のファイル名を使う必要がある(\"archive/...\" ではなく)",
-  "cdxj/filename-archive-relative.parse-error": "{entry} の {line} 行目をパースできませんでした({reason})",
   "cdxj/filename-archive-relative.no-filename": "{entry} のエントリに \"filename\" フィールドがありません",
   "cdxj/filename-archive-relative.starts-with-archive": "{entry} のエントリの \"filename\" が \"archive/\" で始まっています — wabac.js は archive/ を自動付与するため、二重プレフィックスは再生を壊します",
 
