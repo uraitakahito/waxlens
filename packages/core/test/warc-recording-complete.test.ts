@@ -76,4 +76,30 @@ describe("warc/recording-complete", () => {
       expect(issues.some((i) => i.rule === RULE)).toBe(false);
     }
   });
+
+  it("resourceType / blockedReason を byResourceType / byBlockedReason に集計する", async () => {
+    const issues = await issuesFor(
+      tmpDir,
+      {
+        warcIncompleteSpec: [
+          { resourceType: "Image" },
+          { resourceType: "Image" },
+          { resourceType: "Script", blockedReason: "inspector" },
+        ],
+      },
+      "browserhive",
+    );
+    const recording = (
+      issues.find((i) => i.rule === RULE)?.details as
+        | {
+            recording?: {
+              byResourceType?: Record<string, number>;
+              byBlockedReason?: Record<string, number>;
+            };
+          }
+        | undefined
+    )?.recording;
+    expect(recording?.byResourceType).toEqual({ Image: 2, Script: 1 });
+    expect(recording?.byBlockedReason).toEqual({ inspector: 1 });
+  });
 });
