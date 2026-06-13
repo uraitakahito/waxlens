@@ -71,12 +71,12 @@ pnpm --dir packages/tui add -g .
 
 ```sh
 # Local file
-waxlens-validate samples/wikipedia.wacz
-waxlens samples/wikipedia.wacz
+waxlens-validate --profile browserhive samples/wikipedia.wacz
+waxlens --profile browserhive samples/wikipedia.wacz
 
 # S3 (AWS credential chain で解決)
-waxlens-validate s3://my-bucket/captures/abc.wacz
-waxlens s3://my-bucket/captures/abc.wacz
+waxlens-validate --profile browserhive s3://my-bucket/captures/abc.wacz
+waxlens --profile browserhive s3://my-bucket/captures/abc.wacz
 ```
 
 元に戻すときは `pnpm remove -g @waxlens/core @waxlens/tui`。
@@ -94,7 +94,7 @@ docker compose -f compose.dev.yaml exec waxlens bash
 # 以下 container 内で:
 pnpm install && pnpm --filter @waxlens/core build
 aws --endpoint-url http://seaweedfs:8333 s3 cp samples/wikipedia.wacz s3://waxlens/wikipedia.wacz
-./packages/core/dist/cli.js s3://waxlens/wikipedia.wacz
+./packages/core/dist/cli.js --profile browserhive s3://waxlens/wikipedia.wacz
 ```
 
 Prod stack は one-shot validation 用 (waxlens 自身は `--profile run` で
@@ -109,7 +109,7 @@ docker run --rm --network waxlens-network \
   -e AWS_REGION=us-east-1 -e AWS_ENDPOINT_URL_S3=http://seaweedfs:8333 \
   amazon/aws-cli s3 cp /samples/wikipedia.wacz s3://waxlens/wikipedia.wacz
 # 1 回 validate:
-docker compose -f compose.prod.yaml --profile run run --rm waxlens s3://waxlens/wikipedia.wacz
+docker compose -f compose.prod.yaml --profile run run --rm waxlens --profile browserhive s3://waxlens/wikipedia.wacz
 docker compose -f compose.prod.yaml down
 ```
 
