@@ -65,7 +65,12 @@ describe("validation engine — happy path", () => {
     expect(report.valid).toBe(true);
     expect(report.summary.failed).toBe(0);
     expect(report.summary.warnings).toBe(0);
-    expect(report.summary.passed).toBe(DEFAULT_RULES.length);
+    // spec profile で除外される rule(warc/recording-complete 等)は実行されず
+    // passed に数えられないので、spec で生きる rule 数を期待値にする。
+    const specRules = DEFAULT_RULES.filter(
+      (r) => !r.applicability?.excludeProfiles?.includes("spec"),
+    );
+    expect(report.summary.passed).toBe(specRules.length);
     expect(report.issues).toEqual([]);
   });
 });

@@ -30,6 +30,7 @@ import { waczReservedDirsCleanRule } from "./wacz-reserved-dirs-clean.js";
 import { warcExtensionRule } from "./warc-extension.js";
 import { warcMembersIndependentRule } from "./warc-members-independent.js";
 import { warcPayloadDigestRule } from "./warc-payload-digest.js";
+import { warcRecordingCompleteRule } from "./warc-recording-complete.js";
 import { warcStorageStoreRule } from "./warc-storage-store.js";
 
 /**
@@ -76,6 +77,9 @@ export const DEFAULT_RULES: readonly ValidationRule[] = [
   cdxjWarcOffsetsRule,
   cdxjPagesMainpageRule,
   warcPayloadDigestRule,
+  // browserhive profile 限定: WARC の metadata レコード(未完了/失敗)の比率を
+  // 可視化する。spec/lenient では excludeProfiles で除外される。
+  warcRecordingCompleteRule,
   fuzzyValidJsonRule,
 ];
 
@@ -114,5 +118,6 @@ export {
   warcExtensionRule,
   warcMembersIndependentRule,
   warcPayloadDigestRule,
+  warcRecordingCompleteRule,
   warcStorageStoreRule,
 };
