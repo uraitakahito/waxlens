@@ -104,6 +104,12 @@ export interface FixtureOptions {
    */
   warcCorruptAt?: number;
   /**
+   * Append this many `WARC-Type: metadata` records (browserhive's
+   * incomplete/failed-request convention, `application/warc-fields` body)
+   * to the WARC as extra gzip members. Exercises `warc/recording-complete`.
+   */
+  warcIncompleteRecords?: number;
+  /**
    * When set, override the CDXJ `offset` field on every entry with this
    * value (string form, matching the producer convention). Used to
    * exercise rule #8.
@@ -217,9 +223,30 @@ const buildWarcInfoBytes = (software: string, payloadDigestBad: boolean): Buffer
   return Buffer.concat([Buffer.from(headers, "utf-8"), bodyBuf, Buffer.from("\r\n\r\n", "utf-8")]);
 };
 
+/**
+ * browserhive が失敗/未完了の取得を記録するときの `WARC-Type: metadata`
+ * レコード(`application/warc-fields` body)を 1 件組み立てる。
+ * `warc/recording-complete` rule のテスト用。
+ */
+const buildIncompleteMetadataBytes = (idx: number): Buffer => {
+  const body = Buffer.from("incomplete: true\r\nreason: loadingFailed\r\n", "utf-8");
+  const headers = [
+    "WARC/1.1",
+    "WARC-Type: metadata",
+    `WARC-Record-ID: <urn:uuid:00000000-0000-0000-0000-${String(idx + 100).padStart(12, "0")}>`,
+    "WARC-Date: 2026-05-13T00:00:00Z",
+    `WARC-Target-URI: https://tracker.example/req/${String(idx)}`,
+    "Content-Type: application/warc-fields",
+    `Content-Length: ${String(body.byteLength)}`,
+    "",
+    "",
+  ].join("\r\n");
+  return Buffer.concat([Buffer.from(headers, "utf-8"), body, Buffer.from("\r\n\r\n", "utf-8")]);
+};
+
 const buildWarcGz = (
   software: string,
-  opts: { payloadDigestBad: boolean; corruptAt?: number },
+  opts: { payloadDigestBad: boolean; corruptAt?: number; incompleteRecords?: number },
 ): { bytes: Buffer; recordLength: number; offset: number } => {
   const raw = buildWarcInfoBytes(software, opts.payloadDigestBad);
   const gz = gzipSync(raw);
@@ -233,7 +260,13 @@ const buildWarcGz = (
     // ここでの index アクセスは意図的な fixture mutation。
     gz[opts.corruptAt] = (gz[opts.corruptAt] ?? 0) ^ 0xff;
   }
-  return { bytes: gz, recordLength: gz.byteLength, offset: 0 };
+  // テスト用: 未完了 metadata を別 gzip member として連結。warcinfo の
+  // offset(0)/length は不変なので、CDXJ・warc-offsets は影響を受けない。
+  const members: Buffer[] = [gz];
+  for (let i = 0; i < (opts.incompleteRecords ?? 0); i++) {
+    members.push(gzipSync(buildIncompleteMetadataBytes(i)));
+  }
+  return { bytes: Buffer.concat(members), recordLength: gz.byteLength, offset: 0 };
 };
 
 // sha256:<base32> 用ヘルパ — fixture generator を self-contained に
@@ -321,6 +354,9 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
   const warc = buildWarcGz(software, {
     payloadDigestBad: options.payloadDigestBad ?? false,
     ...(options.warcCorruptAt !== undefined && { corruptAt: options.warcCorruptAt }),
+    ...(options.warcIncompleteRecords !== undefined && {
+      incompleteRecords: options.warcIncompleteRecords,
+    }),
   });
 
   const cdxjFilename = options.cdxjFilenameOverride ?? "data.warc.gz";

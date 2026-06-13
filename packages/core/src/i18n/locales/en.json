@@ -70,6 +70,9 @@
   "warc/payload-digest.no-http-body": "WARC record #{memberIdx} ({recordType}) has WARC-Payload-Digest but no parseable HTTP body",
   "warc/payload-digest.mismatch": "WARC record #{memberIdx} payload digest mismatch",
 
+  "warc/recording-complete.desc": "browserhive: surface how many recorded requests were incomplete/failed (WARC metadata records)",
+  "warc/recording-complete.incomplete": "{incomplete} of {total} recorded requests are incomplete or failed ({percent}%)",
+
   "fuzzy/valid-json.desc": "fuzzy.json (when present) must parse as '{' rules: [...] '}'",
   "fuzzy/valid-json.invalid-json": "{entry} is not valid JSON",
   "fuzzy/valid-json.not-object": "{entry} top level must be an object",

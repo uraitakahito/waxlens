@@ -37,6 +37,7 @@ MUST / SHOULD / MAY)を示す。severity が「waxlens の影響判断・profile
 | 19  | `datapackage/resources-complete`    | MUST        | warning | warning     | info    | ZIP 内のファイルが `datapackage.json` の resources に未宣言(孤児)               |
 | 20  | `datapackage/frictionless-structure` | MUST       | error   | error       | —       | Frictionless の構造 MUST 違反: `resources` が空でない配列でない / resource に `name` と `path`(か `data`)が無い(#5 の error 版。lenient では除外) |
 | 21  | `cdxj/index-valid-data`             | MUST        | error   | error       | error   | `indexes/` の CDXJ(平文 `.cdxj` / gzip `.cdxj.gz` / `.idx` 経由の `.cdx.gz`)の中身が CDXJ として parse できない / gzip 展開できない(§5.2.2 MUST contain CDXJ data, MAY be gzip compressed) |
+| 22  | `warc/recording-complete`           | MAY         | —       | info / warning | —     | **browserhive profile 限定**。WARC の `metadata` レコード(未完了/失敗の記録)の比率を可視化(比率 &gt; 10% で warning)。`spec` / `lenient` では除外 |
 
 ## Severity の凡例
 
@@ -294,6 +295,23 @@ info レベルの note として受け入れる。spec が任意の `algorithm:v
 `details` には payload 先頭 256 bytes の hex preview が入っているので、
 operator はその record が claim している resource の bytes として
 見た目が妥当かを目視確認できる。
+
+### `warc/recording-complete` — info / warning(browserhive profile 限定)
+
+一部の producer(browserhive)は、失敗した / 途中で打ち切った HTTP 取得を
+通常の `response` ではなく `WARC-Type: metadata` レコード
+(`application/warc-fields` body: `incomplete: true` / `reason: loadingFailed` /
+`skipBodyReason: ...`)として記録する。この rule はその metadata を数え、
+`response` を分母にした「未完了比率」を可視化する。比率が 10% を超えると
+`info` から `warning` に上げ、`details.recording` に内訳(failed / incomplete /
+truncated / blocked)とサンプル URL を載せる(TUI の Recording health パネルが描画)。
+
+この metadata 慣習は WARC/WACZ 規格そのものではなく browserhive 固有なので、
+`applicability.excludeProfiles` で `spec` / `lenient` を除外し、`--profile browserhive`
+のときだけ走る。未完了レコードは「実際に起きた HTTP の正しい記録」で spec 違反では
+ないため severity は info/warning(`valid` は落とさない)。動的/状態依存トラフィック
+(広告 RTB・解析ビーコン)は記録できても再生で再現できないため、多い場合は収集側で
+ブロックすることを検討する。
 
 ### `fuzzy/valid-json` — info
 

@@ -480,7 +480,7 @@ const IssueRow: FC<{ issue: WireIssue; focused: boolean; expanded: boolean }> = 
  * `details` payload を、当てはまる shape 専用 view で render し、
  * それ以外は JSON pretty に fallback する。
  */
-const ExpandedDetails: FC<{ details: unknown }> = ({ details }) => {
+export const ExpandedDetails: FC<{ details: unknown }> = ({ details }) => {
   if (typeof details !== "object" || details === null) {
     return <Text dimColor>{JSON.stringify(details, null, 2)}</Text>;
   }
@@ -490,6 +490,10 @@ const ExpandedDetails: FC<{ details: unknown }> = ({ details }) => {
   const warcHeader = Array.isArray(d["warcHeader"]) ? (d["warcHeader"] as unknown[]) : null;
   const hexPreview = Array.isArray(d["hexPreview"]) ? (d["hexPreview"] as unknown[]) : null;
   const candidates = Array.isArray(d["candidates"]) ? (d["candidates"] as unknown[]) : null;
+  const recording =
+    typeof d["recording"] === "object" && d["recording"] !== null
+      ? (d["recording"] as Record<string, unknown>)
+      : null;
 
   const consumed = new Set<string>();
   if (hasDiff) {
@@ -499,6 +503,7 @@ const ExpandedDetails: FC<{ details: unknown }> = ({ details }) => {
   if (warcHeader) consumed.add("warcHeader");
   if (hexPreview) consumed.add("hexPreview");
   if (candidates) consumed.add("candidates");
+  if (recording) consumed.add("recording");
 
   const rest: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(d)) {
@@ -508,6 +513,7 @@ const ExpandedDetails: FC<{ details: unknown }> = ({ details }) => {
   return (
     <Box flexDirection="column">
       {hasDiff ? <DiffView expected={d["expected"]} actual={d["actual"]} /> : null}
+      {recording ? <RecordingHealthView recording={recording} /> : null}
       {candidates ? <CandidatesView candidates={candidates} /> : null}
       {warcHeader ? <WarcHeaderView lines={warcHeader} /> : null}
       {hexPreview ? <HexView lines={hexPreview} /> : null}
@@ -561,6 +567,53 @@ const CandidatesView: FC<{ candidates: unknown[] }> = ({ candidates }) => (
     ))}
   </Box>
 );
+
+/**
+ * Recording health パネル(案3)。`warc/recording-complete` が載せる
+ * `details.recording` から、未完了比率の棒・件数・内訳・サンプル URL を描く。
+ */
+const RecordingHealthView: FC<{ recording: Record<string, unknown> }> = ({ recording }) => {
+  const responses = Number(recording["responses"] ?? 0);
+  const incomplete = Number(recording["incomplete"] ?? 0);
+  const percent = Number(recording["percent"] ?? 0);
+  const width = 32;
+  const filled = Math.min(width, Math.max(0, Math.round((percent / 100) * width)));
+  const bar = "█".repeat(filled) + "░".repeat(width - filled);
+  const byReason =
+    typeof recording["byReason"] === "object" && recording["byReason"] !== null
+      ? (recording["byReason"] as Record<string, unknown>)
+      : {};
+  const breakdown = ["failed", "incomplete", "truncated", "blocked"]
+    .map((k) => `${k} ${String(Number(byReason[k] ?? 0))}`)
+    .join(" · ");
+  const samples = Array.isArray(recording["samples"]) ? recording["samples"] : [];
+  return (
+    <Box flexDirection="column" marginTop={1}>
+      <Text dimColor>Recording health:</Text>
+      <Text>
+        {"  responses "}
+        {responses}
+        {"  incomplete "}
+        <Text color="red">{incomplete}</Text>
+        {` (${String(percent)}%)`}
+      </Text>
+      <Text color="red">
+        {"  "}
+        {bar}
+      </Text>
+      <Text dimColor>
+        {"  "}
+        {breakdown}
+      </Text>
+      {samples.slice(0, 8).map((s, i) => (
+        <Text key={`rec-${String(i)}`} dimColor>
+          {"   - "}
+          {JSON.stringify(s)}
+        </Text>
+      ))}
+    </Box>
+  );
+};
 
 const formatValue = (v: unknown): string => {
   if (typeof v === "string") return v;

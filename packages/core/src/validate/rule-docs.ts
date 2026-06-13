@@ -62,6 +62,7 @@ export const RULE_DOCS: Record<string, readonly DocLink[]> = {
   "warc/storage-store": [{ label: "WACZ §archive", url: `${WACZ}#archive` }],
   "warc/members-independent": [{ label: "WARC 1.1", url: WARC11 }],
   "warc/payload-digest": [{ label: "WARC 1.1", url: WARC11 }],
+  "warc/recording-complete": [{ label: "WARC 1.1 metadata record", url: WARC11 }],
   "fuzzy/valid-json": [{ label: "WACZ §fuzzy.json", url: `${WACZ}#fuzzy-json` }],
 };
 
