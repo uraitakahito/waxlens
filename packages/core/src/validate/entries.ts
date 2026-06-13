@@ -22,7 +22,7 @@
 import { parseDatapackage } from "../wacz/datapackage.js";
 import type { WaczReader } from "../wacz/reader.js";
 import type { ExpectedBy, Issue, ReportEntry } from "./domain.js";
-import { SPEC_REQUIRED_PATHS, hasIndex, hasWarc } from "./wacz-spec.js";
+import { SPEC_REQUIRED_PATHS, hasIndex, hasWarc, sectionForSpecPath } from "./wacz-spec.js";
 
 const DATAPACKAGE_ENTRY = "datapackage.json";
 
@@ -59,6 +59,9 @@ export const buildEntries = async (
   //    present で実在を、expectedBy で「なぜ期待されるか」を持つ。
   for (const path of new Set([...names, ...declared, ...SPEC_REQUIRED_PATHS])) {
     const meta = present.has(path) ? wacz.getEntryMeta(path) : undefined;
+    const expectedBy = expectFor(path);
+    // wacz-spec 由来のときだけ §5.2.x を載せる(path から sectionForSpecPath が導出)。
+    const expectedSection = expectedBy.includes("wacz-spec") ? sectionForSpecPath(path) : undefined;
     byPath.set(path, {
       path,
       present: present.has(path),
@@ -67,7 +70,8 @@ export const buildEntries = async (
         uncompressedSize: meta.uncompressedSize,
         compressionMethod: meta.compressionMethod,
       }),
-      expectedBy: expectFor(path),
+      expectedBy,
+      ...(expectedSection !== undefined && { expectedSection }),
       issues: [],
     });
   }
@@ -75,10 +79,24 @@ export const buildEntries = async (
   // 2) §5.2 の「ディレクトリに ≥1」(archive/ の WARC、indexes/ の index)。
   //    特定 path が無いので、未充足のときだけ dir 単位の placeholder を足す。
   if (!hasWarc(names)) {
-    byPath.set("archive/", { path: "archive/", present: false, expectedBy: ["wacz-spec"], issues: [] });
+    const expectedSection = sectionForSpecPath("archive/");
+    byPath.set("archive/", {
+      path: "archive/",
+      present: false,
+      expectedBy: ["wacz-spec"],
+      ...(expectedSection !== undefined && { expectedSection }),
+      issues: [],
+    });
   }
   if (!hasIndex(names)) {
-    byPath.set("indexes/", { path: "indexes/", present: false, expectedBy: ["wacz-spec"], issues: [] });
+    const expectedSection = sectionForSpecPath("indexes/");
+    byPath.set("indexes/", {
+      path: "indexes/",
+      present: false,
+      expectedBy: ["wacz-spec"],
+      ...(expectedSection !== undefined && { expectedSection }),
+      issues: [],
+    });
   }
 
   // 3) issue を path で紐付け(archive//indexes/ の placeholder にも付く)。

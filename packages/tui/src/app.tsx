@@ -290,7 +290,7 @@ const DetailPane: FC<{
       ) : null}
       <Box>
         <Text dimColor>expected </Text>
-        <Text>{expectedLabel(entry.expectedBy)}</Text>
+        <Text>{expectedLabel(entry.expectedBy, entry.expectedSection)}</Text>
       </Box>
       <IssueList entry={entry} report={report} />
       {entry.present ? (

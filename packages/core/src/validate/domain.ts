@@ -274,6 +274,12 @@ export interface ReportEntry {
   compressionMethod?: number;
   /** なぜ「あるべき」か。{@link ExpectedBy} を参照。空 = 実在するだけ。 */
   expectedBy: ExpectedBy[];
+  /**
+   * wacz-spec 由来のとき、その spec 小節(§5.2.x)。path から `sectionForSpecPath`
+   * で導出した値で、renderer が「§5.2.1」のように精密表示するのに使う。
+   * §5.2 の対象外 path では undefined。
+   */
+  expectedSection?: string;
   /** この path を `location.entry` に持つ issue(rule + severity)。 */
   issues: { rule: string; severity: Severity }[];
 }

@@ -28,3 +28,17 @@ export const SPEC_REQUIRED_PATHS: readonly string[] = ["datapackage.json", "page
 export const hasWarc = (names: readonly string[]): boolean => names.some((n) => WARC_RE.test(n));
 /** indexes/ に index が 1 つ以上あるか(§5.2.2)。 */
 export const hasIndex = (names: readonly string[]): boolean => names.some((n) => INDEX_RE.test(n));
+
+/**
+ * §5.2 が MUST とする path → spec 小節番号の **単一の真実**。
+ * rule(issue の `params.section`)と {@link buildEntries}(`ReportEntry.expectedSection`)が
+ * 同じ対応を共用するためにここへ集約する(番号の二重持ちを避ける)。
+ * §5.2 の対象外 path は `undefined`。
+ */
+export const sectionForSpecPath = (path: string): string | undefined => {
+  if (path === "datapackage.json") return "5.2.4";
+  if (path === "pages/pages.jsonl") return "5.2.3";
+  if (path === "archive/" || WARC_RE.test(path)) return "5.2.1";
+  if (path === "indexes/" || INDEX_RE.test(path)) return "5.2.2";
+  return undefined;
+};

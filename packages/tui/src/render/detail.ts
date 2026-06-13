@@ -14,10 +14,11 @@ export const codecName = (method?: number): string =>
  * expectedBy → 「なぜ期待されるか」の一文。両方該当も表現する。
  * 空(= ZIP に実在するだけ)は "—"。
  */
-export const expectedLabel = (expectedBy: ExpectedBy[]): string => {
+export const expectedLabel = (expectedBy: ExpectedBy[], expectedSection?: string): string => {
   const parts: string[] = [];
   if (expectedBy.includes("datapackage")) parts.push("declared in datapackage");
-  if (expectedBy.includes("wacz-spec")) parts.push("required by §5.2");
+  // 小節があれば §5.2.1 のように精密化(issue と一致)。無ければ親 §5.2 に fallback。
+  if (expectedBy.includes("wacz-spec")) parts.push(`required by §${expectedSection ?? "5.2"}`);
   return parts.length > 0 ? parts.join(", ") : "—";
 };
 
