@@ -24,7 +24,7 @@
  */
 import { ok } from "../../result.js";
 import type { Issue, ValidationRule } from "../domain.js";
-import { hasIndex, hasWarc } from "../wacz-spec.js";
+import { hasIndex, hasWarc, sectionForSpecPath } from "../wacz-spec.js";
 
 export const waczRequiredFilesRule: ValidationRule = {
   name: "wacz/required-files",
@@ -40,49 +40,26 @@ export const waczRequiredFilesRule: ValidationRule = {
     const issues: Issue[] = [];
     const names = wacz.entryNames();
 
-    const need = (
-      present: boolean,
-      entry: string,
-      messageKey: string,
-      params?: Record<string, string | number>,
-    ): void => {
+    const need = (present: boolean, entry: string, messageKey: string): void => {
       if (!present) {
+        // params.section は path から導出(sectionForSpecPath が単一の真実)。
+        const section = sectionForSpecPath(entry);
         issues.push({
           rule: "wacz/required-files",
           severity: "error",
           messageKey,
-          ...(params && { params }),
+          ...(section !== undefined && { params: { section } }),
           location: { entry },
         });
       }
     };
 
-    // params.section は spec のセクション番号。renderer が specUrl() で
-    // 該当アンカー(例 §5.2.1 → #archive)へのリンクを出すのに使う。
-    need(
-      wacz.hasEntry("datapackage.json"),
-      "datapackage.json",
-      "wacz/required-files.missing-datapackage",
-      { section: "5.2.4" },
-    );
-    need(
-      wacz.hasEntry("pages/pages.jsonl"),
-      "pages/pages.jsonl",
-      "wacz/required-files.missing-pages",
-      { section: "5.2.3" },
-    );
-    need(
-      hasWarc(names),
-      "archive/",
-      "wacz/required-files.missing-archive",
-      { section: "5.2.1" },
-    );
-    need(
-      hasIndex(names),
-      "indexes/",
-      "wacz/required-files.missing-indexes",
-      { section: "5.2.2" },
-    );
+    // section は entry path から sectionForSpecPath が導出する(renderer が
+    // specUrl() で該当アンカー、例 §5.2.1 → #archive へのリンクを出すのに使う)。
+    need(wacz.hasEntry("datapackage.json"), "datapackage.json", "wacz/required-files.missing-datapackage");
+    need(wacz.hasEntry("pages/pages.jsonl"), "pages/pages.jsonl", "wacz/required-files.missing-pages");
+    need(hasWarc(names), "archive/", "wacz/required-files.missing-archive");
+    need(hasIndex(names), "indexes/", "wacz/required-files.missing-indexes");
 
     return Promise.resolve(ok(issues));
   },

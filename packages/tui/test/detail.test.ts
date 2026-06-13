@@ -16,11 +16,12 @@ describe("codecName", () => {
 });
 
 describe("expectedLabel", () => {
-  it("datapackage / wacz-spec / 両方 / 空 を出し分ける", () => {
+  it("datapackage / wacz-spec / 両方 / 空 を出し分ける(section は §X に反映)", () => {
     expect(expectedLabel(["datapackage"])).toBe("declared in datapackage");
-    expect(expectedLabel(["wacz-spec"])).toBe("required by §5.2");
-    expect(expectedLabel(["datapackage", "wacz-spec"])).toBe(
-      "declared in datapackage, required by §5.2",
+    expect(expectedLabel(["wacz-spec"], "5.2.1")).toBe("required by §5.2.1");
+    expect(expectedLabel(["wacz-spec"])).toBe("required by §5.2"); // section 無しは §5.2 fallback
+    expect(expectedLabel(["datapackage", "wacz-spec"], "5.2.4")).toBe(
+      "declared in datapackage, required by §5.2.4",
     );
     expect(expectedLabel([])).toBe("—");
   });

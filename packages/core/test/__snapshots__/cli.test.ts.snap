@@ -34,6 +34,7 @@ exports[`cli — JSON output shape (default) > gzipped CDXJ JSON snapshot 1`] = 
         "datapackage",
         "wacz-spec",
       ],
+      "expectedSection": "5.2.3",
       "issues": [],
       "path": "pages/pages.jsonl",
       "present": true,
@@ -54,6 +55,7 @@ exports[`cli — JSON output shape (default) > gzipped CDXJ JSON snapshot 1`] = 
       "expectedBy": [
         "wacz-spec",
       ],
+      "expectedSection": "5.2.4",
       "issues": [],
       "path": "datapackage.json",
       "present": true,
@@ -166,6 +168,7 @@ exports[`cli — JSON output shape (default) > missing-profile JSON snapshot 1`]
         "datapackage",
         "wacz-spec",
       ],
+      "expectedSection": "5.2.3",
       "issues": [],
       "path": "pages/pages.jsonl",
       "present": true,
@@ -186,6 +189,7 @@ exports[`cli — JSON output shape (default) > missing-profile JSON snapshot 1`]
       "expectedBy": [
         "wacz-spec",
       ],
+      "expectedSection": "5.2.4",
       "issues": [
         {
           "rule": "datapackage/profile-required",
@@ -286,6 +290,7 @@ exports[`cli — JSON output shape (default) > valid WACZ JSON snapshot 1`] = `
         "datapackage",
         "wacz-spec",
       ],
+      "expectedSection": "5.2.3",
       "issues": [],
       "path": "pages/pages.jsonl",
       "present": true,
@@ -306,6 +311,7 @@ exports[`cli — JSON output shape (default) > valid WACZ JSON snapshot 1`] = `
       "expectedBy": [
         "wacz-spec",
       ],
+      "expectedSection": "5.2.4",
       "issues": [],
       "path": "datapackage.json",
       "present": true,
