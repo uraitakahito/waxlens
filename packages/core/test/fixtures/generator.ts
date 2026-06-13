@@ -110,6 +110,13 @@ export interface FixtureOptions {
    */
   warcIncompleteRecords?: number;
   /**
+   * `warcIncompleteRecords` のリッチ版。各要素が 1 件の metadata レコードを
+   * 表し、案3 で追加された `resourceType` / `blockedReason` field を任意で
+   * 載せる。`warc/recording-complete` の byResourceType / byBlockedReason
+   * 集計を動かす。`warcIncompleteRecords` と併用すると両方が連結される。
+   */
+  warcIncompleteSpec?: { resourceType?: string; blockedReason?: string }[];
+  /**
    * When set, override the CDXJ `offset` field on every entry with this
    * value (string form, matching the producer convention). Used to
    * exercise rule #8.
@@ -226,10 +233,18 @@ const buildWarcInfoBytes = (software: string, payloadDigestBad: boolean): Buffer
 /**
  * browserhive が失敗/未完了の取得を記録するときの `WARC-Type: metadata`
  * レコード(`application/warc-fields` body)を 1 件組み立てる。
- * `warc/recording-complete` rule のテスト用。
+ * `warc/recording-complete` rule のテスト用。`opts` で案3 の
+ * `resourceType` / `blockedReason` field を任意で載せる(byResourceType /
+ * byBlockedReason 集計を動かす)。
  */
-const buildIncompleteMetadataBytes = (idx: number): Buffer => {
-  const body = Buffer.from("incomplete: true\r\nreason: loadingFailed\r\n", "utf-8");
+const buildIncompleteMetadataBytes = (
+  idx: number,
+  opts: { resourceType?: string; blockedReason?: string } = {},
+): Buffer => {
+  const lines = ["incomplete: true", "reason: loadingFailed"];
+  if (opts.resourceType !== undefined) lines.push(`resourceType: ${opts.resourceType}`);
+  if (opts.blockedReason !== undefined) lines.push(`blockedReason: ${opts.blockedReason}`);
+  const body = Buffer.from(`${lines.join("\r\n")}\r\n`, "utf-8");
   const headers = [
     "WARC/1.1",
     "WARC-Type: metadata",
@@ -246,7 +261,12 @@ const buildIncompleteMetadataBytes = (idx: number): Buffer => {
 
 const buildWarcGz = (
   software: string,
-  opts: { payloadDigestBad: boolean; corruptAt?: number; incompleteRecords?: number },
+  opts: {
+    payloadDigestBad: boolean;
+    corruptAt?: number;
+    incompleteRecords?: number;
+    incompleteSpec?: { resourceType?: string; blockedReason?: string }[];
+  },
 ): { bytes: Buffer; recordLength: number; offset: number } => {
   const raw = buildWarcInfoBytes(software, opts.payloadDigestBad);
   const gz = gzipSync(raw);
@@ -263,9 +283,15 @@ const buildWarcGz = (
   // テスト用: 未完了 metadata を別 gzip member として連結。warcinfo の
   // offset(0)/length は不変なので、CDXJ・warc-offsets は影響を受けない。
   const members: Buffer[] = [gz];
-  for (let i = 0; i < (opts.incompleteRecords ?? 0); i++) {
+  const plainCount = opts.incompleteRecords ?? 0;
+  for (let i = 0; i < plainCount; i++) {
     members.push(gzipSync(buildIncompleteMetadataBytes(i)));
   }
+  // リッチ版(resourceType / blockedReason 付き)は plain の後ろに連結。
+  // idx は衝突しないよう plainCount からの連番にする。
+  (opts.incompleteSpec ?? []).forEach((spec, i) => {
+    members.push(gzipSync(buildIncompleteMetadataBytes(plainCount + i, spec)));
+  });
   return { bytes: Buffer.concat(members), recordLength: gz.byteLength, offset: 0 };
 };
 
@@ -356,6 +382,9 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
     ...(options.warcCorruptAt !== undefined && { corruptAt: options.warcCorruptAt }),
     ...(options.warcIncompleteRecords !== undefined && {
       incompleteRecords: options.warcIncompleteRecords,
+    }),
+    ...(options.warcIncompleteSpec !== undefined && {
+      incompleteSpec: options.warcIncompleteSpec,
     }),
   });
 

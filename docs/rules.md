@@ -305,6 +305,9 @@ operator はその record が claim している resource の bytes として
 `response` を分母にした「未完了比率」を可視化する。比率が 10% を超えると
 `info` から `warning` に上げ、`details.recording` に内訳(failed / incomplete /
 truncated / blocked)とサンプル URL を載せる(TUI の Recording health パネルが描画)。
+producer が metadata に `resourceType` / `blockedReason`(案3)を載せていれば、
+`details.recording.byResourceType` / `byBlockedReason` に種別ごとの件数も集計し、
+TUI は `by type` / `blocked` 行として描く(無ければ行を出さない)。
 
 この metadata 慣習は WARC/WACZ 規格そのものではなく browserhive 固有なので、
 `applicability.excludeProfiles` で `spec` / `lenient` を除外し、`--profile browserhive`

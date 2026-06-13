@@ -31,4 +31,13 @@ describe("Recording health panel", () => {
     // 専用ビューが消費するので、生 JSON の "responses": 259 は出ない。
     expect(lastFrame() ?? "").not.toContain('"responses": 259');
   });
+
+  it("renders the resourceType breakdown (by type) from byResourceType", () => {
+    const { lastFrame } = render(
+      <ExpandedDetails
+        details={{ recording: { ...recording, byResourceType: { Document: 23, Fetch: 9 } } }}
+      />,
+    );
+    expect(lastFrame() ?? "").toContain("Document 23");
+  });
 });

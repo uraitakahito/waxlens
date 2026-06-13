@@ -59,7 +59,11 @@ export const warcRecordingCompleteRule: ValidationRule = {
 
     let responses = 0;
     const byReason: Record<Reason, number> = { failed: 0, incomplete: 0, truncated: 0, blocked: 0 };
-    const samples: { url: string; reason: Reason }[] = [];
+    // 案3 で metadata に追加された `resourceType` / `blockedReason` 内訳。
+    // 旧 producer のレコードには無いので空のまま残る(欠落 ≠ 0 件の種別)。
+    const byResourceType: Record<string, number> = {};
+    const byBlockedReason: Record<string, number> = {};
+    const samples: { url: string; reason: Reason; resourceType?: string }[] = [];
 
     for (const member of iterateWarcMembers(buf, { loose: true })) {
       const record = parseWarcRecord(member.raw);
@@ -70,10 +74,19 @@ export const warcRecordingCompleteRule: ValidationRule = {
         continue;
       }
       if (type !== "metadata") continue;
-      const reason = classify(parseWarcFields(record.body));
+      const fields = parseWarcFields(record.body);
+      const reason = classify(fields);
       byReason[reason] += 1;
+      const rt = fields["resourceType"];
+      if (rt) byResourceType[rt] = (byResourceType[rt] ?? 0) + 1;
+      const br = fields["blockedReason"];
+      if (br) byBlockedReason[br] = (byBlockedReason[br] ?? 0) + 1;
       if (samples.length < 10) {
-        samples.push({ url: getHeader(record, "WARC-Target-URI") ?? "?", reason });
+        samples.push({
+          url: getHeader(record, "WARC-Target-URI") ?? "?",
+          reason,
+          ...(rt ? { resourceType: rt } : {}),
+        });
       }
     }
 
@@ -89,7 +102,9 @@ export const warcRecordingCompleteRule: ValidationRule = {
         messageKey: "warc/recording-complete.incomplete",
         params: { incomplete, total: responses + incomplete, percent },
         location: { entry: WARC_ENTRY },
-        details: { recording: { responses, incomplete, percent, byReason, samples } },
+        details: {
+          recording: { responses, incomplete, percent, byReason, byResourceType, byBlockedReason, samples },
+        },
       },
     ];
     return ok(issues);

@@ -579,13 +579,20 @@ const RecordingHealthView: FC<{ recording: Record<string, unknown> }> = ({ recor
   const width = 32;
   const filled = Math.min(width, Math.max(0, Math.round((percent / 100) * width)));
   const bar = "█".repeat(filled) + "░".repeat(width - filled);
-  const byReason =
-    typeof recording["byReason"] === "object" && recording["byReason"] !== null
-      ? (recording["byReason"] as Record<string, unknown>)
-      : {};
+  const asMap = (v: unknown): Record<string, unknown> =>
+    typeof v === "object" && v !== null ? (v as Record<string, unknown>) : {};
+  // 開放的な map(キーが producer 由来)を "k n · k n" 形に。
+  const fmtMap = (m: Record<string, unknown>): string =>
+    Object.entries(m)
+      .map(([k, v]) => `${k} ${String(Number(v))}`)
+      .join(" · ");
+  const byReason = asMap(recording["byReason"]);
   const breakdown = ["failed", "incomplete", "truncated", "blocked"]
     .map((k) => `${k} ${String(Number(byReason[k] ?? 0))}`)
     .join(" · ");
+  // 案3 で metadata に追加された内訳。レコードに無ければ空 → 行を描かない。
+  const byResourceType = asMap(recording["byResourceType"]);
+  const byBlockedReason = asMap(recording["byBlockedReason"]);
   const samples = Array.isArray(recording["samples"]) ? recording["samples"] : [];
   return (
     <Box flexDirection="column" marginTop={1}>
@@ -605,6 +612,18 @@ const RecordingHealthView: FC<{ recording: Record<string, unknown> }> = ({ recor
         {"  "}
         {breakdown}
       </Text>
+      {Object.keys(byResourceType).length > 0 ? (
+        <Text dimColor>
+          {"  by type  "}
+          {fmtMap(byResourceType)}
+        </Text>
+      ) : null}
+      {Object.keys(byBlockedReason).length > 0 ? (
+        <Text dimColor>
+          {"  blocked  "}
+          {fmtMap(byBlockedReason)}
+        </Text>
+      ) : null}
       {samples.slice(0, 8).map((s, i) => (
         <Text key={`rec-${String(i)}`} dimColor>
           {"   - "}
