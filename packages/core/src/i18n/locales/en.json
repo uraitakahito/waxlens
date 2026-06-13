@@ -36,12 +36,15 @@
   "cdxj/index-recognised-by-wabac.no-index": "No wabac-recognised index file found under indexes/ — wabac.js needs at least one .cdx / .cdxj / .idx entry to serve any URL",
   "cdxj/index-recognised-by-wabac.missing-pair": "{name} references \"{pair}\" but no such entry exists in the WACZ",
 
+  "cdxj/index-valid-data.desc": "index CDXJ (plain or gzipped) must contain valid CDXJ data (WACZ §5.2.2)",
+  "cdxj/index-valid-data.invalid": "{entry} line {line} is not valid CDXJ ({reason}) (WACZ §5.2.2: index files MUST contain CDXJ data)",
+  "cdxj/index-valid-data.gzip-error": "{entry} is named as gzipped but could not be decompressed (WACZ §5.2.2: index files MUST contain CDXJ data)",
+
   "cdxj/index-not-gzipped.desc": "indexes/index.cdxj must not be gzipped (wabac.js silently ignores .cdxj.gz)",
   "cdxj/index-not-gzipped.gzipped-entry": "Entry \"{name}\" is a gzipped CDXJ — wabac.js does not recognise .cdxj.gz / .cdx.gz",
   "cdxj/index-not-gzipped.gzip-magic": "{entry} starts with the gzip magic bytes — the file is named correctly but the content is compressed",
 
   "cdxj/filename-archive-relative.desc": "indexes/index.cdxj entries must use archive-relative filenames (not \"archive/...\")",
-  "cdxj/filename-archive-relative.parse-error": "{entry} line {line} could not be parsed ({reason})",
   "cdxj/filename-archive-relative.no-filename": "{entry} entry has no \"filename\" field",
   "cdxj/filename-archive-relative.starts-with-archive": "{entry} entry \"filename\" starts with \"archive/\" — wabac.js prepends archive/ itself, double-prefix breaks replay",
 

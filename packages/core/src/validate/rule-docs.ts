@@ -53,6 +53,7 @@ export const RULE_DOCS: Record<string, readonly DocLink[]> = {
   ],
   "pages/page-schema": [{ label: "WACZ §pages", url: `${WACZ}#pages` }],
   "cdxj/index-recognised-by-wabac": [{ label: "WACZ §indexes", url: `${WACZ}#indexes` }],
+  "cdxj/index-valid-data": [{ label: "WACZ §indexes", url: `${WACZ}#indexes` }],
   "cdxj/index-not-gzipped": [{ label: "WACZ §indexes", url: `${WACZ}#indexes` }],
   "cdxj/filename-archive-relative": [{ label: "WACZ §indexes", url: `${WACZ}#indexes` }],
   "cdxj/warc-offsets": [{ label: "WACZ §indexes", url: `${WACZ}#indexes` }],

@@ -23,7 +23,11 @@
  * 何を報告するか:
  *   - `filename` が `archive/` で始まる CDXJ entry → error
  *   - `filename` が無い CDXJ entry → error (replay が seek できない)
- *   - CDXJ parse error → error (line 番号付き)
+ *
+ * CDXJ の parse 妥当性そのもの(行が CDXJ として読めるか = §5.2.2
+ * MUST contain CDXJ data)は `cdxj/index-valid-data` の専任に分離した。
+ * ここでは parse 済み entry の `filename` だけを見る。`errors` は、parse
+ * 失敗行を飛ばした後の entry の元行番号を復元するためだけに参照する。
  */
 import { ok } from "../../result.js";
 import { parseCdxj } from "../../wacz/cdxj-parser.js";
@@ -52,21 +56,6 @@ export const cdxjFilenameRule: ValidationRule = {
     }
 
     const { entries, errors } = parseCdxj(buf.toString("utf-8"));
-
-    for (const parseErr of errors) {
-      issues.push({
-        rule: "cdxj/filename-archive-relative",
-        severity: "error",
-        messageKey: "cdxj/filename-archive-relative.parse-error",
-        params: {
-          entry: CDXJ_ENTRY,
-          line: String(parseErr.line),
-          reason: parseErr.reason,
-        },
-        location: { entry: CDXJ_ENTRY, line: parseErr.line },
-        details: { rawLine: parseErr.rawLine },
-      });
-    }
 
     for (let i = 0; i < entries.length; i++) {
       const entry = entries[i];

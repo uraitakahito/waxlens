@@ -12,6 +12,7 @@
 import type { Conformance, ValidationRule } from "../domain.js";
 import { cdxjFilenameRule } from "./cdxj-filename.js";
 import { cdxjIndexRecognisedRule } from "./cdxj-index-recognised.js";
+import { cdxjIndexValidDataRule } from "./cdxj-index-valid-data.js";
 import { cdxjNonGzippedRule } from "./cdxj-non-gzipped.js";
 import { cdxjPagesMainpageRule } from "./cdxj-pages-mainpage.js";
 import { cdxjWarcOffsetsRule } from "./cdxj-warc-offsets.js";
@@ -62,6 +63,10 @@ export const DEFAULT_RULES: readonly ValidationRule[] = [
   // 「index が全く無い」状態を最優先で出して、index を読む派生 rule
   // の二次的な不満より前に置きたいため。
   cdxjIndexRecognisedRule,
+  // 「index は存在し認識される」の次に「その中身が CDXJ として妥当か」
+  // (§5.2.2 MUST contain CDXJ data)。中身がゴミなら以降の filename /
+  // offset / mainpage check は前提を欠くので、cdxj 群の早い段で出す。
+  cdxjIndexValidDataRule,
   cdxjNonGzippedRule,
   cdxjFilenameRule,
   // §5.2.1 WARC の拡張子と中身の gzip 状態の整合。
@@ -91,6 +96,7 @@ export const conformanceForRule = (rule: string): Conformance | undefined =>
 export {
   cdxjFilenameRule,
   cdxjIndexRecognisedRule,
+  cdxjIndexValidDataRule,
   cdxjNonGzippedRule,
   cdxjPagesMainpageRule,
   cdxjWarcOffsetsRule,
