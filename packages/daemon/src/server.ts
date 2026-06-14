@@ -17,11 +17,14 @@ import type {
   ValidateParams,
   WireReport,
 } from "@waxlens/protocol";
-import { DaemonError, readEntry, validate, VERSION } from "./handlers.js";
+import { BUILD_INFO } from "./generated/build-info.js";
+import { DaemonError, readEntry, validate } from "./handlers.js";
 
 const healthStatus = (): HealthStatus => ({
   status: "ok",
-  version: VERSION,
+  version: BUILD_INFO.version,
+  gitSha: BUILD_INFO.gitSha,
+  builtAt: BUILD_INFO.builtAt,
   uptimeSec: Math.round(process.uptime()),
 });
 

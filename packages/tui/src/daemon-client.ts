@@ -9,6 +9,7 @@ import { spawn } from "node:child_process";
 import { createRequire } from "node:module";
 import { WebSocket, type RawData } from "ws";
 import type {
+  PingParams,
   ReadEntryParams,
   RpcError,
   RpcMethod,
@@ -101,7 +102,10 @@ interface Pending {
 }
 
 export interface DaemonClient {
-  request: <R>(method: RpcMethod, params: ValidateParams | ReadEntryParams) => Promise<R>;
+  request: <R>(
+    method: RpcMethod,
+    params: ValidateParams | ReadEntryParams | PingParams,
+  ) => Promise<R>;
   close: () => void;
 }
 
@@ -140,7 +144,10 @@ export const connect = async (endpoint: ServerEndpoint): Promise<DaemonClient> =
   });
 
   return {
-    request: <R>(method: RpcMethod, params: ValidateParams | ReadEntryParams): Promise<R> =>
+    request: <R>(
+      method: RpcMethod,
+      params: ValidateParams | ReadEntryParams | PingParams,
+    ): Promise<R> =>
       new Promise<R>((resolveReq, rejectReq) => {
         const id = nextId++;
         pending.set(id, { resolve: (value) => { resolveReq(value as R); }, reject: rejectReq });

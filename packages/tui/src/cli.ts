@@ -29,6 +29,7 @@ import {
   exitCodeFor,
   SUPPORTED_LOCALES,
   type CliOutcome,
+  type HealthStatus,
   type ReadEntryResult,
   type RuleProfile,
   type WireReport,
@@ -39,7 +40,15 @@ import {
   RpcCallError,
   type DaemonClient,
 } from "./daemon-client.js";
+import { BUILD_INFO } from "./generated/build-info.js";
 import { ServerEndpoint } from "./server-url.js";
+import type { BuildPair } from "./app.js";
+
+/** 描画(tui)と検証(daemon)の双方のビルド識別。Header の SHA 表示・不一致警告に使う。 */
+interface BuildInfo {
+  tui: BuildPair;
+  daemon: BuildPair;
+}
 
 const here = dirname(fileURLToPath(import.meta.url));
 const manifestPath = join(here, "..", "package.json");
@@ -72,7 +81,7 @@ const program = new Command();
 program
   .name("waxlens")
   .description("Interactive TUI for WACZ validation (use waxlens-validate for JSON output)")
-  .version(manifest.version)
+  .version(`${manifest.version} (${BUILD_INFO.gitSha})`)
   .argument("<source>", "Local path or s3://bucket/key URI of the .wacz to validate")
   .option(
     "--profile <name>",
@@ -113,10 +122,17 @@ program
           : await DaemonSession.spawn();
       const client = await connect(session.endpoint);
       try {
+        // 起動直後に daemon の版を問い合わせる。tui 自身の版(BUILD_INFO)と
+        // 突き合わせ、Header で SHA を出し・不一致(古いプロセス)を警告する。
+        const health = await client.request<HealthStatus>("waxlens/ping", {});
+        const build: BuildInfo = {
+          tui: { version: BUILD_INFO.version, gitSha: BUILD_INFO.gitSha },
+          daemon: { version: health.version, gitSha: health.gitSha },
+        };
         const outcome = await validateOnce(client, uri, filePath, options);
         const requestContent: RequestContent = (path) =>
           client.request<ReadEntryResult>("waxlens/readEntry", { source: { kind: "uri", uri }, path });
-        await dispatch(outcome, requestContent);
+        await dispatch(outcome, requestContent, build);
         // session は finally で release し(spawn 時は kill + exit 待ち)、その後に
         // process が終わる(exitCode を確定後に child が残らないようにするため)。
         process.exitCode = exitCodeFor(outcome);
@@ -160,12 +176,16 @@ async function validateOnce(
   }
 }
 
-/** outcome に従って TUI / stderr を発火する。TUI には readEntry ブリッジを渡す。 */
-async function dispatch(outcome: CliOutcome, requestContent: RequestContent): Promise<void> {
+/** outcome に従って TUI / stderr を発火する。TUI には readEntry ブリッジと版情報を渡す。 */
+async function dispatch(
+  outcome: CliOutcome,
+  requestContent: RequestContent,
+  build: BuildInfo,
+): Promise<void> {
   switch (outcome.kind) {
     case "valid":
     case "invalid":
-      await runTui(outcome.report, requestContent);
+      await runTui(outcome.report, requestContent, build);
       return;
     case "openFailed": {
       const message =
@@ -178,12 +198,16 @@ async function dispatch(outcome: CliOutcome, requestContent: RequestContent): Pr
   }
 }
 
-async function runTui(report: WireReport, requestContent: RequestContent): Promise<void> {
+async function runTui(
+  report: WireReport,
+  requestContent: RequestContent,
+  build: BuildInfo,
+): Promise<void> {
   const [{ render }, { createElement }, { App }] = await Promise.all([
     import("ink"),
     import("react"),
     import("./app.js"),
   ]);
-  const instance = render(createElement(App, { report, requestContent }));
+  const instance = render(createElement(App, { report, requestContent, build }));
   await instance.waitUntilExit();
 }

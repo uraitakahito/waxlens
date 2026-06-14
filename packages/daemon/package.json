@@ -16,9 +16,9 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "node ../../scripts/gen-build-info.mjs daemon && tsc -p tsconfig.build.json",
     "postbuild": "chmod +x dist/cli.js",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "node ../../scripts/gen-build-info.mjs daemon && tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",

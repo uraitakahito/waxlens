@@ -47,6 +47,10 @@ web_modules/
 # TypeScript cache
 *.tsbuildinfo
 
+# Build-info codegen output (scripts/gen-build-info.mjs) — regenerated every
+# build, carries the git SHA, never committed.
+packages/*/src/generated/
+
 # Optional npm cache directory
 .npm
 
