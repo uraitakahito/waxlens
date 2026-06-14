@@ -27,10 +27,21 @@ import { buildEntryTree, entryMarker, flattenTree, type TreeRow } from "./render
 import { codecName, entryIssues, expectedLabel } from "./render/detail.js";
 import { clampOffset, scrollWindow } from "./scroll.js";
 
+/** version + 短い git SHA の組。TUI 自身と daemon の双方を持つ。 */
+export interface BuildPair {
+  version: string;
+  gitSha: string;
+}
+
 interface AppProps {
   report: WireReport;
   /** Layout で enter 時に呼ぶ内容取得ブリッジ(daemon の readEntry)。省略可。 */
   requestContent?: (path: string) => Promise<ReadEntryResult>;
+  /**
+   * 描画側(tui)と検証側(daemon)のビルド識別。Header に SHA を出し、
+   * 食い違い(= どちらかが古いプロセス)を警告するのに使う。
+   */
+  build: { tui: BuildPair; daemon: BuildPair };
 }
 
 type View = "issues" | "layout" | "content";
@@ -70,7 +81,7 @@ const ScrollList: FC<{
   );
 };
 
-export const App: FC<AppProps> = ({ report, requestContent }) => {
+export const App: FC<AppProps> = ({ report, requestContent, build }) => {
   const { exit } = useApp();
   // root を端末サイズに固定(resize 追従)。これと body の flexGrow + 各ビューの実測
   // スクロールにより、フレーム行数が端末を超えない=Ink の縦はみ出し崩れが起きない。
@@ -157,7 +168,7 @@ export const App: FC<AppProps> = ({ report, requestContent }) => {
 
   return (
     <Box flexDirection="column" width={columns} height={rows}>
-      <Header report={report} view={view} />
+      <Header report={report} view={view} build={build} />
       <Box flexGrow={1} minHeight={0} marginTop={1}>
         {view === "content" && content !== null ? (
           <ContentView result={content} offset={contentOffset} onHeight={setContentH} />
@@ -420,12 +431,25 @@ const formatBytes = (n: number): string => {
   return `${(n / 1024 / 1024 / 1024).toFixed(1)} GB`;
 };
 
-const Header: FC<{ report: WireReport; view: View }> = ({ report, view }) => {
+const Header: FC<{ report: WireReport; view: View; build: AppProps["build"] }> = ({
+  report,
+  view,
+  build,
+}) => {
   const sourceLabel = report.source.kind === "file" ? report.source.path : report.source.uri;
+  // tui(描画)と daemon(検証)の SHA 不一致 = どちらかが古いプロセス。
+  // 一致なら SHA を 1 つ、食い違えば daemon 側を警告色で添える。
+  const drift = build.tui.gitSha !== build.daemon.gitSha;
   return (
     <Box>
       <Text bold>waxlens</Text>
-      <Text dimColor> {report.waxlensVersion} </Text>
+      <Text dimColor> {build.tui.version} </Text>
+      {drift ? (
+        <Text color="yellow">{`·${build.tui.gitSha} `}</Text>
+      ) : (
+        <Text dimColor>{`·${build.tui.gitSha} `}</Text>
+      )}
+      {drift ? <Text color="yellow">{`⚠ daemon ·${build.daemon.gitSha} `}</Text> : null}
       <Text> {sourceLabel} </Text>
       <Text inverse={view === "issues"}> Issues </Text>
       <Text> </Text>

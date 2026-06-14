@@ -91,6 +91,10 @@ export type PingParams = Record<string, never>;
 export interface HealthStatus {
   status: "ok";
   version: string;
+  /** 短い git SHA(未コミット変更があれば `-dirty` 付き)。ビルド時に焼き込み。 */
+  gitSha: string;
+  /** ビルド時刻(ISO8601)。 */
+  builtAt: string;
   uptimeSec: number;
 }
 

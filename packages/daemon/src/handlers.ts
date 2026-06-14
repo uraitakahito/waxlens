@@ -25,9 +25,9 @@ import type {
   ValidateParams,
   WireReport,
 } from "@waxlens/protocol";
+import { BUILD_INFO } from "./generated/build-info.js";
 import { previewEntry } from "./entry-preview.js";
 
-export const VERSION = "0.0.0";
 /** content プレビューの上限(byte 相当)。これを超えたら truncated。 */
 const PREVIEW_CAP = 64 * 1024;
 const PROFILES: readonly string[] = ["spec", "browserhive", "lenient"];
@@ -76,7 +76,7 @@ export const validate = async (params: ValidateParams): Promise<WireReport> => {
   const reader = await openFromSource(parsed.value, params.s3ForcePathStyle ?? false);
   try {
     const result = await runValidation(reader, {
-      waxlensVersion: VERSION,
+      waxlensVersion: BUILD_INFO.version,
       rules: DEFAULT_RULES,
       ...(profile !== undefined && { profile }),
     });

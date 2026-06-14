@@ -107,9 +107,15 @@ const makeReport = (overrides: Partial<WireReport> = {}): WireReport => ({
   ...overrides,
 });
 
+/** Header の build prop スタブ。tui/daemon の SHA を揃え、不一致警告を出さない。 */
+const buildStub = {
+  tui: { version: "0.0.0", gitSha: "testsha" },
+  daemon: { version: "0.0.0", gitSha: "testsha" },
+};
+
 describe("tui rendering", () => {
   it("renders all issue rule names and the summary", async () => {
-    const { lastFrame } = render(<App report={makeReport()} />);
+    const { lastFrame } = render(<App report={makeReport()} build={buildStub} />);
     // ビューポートは useBoxMetrics で高さを実測してから可視ぶんを描くので、初回 layout
     // パスが終わるまで 1 tick 待つ(以降のスクロール系テストも同様)。
     await new Promise((resolve) => setTimeout(resolve, 60));
@@ -128,12 +134,12 @@ describe("tui rendering", () => {
       valid: true,
       summary: { passed: 5, failed: 0, warnings: 0, info: 0, durationMs: 8 },
     });
-    const { lastFrame } = render(<App report={report} />);
+    const { lastFrame } = render(<App report={report} build={buildStub} />);
     expect(lastFrame() ?? "").toContain("All rules passed.");
   });
 
   it("starts with the cursor on the first issue", () => {
-    const { lastFrame } = render(<App report={makeReport()} />);
+    const { lastFrame } = render(<App report={makeReport()} build={buildStub} />);
     const frame = lastFrame() ?? "";
     const cursorIdx = frame.indexOf("▸");
     const firstRuleIdx = frame.indexOf("datapackage/profile-required");
@@ -143,7 +149,7 @@ describe("tui rendering", () => {
   });
 
   it("expands details on enter", async () => {
-    const { lastFrame, stdin } = render(<App report={makeReport()} />);
+    const { lastFrame, stdin } = render(<App report={makeReport()} build={buildStub} />);
     expect(lastFrame() ?? "").not.toContain("expected:");
     stdin.write("\r");
     await new Promise((resolve) => setTimeout(resolve, 60));
@@ -151,7 +157,7 @@ describe("tui rendering", () => {
   });
 
   it("moves the cursor with the down arrow", async () => {
-    const { lastFrame, stdin } = render(<App report={makeReport()} />);
+    const { lastFrame, stdin } = render(<App report={makeReport()} build={buildStub} />);
     // 本物の down-arrow は ESC + CSI(`[B`)。ESC 無しの "[B" は ink の
     // デコードが不安定なので、正しい制御シーケンスで決定的に駆動する。
     stdin.write("[B");
@@ -168,14 +174,14 @@ describe("tui rendering", () => {
     const rep = makeReport({
       issues: [{ rule: "x/y", severity: "error", messageKey: "x/y.z", message: "no details here" }],
     });
-    const { lastFrame, stdin } = render(<App report={rep} />);
+    const { lastFrame, stdin } = render(<App report={rep} build={buildStub} />);
     stdin.write("\r");
     await new Promise((resolve) => setTimeout(resolve, 60));
     expect(lastFrame() ?? "").toContain("これ以上の詳細はありません");
   });
 
   it("enter で開閉マーカーが ▸ から ▾ に変わる", async () => {
-    const { lastFrame, stdin } = render(<App report={makeReport()} />);
+    const { lastFrame, stdin } = render(<App report={makeReport()} build={buildStub} />);
     expect(lastFrame() ?? "").toContain("▸");
     stdin.write("\r");
     await new Promise((resolve) => setTimeout(resolve, 60));
@@ -194,7 +200,7 @@ describe("tui rendering", () => {
         },
       ],
     });
-    const { lastFrame, stdin } = render(<App report={rep} />);
+    const { lastFrame, stdin } = render(<App report={rep} build={buildStub} />);
     stdin.write("\r");
     await new Promise((resolve) => setTimeout(resolve, 60));
     const frame = lastFrame() ?? "";
@@ -206,7 +212,7 @@ describe("tui rendering", () => {
     const report = makeReport({
       stats: { warcRecordCount: 42, warcArchiveBytes: 5 * 1024 * 1024, hosts: ["a", "b", "c"] },
     });
-    const frame = render(<App report={report} />).lastFrame() ?? "";
+    const frame = render(<App report={report} build={buildStub} />).lastFrame() ?? "";
     expect(frame).toContain("42 records");
     expect(frame).toContain("5.0 MB");
     expect(frame).toContain("3 hosts");
@@ -225,7 +231,7 @@ describe("tui rendering", () => {
         },
       ],
     });
-    const { lastFrame, stdin } = render(<App report={report} />);
+    const { lastFrame, stdin } = render(<App report={report} build={buildStub} />);
     stdin.write("\r");
     await new Promise((resolve) => setTimeout(resolve, 60));
     const frame = lastFrame() ?? "";
@@ -251,7 +257,7 @@ describe("tui rendering", () => {
         },
       ],
     });
-    const { lastFrame, stdin } = render(<App report={report} />);
+    const { lastFrame, stdin } = render(<App report={report} build={buildStub} />);
     stdin.write("\r");
     await new Promise((resolve) => setTimeout(resolve, 60));
     expect(lastFrame() ?? "").toContain("Nearby WARC members:");
@@ -276,7 +282,7 @@ describe("tui rendering", () => {
         },
       ],
     });
-    const { lastFrame, stdin } = render(<App report={report} />);
+    const { lastFrame, stdin } = render(<App report={report} build={buildStub} />);
     stdin.write("\r");
     await new Promise((resolve) => setTimeout(resolve, 60));
     const frame = lastFrame() ?? "";
@@ -298,7 +304,7 @@ describe("tui rendering", () => {
         },
       ],
     });
-    const frame = render(<App report={report} />).lastFrame() ?? "";
+    const frame = render(<App report={report} build={buildStub} />).lastFrame() ?? "";
     expect(frame).toContain("spec https://specs.webrecorder.net/wacz/1.1.1/#archive");
   });
 
@@ -314,7 +320,7 @@ describe("tui rendering", () => {
         },
       ],
     });
-    const frame = render(<App report={report} />).lastFrame() ?? "";
+    const frame = render(<App report={report} build={buildStub} />).lastFrame() ?? "";
     expect(frame).not.toContain("spec https://");
   });
 });
@@ -349,12 +355,12 @@ describe("tui — layout view", () => {
     });
 
   it("starts on the Issues view (no file tree)", () => {
-    const frame = render(<App report={withEntries()} />).lastFrame() ?? "";
+    const frame = render(<App report={withEntries()} build={buildStub} />).lastFrame() ?? "";
     expect(frame).not.toContain("data.warc.gz");
   });
 
   it("Tab switches to the Layout view: §5.1 tree with compact status icons", async () => {
-    const { lastFrame, stdin } = render(<App report={withEntries()} />);
+    const { lastFrame, stdin } = render(<App report={withEntries()} build={buildStub} />);
     stdin.write("\t"); // Tab
     await new Promise((resolve) => setTimeout(resolve, 60));
     const frame = lastFrame() ?? "";
@@ -387,7 +393,7 @@ describe("tui — layout view", () => {
         },
       ],
     });
-    const { lastFrame, stdin } = render(<App report={report} />);
+    const { lastFrame, stdin } = render(<App report={report} build={buildStub} />);
     stdin.write("\t"); // Tab → Layout、focus 0 = datapackage.json(root file）
     await new Promise((resolve) => setTimeout(resolve, 60));
     const frame = lastFrame() ?? "";
@@ -418,7 +424,7 @@ describe("tui — layout view", () => {
         },
       ],
     });
-    const { lastFrame, stdin } = render(<App report={report} />);
+    const { lastFrame, stdin } = render(<App report={report} build={buildStub} />);
     stdin.write("\t");
     await new Promise((resolve) => setTimeout(resolve, 60));
     const frame = lastFrame() ?? "";
@@ -442,7 +448,7 @@ describe("tui — layout view", () => {
         },
       ],
     });
-    const { lastFrame, stdin } = render(<App report={report} />);
+    const { lastFrame, stdin } = render(<App report={report} build={buildStub} />);
     stdin.write("\t"); // → Layout
     await new Promise((resolve) => setTimeout(resolve, 60));
     const max = Math.max(...(lastFrame() ?? "").split("\n").map((l) => l.length));
@@ -475,7 +481,7 @@ describe("tui — content view (実測スクロール)", () => {
 
   it("Layout で enter: 全幅 content view に開く(ツリーは消える)", async () => {
     const { lastFrame, stdin } = render(
-      <App report={reportWithFile()} requestContent={requestContent} />,
+      <App report={reportWithFile()} requestContent={requestContent} build={buildStub} />,
     );
     stdin.write("\t"); // → Layout
     await tick();
@@ -489,7 +495,7 @@ describe("tui — content view (実測スクロール)", () => {
 
   it("content view で esc: Layout に戻る", async () => {
     const { lastFrame, stdin } = render(
-      <App report={reportWithFile()} requestContent={requestContent} />,
+      <App report={reportWithFile()} requestContent={requestContent} build={buildStub} />,
     );
     stdin.write("\t");
     await tick();
@@ -504,7 +510,7 @@ describe("tui — content view (実測スクロール)", () => {
     const many = Array.from({ length: 100 }, (_, i) => `row-${String(i).padStart(3, "0")}`).join("\n");
     const reqMany = (): Promise<ReadEntryResult> =>
       Promise.resolve({ kind: "text", content: many, truncated: false, gunzipped: true });
-    const { lastFrame, stdin } = render(<App report={reportWithFile()} requestContent={reqMany} />);
+    const { lastFrame, stdin } = render(<App report={reportWithFile()} requestContent={reqMany} build={buildStub} />);
     stdin.write("\t");
     await tick();
     stdin.write("\r"); // → content view(先頭行が窓内)
@@ -528,7 +534,7 @@ describe("tui — content view (実測スクロール)", () => {
       const { lastFrame, stdin, unmount } = renderAt(
         120,
         rows,
-        <App report={reportWithFile()} requestContent={reqMany} />,
+        <App report={reportWithFile()} requestContent={reqMany} build={buildStub} />,
       );
       stdin.write("\t"); // → Layout
       await tick();
@@ -554,7 +560,7 @@ describe("tui — layout view: 右枠の幅はコンテンツに依存しない"
     });
 
   const widthAfterTab = async (report: WireReport): Promise<number> => {
-    const { stdin, lastFrame, unmount } = renderAt(120, 24, <App report={report} />);
+    const { stdin, lastFrame, unmount } = renderAt(120, 24, <App report={report} build={buildStub} />);
     stdin.write("\t"); // → Layout
     await new Promise((resolve) => setTimeout(resolve, 60)); // 実測 layout パス待ち
     const w = boxWidth(lastFrame());

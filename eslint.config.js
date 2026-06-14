@@ -32,6 +32,8 @@ export function makeConfig(workspaceDir) {
         "**/coverage/**",
         "**/*.config.js",
         "**/*.config.mjs",
+        // Build-info is machine-generated (scripts/gen-build-info.mjs) and git-ignored.
+        "**/src/generated/**",
       ],
     },
 
