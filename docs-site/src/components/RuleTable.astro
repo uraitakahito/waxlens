@@ -1,0 +1,70 @@
+---
+/**
+ * Every rule, straight out of packages/core/src/validate/.
+ *
+ * The table is generated rather than written because everything in it —
+ * name, severity, conformance, per-profile overrides, spec links — already
+ * exists in code, and keeping a hand-written copy in two languages would mean
+ * three places to update per rule. Prose about *why* a rule exists stays in the
+ * page around this component; that is the part worth writing by hand.
+ *
+ * `lang` only switches the column headers. The data is identical either way.
+ */
+import { rules } from "../lib/extract";
+
+interface Props {
+  lang?: "en" | "ja";
+}
+
+const { lang = "en" } = Astro.props;
+
+const head =
+  lang === "ja"
+    ? { rule: "Rule", severity: "既定 severity", conformance: "適合レベル", profile: "profile 上書き", spec: "出典" }
+    : { rule: "Rule", severity: "Default severity", conformance: "Conformance", profile: "Profile overrides", spec: "Spec" };
+
+const all = rules();
+---
+
+<table>
+  <thead>
+    <tr>
+      <th>{head.rule}</th>
+      <th>{head.severity}</th>
+      <th>{head.conformance}</th>
+      <th>{head.profile}</th>
+      <th>{head.spec}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {
+      all.map((rule) => (
+        <tr>
+          <td>
+            <code>{rule.name}</code>
+          </td>
+          <td>{rule.severity}</td>
+          <td>{rule.conformance}</td>
+          <td>
+            {Object.keys(rule.severityByProfile).length === 0
+              ? "—"
+              : Object.entries(rule.severityByProfile).map(([profile, level]) => (
+                  <code class="env">
+                    {profile}: {level}
+                  </code>
+                ))}
+          </td>
+          <td>
+            {rule.links.length === 0
+              ? "—"
+              : rule.links.map((link) => (
+                  <a href={link.url}>
+                    {link.label}
+                  </a>
+                ))}
+          </td>
+        </tr>
+      ))
+    }
+  </tbody>
+</table>

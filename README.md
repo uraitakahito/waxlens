@@ -34,16 +34,19 @@ flowchart LR
 `waxlens` は既定で `waxlens-daemon` を子プロセスとして起動して接続する。常駐 daemon に
 繋ぐ場合は `waxlens --server ws://127.0.0.1:PORT <file>`。
 
-両 package に共通する spec / 詳細 docs:
+## 📚 ドキュメント
 
-- [`docs/rules.md`](docs/rules.md) — 各 rule の severity、profile
-  matrix、upstream 参照
-- [`docs/json-schema.md`](docs/json-schema.md) — `WaxlensReport`
-  (`--json` 出力) の wire format
-- [`docs/examples.md`](docs/examples.md) — [waxlens-corpus](https://github.com/uraitakahito/waxlens-corpus)
-  を使った rule 別の事例カタログ (失敗例・profile 差)。`manifest.json` から自動生成
-- [`docs/terminology.md`](docs/terminology.md) — Terminology。WACZ 1.1.1 で定義された
-  Web Archive 基盤の用語を、日本語文中でも英語で揃える方針
+**<https://uraitakahito.github.io/waxlens/ja/>**（[English](https://uraitakahito.github.io/waxlens/)）
+
+|  |  |
+| --- | --- |
+| [クイックスタート](https://uraitakahito.github.io/waxlens/ja/quickstart/) | 導入して 1 本検証するまで |
+| [Rules](https://uraitakahito.github.io/waxlens/ja/rules/) | 全 rule の severity・適合レベル・出典（コードから生成） |
+| [プロファイル](https://uraitakahito.github.io/waxlens/ja/profiles/) | `--profile` が変えるもの／変えないもの |
+| [JSON レポート](https://uraitakahito.github.io/waxlens/ja/json-report/) | `--json` の形式と安定性の約束 |
+| [Corpus](https://uraitakahito.github.io/waxlens/ja/corpus/) | 意図的に失敗する標本の入手と使い方 |
+| [用語](https://uraitakahito.github.io/waxlens/ja/terminology/) | 日本語文中でも英語のまま書く語 |
+| [アーキテクチャ](https://uraitakahito.github.io/waxlens/ja/architecture/) | 4 package と stateless daemon の理由 |
 
 ## 開発
 

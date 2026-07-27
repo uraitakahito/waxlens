@@ -34,7 +34,7 @@ waxlens-validate SOURCE --profile PROFILE
 rule 別の失敗例や profile 差を試したい場合は、20 標本を揃えた
 [waxlens-corpus](https://github.com/uraitakahito/waxlens-corpus) を使う —
 入手方法とカタログは
-[`docs/examples.md`](https://github.com/uraitakahito/waxlens/blob/main/docs/examples.md)。
+[事例カタログ](https://uraitakahito.github.io/waxlens/ja/corpus/)。
 
 ### Exit codes
 
@@ -49,7 +49,7 @@ warning / info レベルの issue が exit code を反転させることは無�
 ### 出力 schema
 
 stdout には `WaxlensReport` が出力される。full schema は
-[`docs/json-schema.md`](https://github.com/uraitakahito/waxlens/blob/main/docs/json-schema.md)
+[JSON レポート](https://uraitakahito.github.io/waxlens/ja/json-report/)
 を参照。短い例:
 
 ```json
@@ -84,7 +84,7 @@ bundled SeaweedFS の compose stack は repo root の `compose.{dev,prod}.yaml`
 を参照。
 
 rule 単位の profile 別 severity matrix は
-[`docs/rules.md`](https://github.com/uraitakahito/waxlens/blob/main/docs/rules.md)
+[Rules](https://uraitakahito.github.io/waxlens/ja/rules/)
 を参照。
 
 ## ライブラリとしての使い方

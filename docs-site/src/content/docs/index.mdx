@@ -1,0 +1,61 @@
+---
+title: waxlens
+description: A producer-independent validator for WACZ web archives.
+template: splash
+hero:
+  tagline: Tells you whether a WACZ is actually valid — and why it is not.
+  actions:
+    - text: Quickstart
+      link: /waxlens/quickstart/
+      icon: right-arrow
+      variant: primary
+    - text: WACZ 1.1.1
+      link: https://specs.webrecorder.net/wacz/1.1.1/
+      icon: external
+---
+
+## What waxlens is
+
+A **producer-independent validator** for [WACZ](https://specs.webrecorder.net/wacz/1.1.1/)
+— the format that packages WARC data and its metadata into a ZIP file. Point it
+at an archive and it reports, rule by rule, what conforms and what does not.
+
+Producer-independent means it makes no assumptions about which tool wrote the
+archive. It reads the ZIP as the spec describes it, so a WACZ from any recorder
+is judged the same way.
+
+## Two things it is not
+
+It does not **replay** archives — that is [ReplayWeb.page](https://replayweb.page/)'s
+job. And it does not **produce** them; when this site mentions BrowserHive, that
+is a separate project whose output waxlens happens to check.
+
+## How it is put together
+
+```mermaid
+flowchart LR
+    tui["@waxlens/tui (bin: waxlens)"] ==>|"WS / JSON-RPC"| daemon["@waxlens/daemon"]
+    browser(["browser (planned)"]) -.->|"WS"| daemon
+    daemon -->|validates with| core["@waxlens/core (bin: waxlens-validate)"]
+    tui -->|import| protocol["@waxlens/protocol"]
+    daemon -->|import| protocol
+    protocol -.->|"import type only"| core
+
+    classDef contract fill:#fff3cd,stroke:#d4a72c,color:#5c4500;
+    classDef future fill:#eeeeee,stroke:#999999,color:#666666;
+    class protocol contract;
+    class browser future;
+```
+
+The daemon is **stateless**, which is what lets a future browser frontend speak
+the same protocol as the terminal UI. See [Architecture](/waxlens/architecture/).
+
+## Where things are
+
+| I want to… | Page |
+| ---------- | ---- |
+| validate an archive for the first time | [Quickstart](/waxlens/quickstart/) |
+| know what each rule checks | [Rules](/waxlens/rules/) |
+| understand `--profile` | [Profiles](/waxlens/profiles/) |
+| consume `--json` output | [JSON report](/waxlens/json-report/) |
+| see real failing archives | [Corpus](/waxlens/corpus/) |

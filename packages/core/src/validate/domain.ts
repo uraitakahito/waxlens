@@ -122,6 +122,7 @@ export interface ValidationRule {
   run: (wacz: WaczReader) => Promise<Result<Issue[], never>>;
 }
 
+// #region report-summary
 export interface ReportSummary {
   passed: number;
   failed: number;
@@ -129,6 +130,7 @@ export interface ReportSummary {
   info: number;
   durationMs: number;
 }
+// #endregion report-summary
 
 /**
  * WACZ に関する人向けには有用だが issue モデルには馴染まない
@@ -284,6 +286,7 @@ export interface ReportEntry {
   issues: { rule: string; severity: Severity }[];
 }
 
+// #region report
 export interface Report {
   waxlensVersion: string;
   /** report を評価する際に使った rule profile。{@link RuleProfile} を参照。 */
@@ -299,3 +302,4 @@ export interface Report {
   /** best-effort な metadata — {@link ReportStats} を参照。 */
   stats?: ReportStats;
 }
+// #endregion report

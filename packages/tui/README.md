@@ -45,7 +45,7 @@ waxlens /tmp/waxlens-demo/wikipedia.wacz
 rule ごとの失敗例や profile 差を試せる WACZ 標本(20 本)は
 [waxlens-corpus](https://github.com/uraitakahito/waxlens-corpus) にある。入手方法と
 全標本のカタログは
-[`docs/examples.md`](https://github.com/uraitakahito/waxlens/blob/main/docs/examples.md)
+[事例カタログ](https://uraitakahito.github.io/waxlens/ja/corpus/)
 を参照。
 
 ## License

@@ -1,0 +1,59 @@
+---
+title: Rules
+description: Every validation rule, its severity, and what it is grounded in.
+---
+
+import RuleTable from "../../components/RuleTable.astro";
+
+waxlens runs a fixed set of rules over an archive and reports one issue per
+violation. This table is **generated from the rule definitions themselves**, so
+it cannot fall behind the code: name, severity, conformance level, per-profile
+overrides and spec links all come out of
+`packages/core/src/validate/`.
+
+<RuleTable />
+
+## Reading the table
+
+**Conformance** is what the spec demands — `MUST`, `SHOULD`, `MAY`, `MUST NOT`.
+**Severity** is what waxlens does about a violation, and the two are not always
+the same: `datapackage/resources-complete` is a `MUST` reported as a `warning`,
+because an incomplete `resources[]` does not by itself break replay.
+
+**Profile overrides** re-grade a rule under a given `--profile`. An empty cell
+means the default severity applies everywhere. See [Profiles](/waxlens/profiles/).
+
+## What the rules are grounded in
+
+Rules fall into groups by the layer they inspect:
+
+- **`wacz/*`** — the ZIP layout itself: which files and directories must exist,
+  and what must not be in the reserved ones.
+- **`datapackage/*`** — `datapackage.json`: the Frictionless structure, the
+  declared `profile`, the WACZ version, and whether the hashes match what is
+  actually in the archive.
+- **`cdxj/*`** — the index: whether wabac.js can load it, whether its offsets
+  point at real WARC records, and whether the filenames are archive-relative.
+- **`warc/*`** — inside the WARC: independently-decodable gzip members, payload
+  digests, and whether the recording is complete.
+- **`pages/*`** — `pages/pages.jsonl` against its schema.
+- **`fuzzy/*`** — best-effort checks that never assert conformance on their own.
+
+## Why some rules exist twice over
+
+Two rules can look at the same file for different reasons, and that is
+deliberate. `wacz/required-files` asserts that an index simply **exists**;
+`cdxj/index-recognised-by-wabac` asserts that wabac.js can actually **load** it.
+An archive can pass the first and fail the second, and the distinction is what
+tells a producer where the problem is.
+
+Likewise `wacz/required-files` owns the "is `datapackage.json` there at all"
+question, so `datapackage/profile-required` can concentrate on the *value* of
+`profile` without reporting the same absence twice.
+
+## Adding a rule
+
+A rule is a file under `packages/core/src/validate/rules/` **and** an entry in
+that directory's `index.ts`. Both steps are required: an unregistered rule never
+runs. The docs build counts the two and fails if they disagree, so a forgotten
+registration cannot ship quietly.
