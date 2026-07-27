@@ -74,6 +74,7 @@ export default defineConfig({
           label: "Guides",
           items: [
             { label: "Architecture", slug: "architecture" },
+            { label: "Docker Compose stack", slug: "compose" },
             { label: "Corpus", slug: "corpus" },
             { label: "Terminology", slug: "terminology" },
           ],
