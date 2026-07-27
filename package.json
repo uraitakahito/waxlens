@@ -6,7 +6,7 @@
   "name": "waxlens-monorepo",
   "version": "0.0.0",
   "private": true,
-  "description": "Monorepo for waxlens — @waxlens/core (validator) and @waxlens/tui (Ink TUI).",
+  "description": "Monorepo for waxlens \u2014 @waxlens/core (validator) and @waxlens/tui (Ink TUI).",
   "license": "Unlicense",
   "type": "module",
   "engines": {
@@ -18,12 +18,16 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
-    "check": "pnpm audit --audit-level=moderate && pnpm --filter @waxlens/core check && pnpm --filter @waxlens/protocol check && pnpm --filter @waxlens/daemon check && pnpm --filter @waxlens/tui check"
+    "check": "pnpm audit --audit-level=moderate && pnpm --filter @waxlens/core check && pnpm --filter @waxlens/protocol check && pnpm --filter @waxlens/daemon check && pnpm --filter @waxlens/tui check",
+    "site:dev": "npm --prefix docs-site run dev",
+    "site:build": "npm --prefix docs-site run build",
+    "site:preview": "npm --prefix docs-site run preview",
+    "site:check": "npm run site:build && node scripts/check-doc-refs.mjs"
   },
   "//@types/node": [
     "Root-level eslint.config.js uses `// @ts-check` plus `import.meta.dirname`",
     "(Node 20.11+). The `dirname` field lives in @types/node's ImportMeta",
-    "interface augmentation — without it the VSCode TS LSP reports `Property",
+    "interface augmentation \u2014 without it the VSCode TS LSP reports `Property",
     "'dirname' does not exist on type 'ImportMeta'`. pnpm's default hoisting is",
     "per-workspace, so @types/node already declared in packages/*/package.json",
     "is NOT visible from the monorepo root; it must be a direct devDependency",

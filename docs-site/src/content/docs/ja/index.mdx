@@ -1,0 +1,61 @@
+---
+title: waxlens
+description: WACZ Web Archive の producer 非依存な validator。
+template: splash
+hero:
+  tagline: その WACZ が本当に valid なのか、valid でないなら何故かを示します。
+  actions:
+    - text: クイックスタート
+      link: /waxlens/ja/quickstart/
+      icon: right-arrow
+      variant: primary
+    - text: WACZ 1.1.1 (日本語訳)
+      link: https://uraitakahito.github.io/specs/wacz/1.1.1/
+      icon: external
+---
+
+## waxlens とは
+
+[WACZ](https://specs.webrecorder.net/wacz/1.1.1/)(WARC データとメタデータを
+`ZIP file` にまとめた `Package`)の **producer 非依存な validator** です。
+archive を渡すと、rule 単位で「何が適合し、何が適合しないか」を報告します。
+
+producer 非依存とは、**どのツールが書いたかを前提にしない**という意味です。
+spec が定める通りに `ZIP file` を読むので、どの recorder が生成した WACZ でも
+同じ基準で判定します。
+
+## 2 つの「やらないこと」
+
+archive を **replay しません** — それは [ReplayWeb.page](https://replayweb.page/)
+の仕事です。archive を **生成もしません**。このサイトに BrowserHive が出てくる
+場合、それは waxlens が検証する対象を生成する別プロジェクトを指します。
+
+## 構成
+
+```mermaid
+flowchart LR
+    tui["@waxlens/tui (bin: waxlens)"] ==>|"WS / JSON-RPC"| daemon["@waxlens/daemon"]
+    browser(["browser (将来)"]) -.->|"WS"| daemon
+    daemon -->|"検証に使う"| core["@waxlens/core (bin: waxlens-validate)"]
+    tui -->|import| protocol["@waxlens/protocol"]
+    daemon -->|import| protocol
+    protocol -.->|"import type のみ"| core
+
+    classDef contract fill:#fff3cd,stroke:#d4a72c,color:#5c4500;
+    classDef future fill:#eeeeee,stroke:#999999,color:#666666;
+    class protocol contract;
+    class browser future;
+```
+
+daemon が **stateless** であることが、将来の browser frontend が terminal UI と
+同じ protocol で繋げる理由です。[アーキテクチャ](/waxlens/ja/architecture/)を参照。
+
+## 目的別の入口
+
+| やりたいこと | ページ |
+| ------------ | ------ |
+| はじめて archive を検証する | [クイックスタート](/waxlens/ja/quickstart/) |
+| 各 rule が何を見るか知る | [Rules](/waxlens/ja/rules/) |
+| `--profile` を理解する | [プロファイル](/waxlens/ja/profiles/) |
+| `--json` 出力を使う | [JSON レポート](/waxlens/ja/json-report/) |
+| 実際に失敗する archive を見る | [Corpus](/waxlens/ja/corpus/) |

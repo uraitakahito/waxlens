@@ -1,0 +1,55 @@
+---
+title: Rules
+description: 全 validation rule と、その severity・根拠。
+---
+
+import RuleTable from "../../../components/RuleTable.astro";
+
+waxlens は固定された rule の集合を archive に対して実行し、違反 1 件につき
+issue を 1 件報告します。下の表は **rule 定義そのものから生成**しているので、
+コードから遅れることがありません。rule 名・severity・適合レベル・profile ごとの
+上書き・spec リンクはすべて `packages/core/src/validate/` 由来です。
+
+<RuleTable lang="ja" />
+
+## 表の読み方
+
+**適合レベル**は spec が要求する強さ(`MUST` / `SHOULD` / `MAY` / `MUST NOT`)、
+**severity** は違反に対して waxlens が取る扱いで、この 2 つは必ずしも一致しません。
+`datapackage/resources-complete` は `MUST` ですが `warning` です — `resources[]`
+が不完全でも、それだけで replay が壊れるわけではないからです。
+
+**profile 上書き**は、指定した `--profile` の下で severity を組み替えます。
+空欄の rule はどの profile でも既定どおりです。
+[プロファイル](/waxlens/ja/profiles/)を参照。
+
+## rule が見ている層
+
+- **`wacz/*`** — `ZIP file` の構造そのもの。存在しなければならないファイル /
+  ディレクトリと、予約ディレクトリに異物が無いか。
+- **`datapackage/*`** — `datapackage.json`。Frictionless の構造、宣言された
+  `profile`、WACZ version、そして hash が実体と一致するか。
+- **`cdxj/*`** — index。wabac.js がロードできるか、offset が実在の WARC record
+  を指すか、filename が `archive/` 相対か。
+- **`warc/*`** — WARC の内部。gzip member が独立して展開できるか、payload digest、
+  recording が完結しているか。
+- **`pages/*`** — `pages/pages.jsonl` の schema 適合。
+- **`fuzzy/*`** — best-effort な check。単独で適合性を主張しません。
+
+## 同じファイルを 2 つの rule が見る理由
+
+観点が違うので意図的にそうしています。`wacz/required-files` は index が
+**存在するか**を assert し、`cdxj/index-recognised-by-wabac` は wabac.js が実際に
+**ロードできるか**を assert します。前者を通って後者で落ちる archive はあり得て、
+その区別こそが producer に問題の所在を教えます。
+
+同様に `datapackage.json` の存在チェックは `wacz/required-files` が担うので、
+`datapackage/profile-required` は `profile` の**値**に専念できます(不在を
+二重に報告しません)。
+
+## rule を追加するとき
+
+rule は `packages/core/src/validate/rules/` にファイルを置き、**かつ**同ディレクトリの
+`index.ts` に登録して初めて有効になります。両方が必要で、登録し忘れた rule は
+一度も実行されません。docs のビルドが両者の件数を突き合わせるので、
+登録忘れが静かに紛れ込むことはありません。
