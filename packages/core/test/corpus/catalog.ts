@@ -32,19 +32,42 @@ export interface Manifest {
 /** profile 差テーブルの列順 (= build-corpus の ALL_PROFILES と同じ並び)。 */
 const PROFILES = ["spec", "browserhive", "lenient"] as const;
 
-const MAIN_HEAD = [
-  "### 全標本(`spec` profile)",
-  "",
-  "| fixture | 説明 | `spec` の発火 rule | exit |",
-  "| --- | --- | --- | --- |",
-];
+/**
+ * カタログは docs site の en / ja 両方へ注入する。表の中身 (fixture 名・rule 名・
+ * severity) は言語非依存なので、切り替わるのは見出しと列名だけ。
+ */
+export type CatalogLang = "en" | "ja";
 
-const PROFILE_HEAD = [
-  "### profile で severity が変わる標本",
-  "",
-  "| fixture | rule | spec | browserhive | lenient |",
-  "| --- | --- | --- | --- | --- |",
-];
+const HEADS: Record<CatalogLang, { main: string[]; profile: string[] }> = {
+  ja: {
+    main: [
+      "### 全標本(`spec` profile)",
+      "",
+      "| fixture | 説明 | `spec` の発火 rule | exit |",
+      "| --- | --- | --- | --- |",
+    ],
+    profile: [
+      "### profile で severity が変わる標本",
+      "",
+      "| fixture | rule | spec | browserhive | lenient |",
+      "| --- | --- | --- | --- | --- |",
+    ],
+  },
+  en: {
+    main: [
+      "### Every specimen (`spec` profile)",
+      "",
+      "| fixture | description | rules fired under `spec` | exit |",
+      "| --- | --- | --- | --- |",
+    ],
+    profile: [
+      "### Specimens whose severity changes by profile",
+      "",
+      "| fixture | rule | spec | browserhive | lenient |",
+      "| --- | --- | --- | --- | --- |",
+    ],
+  },
+};
 
 const base = (file: string): string => file.replace(/^fixtures\//, "");
 
@@ -89,7 +112,8 @@ const ruleUnion = (byProfile: Record<string, ProfileResult>): string[] => {
  *   2. profile で severity が変わる標本 — rule ごとの spec/browserhive/lenient
  * 返り値はマーカー間に挿入する **本文のみ** (マーカー自体は injectCatalog が保持)。
  */
-export const renderCatalog = (manifest: Manifest): string => {
+export const renderCatalog = (manifest: Manifest, lang: CatalogLang = "ja"): string => {
+  const { main: MAIN_HEAD, profile: PROFILE_HEAD } = HEADS[lang];
   const mainRows = manifest.fixtures.map((entry) => {
     const spec = specOf(entry);
     const exit = spec.valid ? 0 : 1;
@@ -113,7 +137,7 @@ const BEGIN = "<!-- BEGIN corpus-catalog";
 const END = "<!-- END corpus-catalog -->";
 
 /**
- * `docs/examples.md` のマーカー間だけを `body` で差し替える。BEGIN コメント
+ * 対象ページのマーカー間だけを `body` で差し替える。BEGIN コメント
  * 行 (末尾の "do not edit" 注記を含む) と END マーカーは温存するので、
  * 同じ入力からは冪等。マーカーが無ければ silent 上書きせず throw する。
  */
@@ -121,7 +145,7 @@ export const injectCatalog = (doc: string, body: string): string => {
   const begin = doc.indexOf(BEGIN);
   const end = doc.indexOf(END);
   if (begin < 0 || end < 0) {
-    throw new Error("docs/examples.md に corpus-catalog マーカー (BEGIN/END) が無い");
+    throw new Error("対象ページに corpus-catalog マーカー (BEGIN/END) が無い");
   }
   const beginClose = doc.indexOf("-->", begin);
   if (beginClose < 0 || beginClose > end) {
