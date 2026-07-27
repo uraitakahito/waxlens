@@ -1,124 +1,24 @@
 # waxlens
 
-[WACZ](https://specs.webrecorder.net/wacz/1.1.1/)(WARC データとメタデータを ZIP file に
-パッケージ化した Web Archive)の producer 非依存な validator。
+A producer-independent validator for [WACZ](https://specs.webrecorder.net/wacz/1.1.1/)
+web archives — the format that packages WARC data and its metadata into a ZIP
+file. Point it at an archive and it reports, rule by rule, what conforms and
+what does not. A stateless daemon does the validating; the terminal UI is a thin
+client of it, so a browser frontend can later speak the same protocol.
 
-**daemon** が `@waxlens/core` で検証を行い、**tui** は薄いクライアントとして daemon に
-WebSocket で問い合わせて結果を描画する。daemon は **stateless**で、将来
-browser など別フロントエンドも同じ protocol で繋げる。
+## Documentation
 
-```mermaid
-flowchart LR
-    tui["@waxlens/tui (bin: waxlens)"] ==>|"WS / JSON-RPC"| daemon["@waxlens/daemon (bin: waxlens-daemon)"]
-    browser(["browser (将来)"]) -.->|"WS (将来)"| daemon
-    daemon -->|"uses (検証)"| core["@waxlens/core (bin: waxlens-validate)"]
-    tui -->|import| protocol["@waxlens/protocol"]
-    daemon -->|import| protocol
-    protocol -.->|"import type のみ"| core
+Everything — quickstart, reference (rules, profiles, JSON report), and guides
+(architecture, Docker Compose stack, corpus, terminology) — lives on the docs
+site:
 
-    classDef contract fill:#fff3cd,stroke:#d4a72c,color:#5c4500;
-    classDef future fill:#eeeeee,stroke:#999999,color:#666666;
-    class protocol contract;
-    class browser future;
-```
+- **English** — <https://uraitakahito.github.io/waxlens/>
+- **日本語** — <https://uraitakahito.github.io/waxlens/ja/>
 
-このプロジェクトは 4 つの package として提供される:
+## Related Projects
 
-| Package                                     | bin                | 目的                                                                                                                                 |
-| ------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
-| [`@waxlens/core`](packages/core/)           | `waxlens-validate` | Validation engine。machine-readable な JSON report を出力する。daemon が所有するが、CI / スクリプト用途では直接も使える。[`packages/core/README.md`](packages/core/README.md)            |
-| [`@waxlens/daemon`](packages/daemon/)       | `waxlens-daemon`   | stateless な HTTP/WS daemon。core を所有し、tui / 将来の browser に解決済み(message/specUrl/conformance inline)の Report を WS で返す。 |
-| [`@waxlens/tui`](packages/tui/)             | `waxlens`          | Interactive な terminal UI(daemon クライアント)。[`packages/tui/README.md`](packages/tui/README.md) |
-| [`@waxlens/protocol`](packages/protocol/)   | —                  | tui / daemon / browser が共有する wire 型と CLI 契約(型 + 軽量定数 / `exitCodeFor`。runtime に core 非依存で browser-safe)。 |
-
-`waxlens` は既定で `waxlens-daemon` を子プロセスとして起動して接続する。常駐 daemon に
-繋ぐ場合は `waxlens --server ws://127.0.0.1:PORT <file>`。
-
-## 📚 ドキュメント
-
-**<https://uraitakahito.github.io/waxlens/ja/>**（[English](https://uraitakahito.github.io/waxlens/)）
-
-|  |  |
-| --- | --- |
-| [クイックスタート](https://uraitakahito.github.io/waxlens/ja/quickstart/) | 導入して 1 本検証するまで |
-| [Rules](https://uraitakahito.github.io/waxlens/ja/rules/) | 全 rule の severity・適合レベル・出典（コードから生成） |
-| [プロファイル](https://uraitakahito.github.io/waxlens/ja/profiles/) | `--profile` が変えるもの／変えないもの |
-| [JSON レポート](https://uraitakahito.github.io/waxlens/ja/json-report/) | `--json` の形式と安定性の約束 |
-| [Corpus](https://uraitakahito.github.io/waxlens/ja/corpus/) | 意図的に失敗する標本の入手と使い方 |
-| [用語](https://uraitakahito.github.io/waxlens/ja/terminology/) | 日本語文中でも英語のまま書く語 |
-| [アーキテクチャ](https://uraitakahito.github.io/waxlens/ja/architecture/) | 4 package と stateless daemon の理由 |
-
-## 開発
-
-```sh
-# installs all workspace deps + creates symlinks
-pnpm install --frozen-lockfile
-# pnpm audit + each workspace's check
-pnpm check
-# builds both packages
-pnpm build
-```
-
-### `waxlens-validate` / `waxlens` を system-wide で呼ぶ
-
-```sh
-# dist/ を最新に
-pnpm build
-# waxlens-validate
-pnpm --dir packages/core add -g .
-# waxlens
-pnpm --dir packages/tui add -g .
-```
-
-登録後は monorepo の外でも waxlens 直下でも、bin 名だけで呼べる:
-
-```sh
-# Local file
-waxlens-validate --profile browserhive samples/wikipedia.wacz
-waxlens --profile browserhive samples/wikipedia.wacz
-
-# S3 (AWS credential chain で解決)
-waxlens-validate --profile browserhive s3://my-bucket/captures/abc.wacz
-waxlens --profile browserhive s3://my-bucket/captures/abc.wacz
-```
-
-元に戻すときは `pnpm remove -g @waxlens/core @waxlens/tui`。
-
-## Docker Compose stack (bundled SeaweedFS)
-
-`waxlens-validate s3://...` を試したい場合は、bundled SeaweedFS を含む
-compose stack を使う。**chromium-server や BrowserHive は含まない** ので、
-waxlens 単体で完結する (loose coupling)。
-
-```sh
-./setup.sh
-docker compose -f compose.dev.yaml up -d --build
-docker compose -f compose.dev.yaml exec waxlens bash
-# 以下 container 内で:
-pnpm install && pnpm --filter @waxlens/core build
-aws --endpoint-url http://seaweedfs:8333 s3 cp samples/wikipedia.wacz s3://waxlens/wikipedia.wacz
-./packages/core/dist/cli.js --profile browserhive s3://waxlens/wikipedia.wacz
-```
-
-Prod stack は one-shot validation 用 (waxlens 自身は `--profile run` で
-明示的に走らせる):
-
-```sh
-docker compose -f compose.prod.yaml up -d
-# host から sidecar AWS CLI で WACZ を upload:
-docker run --rm --network waxlens-network \
-  -v $(pwd)/samples:/samples:ro \
-  -e AWS_ACCESS_KEY_ID=waxlens -e AWS_SECRET_ACCESS_KEY=waxlens \
-  -e AWS_REGION=us-east-1 -e AWS_ENDPOINT_URL_S3=http://seaweedfs:8333 \
-  amazon/aws-cli s3 cp /samples/wikipedia.wacz s3://waxlens/wikipedia.wacz
-# 1 回 validate:
-docker compose -f compose.prod.yaml --profile run run --rm waxlens --profile browserhive s3://waxlens/wikipedia.wacz
-docker compose -f compose.prod.yaml down
-```
-
-bundled SeaweedFS 専用の構成で、AWS / R2 / 他の S3 互換 service への
-切り替えは現状想定していない。
-
+- [BrowserHive](https://github.com/uraitakahito/browserhive) — a web-capture server whose WACZ output waxlens checks.
+- [WACZ 1.1.1](https://specs.webrecorder.net/wacz/1.1.1/) — the specification ([日本語訳](https://uraitakahito.github.io/specs/wacz/1.1.1/)).
 
 ## License
 
