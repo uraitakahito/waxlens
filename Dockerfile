@@ -1,13 +1,25 @@
-# Dockerfile.prod — waxlens production / one-shot image
+# Dockerfile — waxlens の唯一のイメージ (one-shot validation)
 #
 # multi-stage:
 #   1. builder  — full source / pnpm install / pnpm build / `pnpm deploy --prod`
 #                 で @waxlens/core を production deps だけにまとめる
 #   2. runtime  — slim Node に builder の deploy 結果だけコピー
 #
-# ENTRYPOINT は `waxlens-validate` (JSON 出力)。compose.prod.yaml の
-# `--profile run` で one-shot 起動し、引数として `<source>` を渡す:
-#   docker compose -f compose.prod.yaml --profile run run --rm waxlens s3://waxlens/foo.wacz
+# 開発用の別イメージは無い。Apple Container のプラットフォーム DNS は
+# `seaweedfs.waxlens` を *ホストからも* 解決させるので、開発時は host の
+# pnpm で普通に動かせばよく、Linux shell を container に用意する理由が無い。
+#
+# Build / run:
+#   container build -t waxlens:latest .
+#   container run --rm \
+#     -e AWS_ENDPOINT_URL_S3=http://seaweedfs.waxlens:8333 -e AWS_REGION=us-east-1 \
+#     -e AWS_ACCESS_KEY_ID=waxlens -e AWS_SECRET_ACCESS_KEY=waxlens \
+#     -e WAXLENS_S3_FORCE_PATH_STYLE=true \
+#     -e NODE_OPTIONS=--dns-result-order=ipv4first \
+#     waxlens:latest --profile browserhive s3://waxlens/foo.wacz
+#
+# container-compose のサブコマンドは up / down / build / version の 4 つだけで
+# `run` が無いため、one-shot は compose service ではなく `container run` で叩く。
 #
 # TUI (`waxlens` bin) を使いたい場合は entrypoint を override する。
 # このイメージには TUI bin は同梱しない (deploy 対象を @waxlens/core
@@ -63,5 +75,5 @@ ENV NODE_ENV=production
 # 作らない — `waxlens-validate` という名前は host 側 install でしか使わない
 # 名前なので、container 内では node 経由で cli.js を直叩きする方が筋。
 # 引数 (`<source>` + `--profile` 等) は呼び出し側で供給する:
-#   docker compose -f compose.prod.yaml --profile run run --rm waxlens s3://bucket/key.wacz
+#   container run --rm waxlens:latest --profile browserhive s3://bucket/key.wacz
 ENTRYPOINT ["node", "/app/dist/cli.js"]

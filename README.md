@@ -9,7 +9,7 @@ client of it, so a browser frontend can later speak the same protocol.
 ## Documentation
 
 Everything — quickstart, reference (rules, profiles, JSON report), and guides
-(architecture, Docker Compose stack, corpus, terminology) — lives on the docs
+(architecture, Apple Container stack, corpus, terminology) — lives on the docs
 site:
 
 - **English** — <https://uraitakahito.github.io/waxlens/>
