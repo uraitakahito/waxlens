@@ -1,0 +1,28 @@
+# Paired with Dockerfile by FILENAME. Renaming one without the other silently
+# drops every rule below — there is no root .dockerignore to fall back on, so
+# the whole tree would enter the build context and the build would still
+# succeed. Rename the two together or not at all.
+
+.git
+.github
+node_modules
+**/node_modules
+# The workspace-local pnpm content-addressable store. Gitignored, but nothing
+# kept it out of the build context: it was 143 MB of the 120 MB transferred.
+.pnpm-store
+dist
+**/dist
+coverage
+**/coverage
+*.log
+.env
+.env.*
+~
+.DS_Store
+
+# Not part of the runtime image: the docs site builds and publishes on its own,
+# samples are bind-mounted at run time, and private-note never ships.
+docs-site
+samples
+private-note
+graphify-out

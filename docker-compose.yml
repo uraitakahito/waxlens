@@ -1,0 +1,55 @@
+# waxlens stack on Apple Container, driven by container-compose
+# (https://github.com/Mcrich23/Container-Compose — installed via Homebrew).
+#
+#   container-compose up -d -b     # build and start
+#   container-compose down         # stop; the volume (and its data) survives
+#
+# One-time machine setup:
+#   sudo container system dns create waxlens
+# The project-named DNS domain switches container-compose into its real-DNS
+# mode: the container is named seaweedfs.waxlens, registered with the platform
+# DNS, and resolvable from other containers AND from the host — which is what
+# lets waxlens itself run on the host against this stack, with no development
+# container of its own.
+# Do NOT add container_name: keys — they suppress the DNS naming and drop the
+# stack back to /etc/hosts patching.
+#
+# Readiness is deliberately NOT handled here (container-compose has no
+# healthcheck support, and depends_on is start order only): the bucket init
+# runs inside seaweedfs's entrypoint as a retry loop, and callers wait on the
+# bucket themselves.
+#
+# waxlens itself is not a service here. container-compose has exactly four
+# subcommands (up / down / build / version), so a one-shot service could not be
+# driven from this file at all — the image is invoked with `container run`.
+# See docs-site (Apple Container stack) for the commands.
+
+# Pin the project name. container-compose derives it from the directory name
+# otherwise, and the project name IS the DNS domain here: it must equal the
+# `container system dns create <name>` domain and the `seaweedfs.waxlens`
+# hostname used by clients.
+name: waxlens
+
+services:
+  seaweedfs:
+    image: docker.io/chrislusf/seaweedfs:4.23
+    # The entrypoint also creates the bucket (background retry loop) — there is
+    # no separate one-shot init container to order around.
+    entrypoint: ["/etc/seaweedfs/entrypoint.sh"]
+    environment:
+      - WAXLENS_S3_ACCESS_KEY_ID=waxlens
+      - WAXLENS_S3_SECRET_ACCESS_KEY=waxlens
+      - WAXLENS_S3_BUCKET=waxlens
+    # Published so host tooling (the aws CLI, and waxlens itself) can reach the
+    # store on localhost as well as by name. 8333 is the S3 API, 8888 the filer
+    # UI (http://localhost:8888/buckets/waxlens/), 9333 the master.
+    ports:
+      - "127.0.0.1:8333:8333"
+      - "127.0.0.1:8888:8888"
+      - "127.0.0.1:9333:9333"
+    volumes:
+      - ./etc/seaweedfs:/etc/seaweedfs:ro
+      - seaweedfs-data:/data
+
+volumes:
+  seaweedfs-data:
