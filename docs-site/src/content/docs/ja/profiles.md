@@ -22,7 +22,8 @@ WACZ spec + wabac.js loader 互換。この profile で exit 0 になる archive
 
 ### `browserhive`
 
-`spec` の上に BrowserHive のより厳しい producer 慣習を重ねます。たとえば
+`spec` の上に [BrowserHive](https://uraitakahito.github.io/browserhive/ja/) の
+より厳しい producer 慣習を重ねます。たとえば
 `indexes/index.cdxj` は plain で置く、という慣習があるため、`.idx` とペアでも
 `.cdxj.gz` は許しません。
 

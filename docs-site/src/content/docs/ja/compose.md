@@ -3,8 +3,9 @@ title: Docker Compose スタック
 description: bundled SeaweedFS を使って s3:// の WACZ を検証する。
 ---
 
-compose file は 2 つある。どちらにも BrowserHive や browser — つまり archive を
-生成する側 — は含まれない。stack が単体で完結していることが、waxlens が
+compose file は 2 つある。どちらにも
+[BrowserHive](https://uraitakahito.github.io/browserhive/ja/) や browser —
+つまり archive を生成する側 — は含まれない。stack が単体で完結していることが、waxlens が
 「誰が書いた WACZ か」に依存しないための土台になっている。
 
 `./setup.sh` が両方の file が読む `.env` を書き出す。中身は bind mount した

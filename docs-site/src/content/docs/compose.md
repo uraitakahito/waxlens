@@ -3,8 +3,9 @@ title: Docker Compose stack
 description: Validate s3:// sources with the bundled SeaweedFS.
 ---
 
-Two compose files ship with the repository. Neither one contains BrowserHive, a
-browser, or anything else that produces archives — the stack is self-contained,
+Two compose files ship with the repository. Neither one contains
+[BrowserHive](https://uraitakahito.github.io/browserhive/), a browser, or
+anything else that produces archives — the stack is self-contained,
 which is what keeps waxlens loosely coupled to whatever wrote the WACZ.
 
 `./setup.sh` writes the `.env` both files read: `USER_ID` / `GROUP_ID` so the

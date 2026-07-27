@@ -22,7 +22,8 @@ This is the profile to use when the question is "is this archive correct?"
 
 ### `browserhive`
 
-`spec` plus the stricter producer conventions of BrowserHive — for example that
+`spec` plus the stricter producer conventions of
+[BrowserHive](https://uraitakahito.github.io/browserhive/) — for example that
 `indexes/index.cdxj` is stored plain, so a `.cdxj.gz` is rejected even when
 paired with a `.idx`.
 
