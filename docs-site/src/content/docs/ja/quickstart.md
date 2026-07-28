@@ -5,18 +5,24 @@ description: waxlens を入れて最初の WACZ を検証するまで。
 
 ## インストール
 
-waxlens は 4 つの package からなる pnpm workspace です。ビルドしてから 2 つの
+waxlens は 4 つの package からなる pnpm workspace です。ビルドしてから
 bin を system-wide に登録します。
 
 ```sh
 pnpm install --frozen-lockfile
 pnpm build
 
-pnpm --dir packages/core add -g .   # waxlens-validate
-pnpm --dir packages/tui  add -g .   # waxlens
+pnpm --dir packages/core   add -g .   # waxlens-validate
+pnpm --dir packages/tui    add -g .   # waxlens
+pnpm --dir packages/daemon add -g .   # waxlens-daemon (常駐 daemon を使うときだけ)
 ```
 
 登録後は monorepo の外でも waxlens 直下でも、bin 名だけで呼べます。
+
+3 行目は任意です。`waxlens` は daemon を自分で起動するので、`waxlens-daemon` を
+PATH に置く必要があるのは、セッションをまたいで生きる daemon を動かすときだけです
+— 依存 package の bin は global に link されないため、tui だけを入れてもこの名前は
+使えません。
 
 ## archive を 1 本検証する
 
@@ -32,11 +38,32 @@ waxlens samples/wikipedia.wacz
 ```
 
 `waxlens` は既定で `waxlens-daemon` を子プロセスとして起動し、WebSocket で
-接続します。常駐している daemon に繋ぐ場合は次のとおりです。
+接続します。ここまでの手順では port を意識する必要はありません。
+
+セッションをまたいで生きる daemon に繋ぐ場合は、まず port を決めて起動します。
 
 ```sh
-waxlens --server ws://127.0.0.1:PORT samples/wikipedia.wacz
+waxlens-daemon --port 7333 &
 ```
+
+listen している URL が出力されます。
+
+```
+waxlens-daemon ws://127.0.0.1:7333
+```
+
+その URL をそのまま渡します。
+
+```sh
+waxlens --server ws://127.0.0.1:7333 samples/wikipedia.wacz
+```
+
+:::note[port はどこから来るか]
+`--port` を省略すると `0`、つまり **OS が空いている port を選び**、起動のたびに
+番号が変わります。固定したいときは `--port` か `WAXLENS_DAEMON_PORT` を使い、
+そうでないときは daemon が出力した URL をコピーしてください。推測できる既定 port
+は存在しません。
+:::
 
 ## 厳しさを選ぶ
 

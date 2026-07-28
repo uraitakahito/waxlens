@@ -5,18 +5,24 @@ description: Install waxlens and validate your first WACZ.
 
 ## Install
 
-waxlens is a pnpm workspace of four packages. Build them, then register the two
+waxlens is a pnpm workspace of four packages. Build them, then register the
 binaries globally:
 
 ```sh
 pnpm install --frozen-lockfile
 pnpm build
 
-pnpm --dir packages/core add -g .   # waxlens-validate
-pnpm --dir packages/tui  add -g .   # waxlens
+pnpm --dir packages/core   add -g .   # waxlens-validate
+pnpm --dir packages/tui    add -g .   # waxlens
+pnpm --dir packages/daemon add -g .   # waxlens-daemon (only for a long-running daemon)
 ```
 
-After that both names work from anywhere, inside the repository or out.
+After that the names work from anywhere, inside the repository or out.
+
+The third line is optional. `waxlens` starts a daemon by itself, so you only
+need `waxlens-daemon` on `PATH` to run one that outlives a single session — a
+dependency's binary is not linked globally, so installing the TUI alone does not
+give you that name.
 
 ## Validate one archive
 
@@ -32,11 +38,33 @@ waxlens samples/wikipedia.wacz
 ```
 
 `waxlens` starts `waxlens-daemon` as a child process and talks to it over
-WebSocket. To attach to a daemon that is already running:
+WebSocket, so nothing above involves a port.
+
+To attach to a daemon that outlives the session instead, start one on a port you
+choose:
 
 ```sh
-waxlens --server ws://127.0.0.1:PORT samples/wikipedia.wacz
+waxlens-daemon --port 7333 &
 ```
+
+It prints the URL it is listening on:
+
+```
+waxlens-daemon ws://127.0.0.1:7333
+```
+
+Pass that URL through:
+
+```sh
+waxlens --server ws://127.0.0.1:7333 samples/wikipedia.wacz
+```
+
+:::note[Where the port comes from]
+Without `--port` the daemon uses `0`, meaning **the OS picks a free port** and
+the number differs on every start. Fix it with `--port` or
+`WAXLENS_DAEMON_PORT`, or copy the URL the daemon prints. There is no default
+port to guess.
+:::
 
 ## Choose how strict to be
 
