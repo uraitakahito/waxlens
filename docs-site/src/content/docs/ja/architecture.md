@@ -13,7 +13,8 @@ description: なぜ 4 つの package と stateless な daemon なのか。
 | `@waxlens/protocol` | — | クライアントと daemon が共有する wire 型と CLI 契約。runtime では core に依存しないので browser-safe。 |
 
 `waxlens` は既定で `waxlens-daemon` を子プロセスとして起動します。常駐 daemon に
-繋ぐ場合は `--server ws://127.0.0.1:PORT` を渡します。
+繋ぐ場合は、その daemon が起動時に出力した port を使って
+`--server ws://127.0.0.1:7333` のように渡します（[クイックスタート](/waxlens/ja/quickstart/)参照）。
 
 ## なぜ daemon を挟むのか
 

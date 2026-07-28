@@ -13,7 +13,8 @@ description: Why waxlens is four packages and a stateless daemon.
 | `@waxlens/protocol` | — | The wire types and CLI contract the clients and the daemon share. Runtime-independent of core, so it is browser-safe. |
 
 `waxlens` starts `waxlens-daemon` as a child process by default. Point it at a
-long-running one with `--server ws://127.0.0.1:PORT`.
+long-running one with `--server ws://127.0.0.1:7333`, using the port that daemon
+printed when it started — see [Quickstart](/waxlens/quickstart/).
 
 ## Why a daemon at all
 
