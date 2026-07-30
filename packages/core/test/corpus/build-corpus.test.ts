@@ -23,13 +23,9 @@ import { runValidation } from "../../src/validate/engine.js";
 import { DEFAULT_RULES } from "../../src/validate/rules/index.js";
 import { ALL_PROFILES, parseReportSource, type RuleProfile } from "../../src/validate/domain.js";
 import { CORPUS } from "./spec.js";
+import type { ProfileResult } from "./manifest.js";
 
 const corpusDir = process.env["CORPUS_DIR"];
-
-interface ProfileResult {
-  valid: boolean;
-  issues: { rule: string; severity: string }[];
-}
 
 const validateFixture = async (absPath: string, profile: RuleProfile): Promise<ProfileResult> => {
   const sourceResult = parseReportSource(absPath);

@@ -25,20 +25,7 @@ import { fileTransport } from "../../src/wacz/transport.js";
 import { runValidation } from "../../src/validate/engine.js";
 import { DEFAULT_RULES } from "../../src/validate/rules/index.js";
 import { ALL_PROFILES, parseReportSource, type RuleProfile } from "../../src/validate/domain.js";
-
-interface ProfileResult {
-  valid: boolean;
-  issues: { rule: string; severity: string }[];
-}
-interface FixtureEntry {
-  file: string;
-  expect?: ProfileResult;
-  byProfile?: Record<string, ProfileResult>;
-}
-interface Manifest {
-  defaultProfile: RuleProfile;
-  fixtures: FixtureEntry[];
-}
+import type { Manifest, ProfileResult } from "./manifest.js";
 
 const LFS_POINTER = "version https://git-lfs.github.com/spec/v1";
 const corpusDir = process.env["CORPUS_DIR"];
