@@ -10,24 +10,12 @@
  * exercise できる。
  */
 
-/** manifest の 1 profile ぶんの結果 (build-corpus が書く形)。 */
-export interface ProfileResult {
-  valid: boolean;
-  issues: { rule: string; severity: string }[];
-}
+import type { FixtureEntry, Manifest, ProfileResult } from "./manifest.js";
 
-/** manifest の fixture 1 件。profile 横断で同一なら `expect`、異なれば `byProfile`。 */
-export interface FixtureEntry {
-  file: string;
-  description: string;
-  expect?: ProfileResult;
-  byProfile?: Record<string, ProfileResult>;
-}
-
-export interface Manifest {
-  defaultProfile: string;
-  fixtures: FixtureEntry[];
-}
+// 既存の import 元 (build-docs.test.ts / catalog.test.ts) を壊さないよう、
+// manifest の型はここから通す。catalog 自体は引き続き「manifest を docs に
+// する」だけを担う。
+export type { FixtureEntry, Manifest, ProfileResult };
 
 /** profile 差テーブルの列順 (= build-corpus の ALL_PROFILES と同じ並び)。 */
 const PROFILES = ["spec", "browserhive", "lenient"] as const;
