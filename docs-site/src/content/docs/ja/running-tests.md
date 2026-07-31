@@ -53,11 +53,18 @@ Test Files  20 passed | 2 skipped (22)
 通常の `pnpm check` はこう見えます。この skip があるおかげで、日常のコマンドは
 外部に依存しないままでいられます。
 
-走らせるには、corpus をこのリポジトリの隣にクローンして指し示します。
+走らせるには、corpus をこのリポジトリの隣にクローンし、**絶対パス**で指し示します。
 
 ```sh
-CORPUS_DIR=../waxlens-corpus pnpm --filter @waxlens/core test:corpus
+CORPUS_DIR="$(cd ../waxlens-corpus && pwd)" pnpm --filter @waxlens/core test:corpus
 ```
+
+`$(cd … && pwd)` は飾りではありません。`pnpm --filter` は作業ディレクトリを
+`packages/core` に移してスクリプトを走らせるので、相対パスの `CORPUS_DIR` は
+シェルではなくそこを基準に解決されます。つまり `../waxlens-corpus` は
+`packages/waxlens-corpus` を探しに行き、何も見つからず、**「manifest が無い」と
+言いながら skip します**。シェルの側で先に絶対パスへ変換しておけば、この問題自体が
+起きません。
 
 | script | 内容 |
 | --- | --- |

@@ -54,11 +54,19 @@ Test Files  20 passed | 2 skipped (22)
 That is what a normal `pnpm check` looks like. The skip is why the routine
 command stays hermetic.
 
-To run them, clone the corpus beside this repository and point at it:
+To run them, clone the corpus beside this repository and point at it with an
+**absolute** path:
 
 ```sh
-CORPUS_DIR=../waxlens-corpus pnpm --filter @waxlens/core test:corpus
+CORPUS_DIR="$(cd ../waxlens-corpus && pwd)" pnpm --filter @waxlens/core test:corpus
 ```
+
+The `$(cd … && pwd)` is not decoration. `pnpm --filter` runs the script with its
+working directory set to `packages/core`, and a relative `CORPUS_DIR` is resolved
+there, not in your shell — so `../waxlens-corpus` looks for
+`packages/waxlens-corpus`, finds nothing, and the suite **skips while telling you
+it found no manifest**. Resolving to an absolute path in the shell first sidesteps
+the question.
 
 | Script | What it does |
 | --- | --- |

@@ -11,7 +11,13 @@
  * `CORPUS_DIR` 未設定時は skip するので、 通常の `pnpm check` (= vitest
  * run) には影響しない。 生成は明示的に:
  *
- *     CORPUS_DIR=../waxlens-corpus pnpm --filter @waxlens/core corpus:build
+ *     CORPUS_DIR="$(cd ../waxlens-corpus && pwd)" pnpm --filter @waxlens/core corpus:build
+ *
+ * **絶対パスで渡すこと。** `pnpm --filter` は cwd を packages/core にして走らせる
+ * ので、 相対パスはそこ基準で解決される (`../waxlens-corpus` は
+ * `packages/waxlens-corpus` になり、 何も見つからず skip する)。 しかもこの
+ * script は fixtures を丸ごと削除してから書き直すので、 パスの誤りは
+ * 「何も起きない」で済まない可能性がある。
  */
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
