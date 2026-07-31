@@ -65,7 +65,7 @@ waxlens --server ws://127.0.0.1:7333 samples/wikipedia.wacz
 は存在しません。
 :::
 
-## 厳しさを選ぶ
+## profile を選ぶ
 
 既定の profile は `spec` です。この profile で exit 0 になる archive は
 [ReplayWeb.page](https://replayweb.page/) で正しく replay できることが
