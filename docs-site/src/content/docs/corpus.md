@@ -21,7 +21,9 @@ base=https://media.githubusercontent.com/media/uraitakahito/waxlens-corpus/main/
 curl -sL "$base/good.wacz" -o good.wacz
 
 # C. Regenerate deterministically from waxlens — no download, byte-identical
-CORPUS_DIR=../waxlens-corpus pnpm --filter @waxlens/core corpus:build
+#    CORPUS_DIR must be absolute: --filter runs the script in packages/core,
+#    so a relative path resolves there and quietly finds nothing.
+CORPUS_DIR="$(cd ../waxlens-corpus && pwd)" pnpm --filter @waxlens/core corpus:build
 ```
 
 Option C exists because the specimens are **built, not collected**: the same
