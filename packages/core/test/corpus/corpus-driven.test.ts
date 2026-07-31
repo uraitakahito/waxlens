@@ -23,7 +23,7 @@
  * 読み取り専用。fixtures の生成は build-corpus.test.ts (別ファイル) の責務。
  */
 import { existsSync, readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { WaczReader } from "../../src/wacz/reader.js";
 import { fileTransport } from "../../src/wacz/transport.js";
@@ -31,10 +31,10 @@ import { runValidation } from "../../src/validate/engine.js";
 import { DEFAULT_RULES } from "../../src/validate/rules/index.js";
 import { ALL_PROFILES, parseReportSource, type RuleProfile } from "../../src/validate/domain.js";
 import type { Manifest, ProfileResult } from "./manifest.js";
+import { corpusRoot } from "./corpus-dir.js";
 
 const LFS_POINTER = "version https://git-lfs.github.com/spec/v1";
-const corpusDir = process.env["CORPUS_DIR"];
-const root = corpusDir ? resolve(corpusDir) : undefined;
+const root = corpusRoot();
 
 // vitest は it() を同期収集するので、manifest は module top で同期読み。
 // 重い validation だけ it() の中 (async) で行う。

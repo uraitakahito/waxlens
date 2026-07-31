@@ -22,8 +22,9 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { injectCatalog, renderCatalog, type CatalogLang, type Manifest } from "./catalog.js";
+import { corpusRoot } from "./corpus-dir.js";
 
-const corpusDir = process.env["CORPUS_DIR"];
+const corpusRootDir = corpusRoot();
 // WAXLENS_DOCS_CHECK=1 のときは書き換えず、committed な docs と突き合わせる。
 const checkMode = process.env["WAXLENS_DOCS_CHECK"] === "1";
 
@@ -36,9 +37,9 @@ const TARGETS: { lang: CatalogLang; path: string; label: string }[] = [
   { lang: "ja", path: resolve(DOCS, "ja", "corpus.md"), label: "ja/corpus.md" },
 ];
 
-describe.skipIf(corpusDir === undefined || corpusDir === "")("build-docs", () => {
+describe.skipIf(corpusRootDir === undefined)("build-docs", () => {
   it.each(TARGETS)("renders the $label catalog from manifest.json", async ({ lang, path, label }) => {
-    const manifestPath = resolve(corpusDir ?? "", "manifest.json");
+    const manifestPath = resolve(corpusRootDir ?? "", "manifest.json");
     const manifest = JSON.parse(await readFile(manifestPath, "utf8")) as Manifest;
     const current = await readFile(path, "utf8");
     const next = injectCatalog(current, renderCatalog(manifest, lang));
