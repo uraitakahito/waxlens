@@ -20,7 +20,7 @@
  * 「何も起きない」で済まない可能性がある。
  */
 import { mkdir, rm, writeFile } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { buildWaczToFile } from "../fixtures/generator.js";
 import { WaczReader } from "../../src/wacz/reader.js";
@@ -29,9 +29,10 @@ import { runValidation } from "../../src/validate/engine.js";
 import { DEFAULT_RULES } from "../../src/validate/rules/index.js";
 import { ALL_PROFILES, parseReportSource, type RuleProfile } from "../../src/validate/domain.js";
 import { CORPUS } from "./spec.js";
+import { corpusRoot } from "./corpus-dir.js";
 import type { ProfileResult } from "./manifest.js";
 
-const corpusDir = process.env["CORPUS_DIR"];
+const corpusRootDir = corpusRoot();
 
 const validateFixture = async (absPath: string, profile: RuleProfile): Promise<ProfileResult> => {
   const sourceResult = parseReportSource(absPath);
@@ -71,11 +72,11 @@ const stableKey = (r: ProfileResult): string =>
     ),
   });
 
-describe.skipIf(corpusDir === undefined || corpusDir === "")("build-corpus", () => {
+describe.skipIf(corpusRootDir === undefined)("build-corpus", () => {
   it(
     "generates fixtures + manifest into CORPUS_DIR, self-validating each",
     async () => {
-      const out = resolve(corpusDir ?? "");
+      const out = corpusRootDir ?? "";
       await rm(join(out, "fixtures"), { recursive: true, force: true });
       await mkdir(join(out, "fixtures"), { recursive: true });
 
