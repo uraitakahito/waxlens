@@ -60,29 +60,55 @@ export default defineConfig({
         root: { label: "English", lang: "en" },
         ja: { label: "日本語", lang: "ja" },
       },
+      // 各項目に `ja` 訳を持たせる。Starlight はページを翻訳するが
+      // ナビゲーションは翻訳しないので、これが無いと日本語ドキュメントは
+      // 翻訳済みのページが英語の目次にぶら下がった状態になる。
       sidebar: [
-        { label: "Quickstart", slug: "quickstart" },
+        { label: "Quickstart", translations: { ja: "クイックスタート" }, slug: "quickstart" },
         {
           label: "Reference",
+          translations: { ja: "リファレンス" },
           items: [
-            { label: "Rules", slug: "rules" },
-            { label: "Profiles", slug: "profiles" },
-            { label: "JSON report", slug: "json-report" },
+            { label: "Rules", translations: { ja: "Rules" }, slug: "rules" },
+            { label: "Profiles", translations: { ja: "プロファイル" }, slug: "profiles" },
+            { label: "JSON report", translations: { ja: "JSON レポート" }, slug: "json-report" },
           ],
         },
         {
           label: "Guides",
+          translations: { ja: "ガイド" },
           items: [
-            { label: "Architecture", slug: "architecture" },
-            { label: "Apple Container stack", slug: "container" },
-            { label: "Corpus", slug: "corpus" },
-            { label: "Terminology", slug: "terminology" },
+            { label: "Architecture", translations: { ja: "アーキテクチャ" }, slug: "architecture" },
+            {
+              label: "Apple Container stack",
+              translations: { ja: "Apple Container スタック" },
+              slug: "container",
+            },
+            { label: "Corpus", translations: { ja: "Corpus" }, slug: "corpus" },
+            { label: "Terminology", translations: { ja: "用語" }, slug: "terminology" },
+          ],
+        },
+        {
+          // waxlens そのものを開発する人向け。使う側の Guides とは読者が違う。
+          label: "For developers",
+          translations: { ja: "開発者向け" },
+          items: [
+            {
+              label: "Running the tests",
+              translations: { ja: "テストの実行" },
+              slug: "running-tests",
+            },
           ],
         },
         // 絶対 URL は意図的。root-relative にすると Starlight が日本語ページ上で
         // /ja/ を注入し 404 になる。
-        { label: "WACZ 1.1.1 ↗", link: SPEC_EN },
-        { label: "WACZ 1.1.1 (日本語訳) ↗", link: SPEC_JA },
+        // 仕様書そのものの名前なので訳さない。
+        { label: "WACZ 1.1.1 ↗", translations: { ja: "WACZ 1.1.1 ↗" }, link: SPEC_EN },
+        {
+          label: "WACZ 1.1.1 (日本語訳) ↗",
+          translations: { ja: "WACZ 1.1.1 (日本語訳) ↗" },
+          link: SPEC_JA,
+        },
       ],
     }),
   ],
