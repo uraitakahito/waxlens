@@ -113,9 +113,17 @@ function parseRuleDocs(): Record<string, RuleLink[]> {
 /**
  * `// #region <name>` … `// #endregion` で囲まれた実ソース片を返す。
  * region が見つからなければ throw = astro build が落ちる。
+ *
+ * 名前は行末まで一致させる。`\b` だと `-` を単語境界とみなすので、
+ * `#region report` が `#region report-summary` を掴んでしまい、
+ * 「トップレベル」の節に ReportSummary が出る、という形で実際に壊れていた。
+ * 掴んだ側の残り (`-summary`) がコード片の 1 行目として描画されるため、
+ * 症状は「謎のハイフン」に見えて原因から遠い。
  */
 export function sourceRegion(file: string, region: string): string {
-  const re = new RegExp(String.raw`//\s*#region\s+${region}\b([\s\S]*?)//\s*#endregion`);
+  // 名前は正規表現ではなくリテラルとして扱う。
+  const name = region.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+  const re = new RegExp(String.raw`//\s*#region\s+${name}[ \t]*\r?\n([\s\S]*?)//\s*#endregion`);
   const m = re.exec(read(resolve(ROOT, file)));
   if (!m) throw new Error(`region '${region}' not found in ${file}`);
   return m[1].replace(/^\n/, "").replace(/\s+$/, "");
