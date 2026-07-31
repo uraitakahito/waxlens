@@ -21,7 +21,9 @@ base=https://media.githubusercontent.com/media/uraitakahito/waxlens-corpus/main/
 curl -sL "$base/good.wacz" -o good.wacz
 
 # C. waxlens から決定的に再生成(DL 不要・byte 同一)
-CORPUS_DIR=../waxlens-corpus pnpm --filter @waxlens/core corpus:build
+#    CORPUS_DIR は絶対パスで。--filter は packages/core を cwd にして走らせるので、
+#    相対パスはそこ基準で解決され、黙って何も見つからない。
+CORPUS_DIR="$(cd ../waxlens-corpus && pwd)" pnpm --filter @waxlens/core corpus:build
 ```
 
 方法 C があるのは、標本が**集めたものではなく生成したもの**だからです。同じ入力から
