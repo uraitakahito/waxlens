@@ -74,10 +74,15 @@ UI を開いたあとは、検索欄に `tag:frictionless` と打っても同じ
 
 **順序が決まっています。**
 
-1. ルートの `vitest.config.ts` の `tags` に**語彙を宣言する**
+1. リポジトリルートの **`test-tags.ts`** に**語彙を宣言する**
 2. テストファイルの冒頭に `// @module-tag <名前>` を書く
 
 逆にすると `strictTags`（既定で有効）が働き、**1 件も走らずにエラーで止まります**。
+
+語彙が `vitest.config.ts` ではなく独立したファイルにあるのは、**走らせ方が 2 通りある**
+ためです ―― `pnpm test:ui` はルートの config を通りますが、`pnpm test`（＝ `pnpm -r test`）と
+`pnpm check` は**各パッケージの config しか読みません**。`test-tags.ts` を
+ルートと 3 パッケージの config が読むことで、どちらの経路でも同じ語彙が見えます。
 
 ファイル全体ではなく 1 件だけに付けたいときは、テスト側の options を使います ――
 `it("…", { tags: ["frictionless"] }, () => {…})`。
@@ -92,6 +97,17 @@ UI を開いたあとは、検索欄に `tag:frictionless` と打っても同じ
 ```bash
 pnpm test:ui
 ```
+
+観点で絞って開くこともできます。
+
+```bash
+pnpm test:ui --tagsFilter frictionless        # frictionless だけで開く
+pnpm test:ui --tagsFilter 'docs && i18n'
+```
+
+開いたあとに切り替えるなら、サイドバーの検索欄に **`tag:frictionless`** と打ちます
+（`tag:` の後ろは `--tagsFilter` と同じ式が書けます）。
+どのタグがあるかは [観点で絞る](#観点で絞る) の表か `pnpm exec vitest --listTags` で。
 
 `core`・`daemon`・`tui` を**1 つの画面**に集めます。ルートの `vitest.config.ts` が
 `projects` で各パッケージの config を指しているだけなので、`include` や
