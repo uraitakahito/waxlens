@@ -25,12 +25,37 @@ pnpm check
 | `pnpm --filter @waxlens/core test` | 1 パッケージだけ |
 | `pnpm --filter @waxlens/core test:watch` | 1 パッケージを watch |
 | `pnpm typecheck` / `pnpm lint` / `pnpm build` | 1 段階を全パッケージに |
+| `pnpm test:ui` | ブラウザの UI で全パッケージ（watch） |
+| `pnpm test:report` | `html/` に静的レポート |
 
 `--filter` に渡すのはディレクトリ名ではなく**パッケージ名**です ―
 `@waxlens/core`、`@waxlens/daemon`、`@waxlens/protocol`、`@waxlens/tui`。
 
 `@waxlens/protocol` にはテストがありません。ここは wire contract そのもので、
 `check` は `build` で終わります。抜けているのではなく、**走らせるものが無い**からです。
+
+## UI で見る
+
+```bash
+pnpm test:ui
+```
+
+`core`・`daemon`・`tui` を**1 つの画面**に集めます。ルートの `vitest.config.ts` が
+`projects` で各パッケージの config を指しているだけなので、`include` や
+`environment` の定義はパッケージ側の 1 か所のままです ―― UI 用に設定が
+二重化することはありません。
+
+`pnpm test` は変わらず `pnpm -r test` を通ります。**両者が走らせる集合は同じ**で、
+それは合計が一致することで確かめてあります（190 passed / 10 skipped）。
+
+`pnpm test:report` は `html/` に静的レポートを出します。
+**`file://` では開けません** ―― `npx vite preview --outDir html` のように配信してください。
+
+:::note
+`@waxlens/protocol` は `projects` に入れていません。テストが無いので、
+入れると UI に**空のプロジェクト**が並び、「テストが足りない」と読めてしまいます。
+「走らせるものが無い」のであって、欠けているのではありません。
+:::
 
 ## なぜ `build` が `test` より前なのか
 

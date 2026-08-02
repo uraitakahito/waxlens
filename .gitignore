@@ -156,3 +156,6 @@ samples/
 
 .vscode/*
 !.vscode/*.sample.json
+
+# Vitest UI static report (pnpm test:report)
+html/
