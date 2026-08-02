@@ -25,12 +25,38 @@ suite that does is skipped unless you ask for it — see below.
 | `pnpm --filter @waxlens/core test` | one package |
 | `pnpm --filter @waxlens/core test:watch` | one package, watching |
 | `pnpm typecheck` / `pnpm lint` / `pnpm build` | one stage across all packages |
+| `pnpm test:ui` | every package in a browser UI (watch) |
+| `pnpm test:report` | a static report into `html/` |
 
 `--filter` takes the package name, not the directory: `@waxlens/core`,
 `@waxlens/daemon`, `@waxlens/protocol`, `@waxlens/tui`.
 
 `@waxlens/protocol` has no tests — it is the wire contract, and its `check` stops
 after `build`. That is not an omission: there is nothing there to run.
+
+## Watching it in a UI
+
+```bash
+pnpm test:ui
+```
+
+Shows `core`, `daemon` and `tui` **in one screen**. The root `vitest.config.ts`
+does nothing but point `projects` at the per-package configs, so `include` and
+`environment` stay defined in one place each — the UI does not fork the
+configuration.
+
+`pnpm test` is unchanged and still goes through `pnpm -r test`. **Both run the
+same set**, which was checked by comparing the totals (190 passed / 10 skipped
+either way).
+
+`pnpm test:report` writes a static report into `html/`. It **cannot be opened
+over `file://`** — serve it, e.g. `npx vite preview --outDir html`.
+
+:::note
+`@waxlens/protocol` is deliberately absent from `projects`. With no tests, it
+would appear in the UI as an **empty project**, which reads as "tests missing"
+rather than "nothing to run".
+:::
 
 ## Why `build` comes before `test`
 
