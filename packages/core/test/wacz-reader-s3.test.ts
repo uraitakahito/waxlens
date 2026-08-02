@@ -1,3 +1,4 @@
+// @module-tag remote
 /**
  * `WaczReader.open(s3Transport(...))` の end-to-end テスト。
  *

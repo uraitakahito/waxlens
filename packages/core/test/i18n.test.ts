@@ -1,3 +1,4 @@
+// @module-tag i18n
 /**
  * i18n 基盤(translate.ts)のテスト。
  *

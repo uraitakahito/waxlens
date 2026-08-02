@@ -1,3 +1,4 @@
+// @module-tag daemon
 /**
  * entry-preview の純ロジック(gzip 展開・テキスト/バイナリ判定・cap 打ち切り)のテスト。
  * 実 WACZ を要さず zlib で作った Buffer で完結するので常時走る(corpus 不要)。

@@ -1,3 +1,5 @@
+// @module-tag corpus
+// @module-tag engine
 /**
  * corpus-driven 回帰テスト。
  *

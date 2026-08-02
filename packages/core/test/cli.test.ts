@@ -1,3 +1,4 @@
+// @module-tag cli
 /**
  * CLI integration テスト。
  *

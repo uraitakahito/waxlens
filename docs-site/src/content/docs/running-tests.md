@@ -25,12 +25,110 @@ suite that does is skipped unless you ask for it — see below.
 | `pnpm --filter @waxlens/core test` | one package |
 | `pnpm --filter @waxlens/core test:watch` | one package, watching |
 | `pnpm typecheck` / `pnpm lint` / `pnpm build` | one stage across all packages |
+| `pnpm test:ui` | every package in a browser UI (watch) |
+| `pnpm test:report` | a static report into `html/` |
 
 `--filter` takes the package name, not the directory: `@waxlens/core`,
 `@waxlens/daemon`, `@waxlens/protocol`, `@waxlens/tui`.
 
 `@waxlens/protocol` has no tests — it is the wire contract, and its `check` stops
 after `build`. That is not an omission: there is nothing there to run.
+
+## Filtering by concern
+
+Tests carry **concern tags**. They let you ask what a test covers, rather than
+where its file happens to live.
+
+```bash
+pnpm exec vitest --listTags                        # the vocabulary
+pnpm exec vitest run --tagsFilter frictionless     # 13 tests
+pnpm exec vitest run --tagsFilter 'docs && i18n'   # 2
+pnpm exec vitest run --tagsFilter '!corpus'
+pnpm test:ui --tagsFilter frictionless             # open the UI already filtered
+```
+
+Once the UI is open, typing `tag:frictionless` in its search box does the same.
+
+| Tag | Covers |
+| --- | --- |
+| `frictionless` | The Data Package base WACZ is built on |
+| `wacz` | WACZ structure — required files, reserved directories |
+| `cdxj` | The index format and wabac compatibility |
+| `warc` | WARC records and digests |
+| `engine` | The layer that runs rules and collects issues |
+| `corpus` | Corpus-driven — opens real archives |
+| `docs` | Documentation agreeing with the code |
+| `i18n` | Messages and translations |
+| `cli` | The command-line surface |
+| `remote` | Reading an archive over S3 |
+| `daemon` / `tui` | The respective package |
+
+:::caution[Not for speed]
+All 203 tests finish in 3.5s. Filtering here buys **findability, not time**.
+Vitest's tags can also carry `timeout` and `retry` for the tests they mark;
+this repository does not use that half, because no class of test here wants a
+different execution policy.
+:::
+
+### Adding a tag
+
+**The order matters.**
+
+1. Declare the name in **`test-tags.ts`** at the repository root
+2. Write `// @module-tag <name>` at the top of the test file
+
+The other way round, `strictTags` (on by default) stops the run before a single
+test executes.
+
+The vocabulary sits in its own file rather than in `vitest.config.ts` because
+there are **two ways to run these tests**: `pnpm test:ui` goes through the root
+config, while `pnpm test` (`pnpm -r test`) and `pnpm check` read only the
+per-package configs. `test-tags.ts` is imported by the root and all three
+package configs, so both paths see the same vocabulary.
+
+To tag one test rather than a whole file, use the test's own options:
+`it("…", { tags: ["frictionless"] }, () => {…})`. `rule-docs.test.ts` is the
+worked example — the file is `docs`, but one test in it is also `frictionless`.
+
+`packages/core/test/test-tags.test.ts` fails on a file with no tag and on a
+declared tag nothing uses. `strictTags` catches only the opposite direction —
+using a tag that was never declared.
+
+## Watching it in a UI
+
+```bash
+pnpm test:ui
+```
+
+It can open already filtered by concern:
+
+```bash
+pnpm test:ui --tagsFilter frictionless        # only frictionless
+pnpm test:ui --tagsFilter 'docs && i18n'
+```
+
+To switch once it is open, type **`tag:frictionless`** in the sidebar's search
+box — anything after `tag:` is the same expression `--tagsFilter` takes. For
+what tags exist, see the table under [Filtering by concern](#filtering-by-concern)
+or run `pnpm exec vitest --listTags`.
+
+Shows `core`, `daemon` and `tui` **in one screen**. The root `vitest.config.ts`
+does nothing but point `projects` at the per-package configs, so `include` and
+`environment` stay defined in one place each — the UI does not fork the
+configuration.
+
+`pnpm test` is unchanged and still goes through `pnpm -r test`. **Both run the
+same set**, which was checked by comparing the totals (190 passed / 10 skipped
+either way).
+
+`pnpm test:report` writes a static report into `html/`. It **cannot be opened
+over `file://`** — serve it, e.g. `npx vite preview --outDir html`.
+
+:::note
+`@waxlens/protocol` is deliberately absent from `projects`. With no tests, it
+would appear in the UI as an **empty project**, which reads as "tests missing"
+rather than "nothing to run".
+:::
 
 ## Why `build` comes before `test`
 

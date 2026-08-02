@@ -1,3 +1,4 @@
+// @module-tag wacz
 /**
  * `sectionForSpecPath` — §5.2 必須 path → spec 小節番号の単一の真実。
  * rule(issue の section)と entries(ReportEntry.expectedSection)が共用する

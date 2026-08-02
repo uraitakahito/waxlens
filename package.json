@@ -17,6 +17,8 @@
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
+    "test:ui": "vitest --ui",
+    "test:report": "vitest run --reporter=html",
     "lint": "pnpm -r lint",
     "check": "pnpm audit --audit-level=moderate && pnpm --filter @waxlens/core check && pnpm --filter @waxlens/protocol check && pnpm --filter @waxlens/daemon check && pnpm --filter @waxlens/tui check",
     "site:dev": "npm --prefix docs-site run dev",
@@ -24,6 +26,13 @@
     "site:preview": "npm --prefix docs-site run preview",
     "site:check": "npm run site:build && node scripts/check-doc-refs.mjs"
   },
+  "//scripts": [
+    "test:ui / test:report use the root vitest.config.ts, whose `projects` point at",
+    "the per-package configs \u2014 so the UI shows core, daemon and tui in one run rather",
+    "than needing three. `pnpm test` is unchanged and still goes through `pnpm -r test`.",
+    "test:report writes html/ and cannot be opened over file:// \u2014 serve it, e.g.",
+    "`npx vite preview --outDir html`."
+  ],
   "//@types/node": [
     "Root-level eslint.config.js uses `// @ts-check` plus `import.meta.dirname`",
     "(Node 20.11+). The `dirname` field lives in @types/node's ImportMeta",
@@ -36,9 +45,11 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^25.7.0",
+    "@vitest/ui": "^4.1.5",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import-x": "^4.16.2",
     "typescript-eslint": "^8.59.2",
-    "vite": "^8.0.16"
+    "vite": "^8.0.16",
+    "vitest": "^4.1.5"
   }
 }

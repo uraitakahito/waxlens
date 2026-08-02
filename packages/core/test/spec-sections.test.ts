@@ -1,3 +1,4 @@
+// @module-tag docs
 /**
  * spec-sections.ts(section → spec URL)のテスト。
  */

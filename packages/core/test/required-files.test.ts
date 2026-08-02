@@ -1,3 +1,4 @@
+// @module-tag wacz
 /**
  * `wacz/required-files`(§5.2 の MUST ファイル存在チェック)と、
  * それに伴う `datapackage/profile-required` の de-dup の回帰テスト。

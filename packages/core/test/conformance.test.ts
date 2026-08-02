@@ -1,3 +1,4 @@
+// @module-tag engine
 /**
  * conformance(RFC 2119 規範レベル)の常設ガード。
  *

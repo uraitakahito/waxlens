@@ -1,3 +1,4 @@
+// @module-tag engine
 /**
  * `validate/domain.ts` の brand 型 / parser 群のテスト。
  *

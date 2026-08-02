@@ -1,3 +1,4 @@
+// @module-tag frictionless
 /**
  * `datapackage/frictionless-schema`(補助ルール)のテスト。
  *
