@@ -1,3 +1,4 @@
+// @module-tag daemon
 /**
  * daemon の HTTP/WS サーバ(dispatch + 相関 id 枠)のテスト。
  *

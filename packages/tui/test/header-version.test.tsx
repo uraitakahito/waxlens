@@ -1,3 +1,4 @@
+// @module-tag tui
 /**
  * Header の版表示テスト。
  *

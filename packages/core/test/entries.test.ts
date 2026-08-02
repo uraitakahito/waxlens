@@ -1,3 +1,4 @@
+// @module-tag engine
 /**
  * `Report.entries`(ファイル一覧 + 検証の紐付け)のテスト。
  *

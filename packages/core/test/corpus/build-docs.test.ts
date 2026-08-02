@@ -1,3 +1,5 @@
+// @module-tag corpus
+// @module-tag docs
 /**
  * corpus カタログ生成ドライバ (build-corpus と対称)。
  *

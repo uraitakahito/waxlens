@@ -1,3 +1,4 @@
+// @module-tag cdxj
 /**
  * `cdxj/index-valid-data`(MUST/error)のテスト。
  *

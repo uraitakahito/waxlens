@@ -34,6 +34,59 @@ pnpm check
 `@waxlens/protocol` にはテストがありません。ここは wire contract そのもので、
 `check` は `build` で終わります。抜けているのではなく、**走らせるものが無い**からです。
 
+## 観点で絞る
+
+テストには**観点のタグ**が付いています。ファイル名やディレクトリではなく、
+**何を検査しているか**で引けます。
+
+```bash
+pnpm exec vitest --listTags                        # 語彙の一覧
+pnpm exec vitest run --tagsFilter frictionless     # 13 件
+pnpm exec vitest run --tagsFilter 'docs && i18n'   # 2 件
+pnpm exec vitest run --tagsFilter '!corpus'
+pnpm test:ui --tagsFilter frictionless             # UI を絞って開く
+```
+
+UI を開いたあとは、検索欄に `tag:frictionless` と打っても同じです。
+
+| タグ | 意味 |
+| --- | --- |
+| `frictionless` | WACZ が土台にする Data Package の検査 |
+| `wacz` | WACZ の構造（必須ファイル・予約ディレクトリ） |
+| `cdxj` | 索引フォーマットと wabac 互換 |
+| `warc` | WARC レコードとダイジェスト |
+| `engine` | ルールを束ねて回す層 |
+| `corpus` | コーパス駆動。実アーカイブを開く |
+| `docs` | ドキュメントとコードの整合 |
+| `i18n` | メッセージと翻訳 |
+| `cli` | コマンドライン表面 |
+| `remote` | S3 越しの読み取り |
+| `daemon` / `tui` | それぞれのパッケージ |
+
+:::caution[速さのためではありません]
+全 203 件が 3.5 秒で終わります。**絞る目的は「引けること」だけ**で、
+実行時間ではありません。Vitest の tags にはタグ側で `timeout` や `retry` を
+指定する用途もありますが、**この repo では使っていません** ――
+実行方針を分けたいテストの種類が無いからです。
+:::
+
+### タグを足すとき
+
+**順序が決まっています。**
+
+1. ルートの `vitest.config.ts` の `tags` に**語彙を宣言する**
+2. テストファイルの冒頭に `// @module-tag <名前>` を書く
+
+逆にすると `strictTags`（既定で有効）が働き、**1 件も走らずにエラーで止まります**。
+
+ファイル全体ではなく 1 件だけに付けたいときは、テスト側の options を使います ――
+`it("…", { tags: ["frictionless"] }, () => {…})`。
+`rule-docs.test.ts` が実例で、ファイルとしては `docs` ですが、
+その中の 1 件だけが `frictionless` でもあります。
+
+`packages/core/test/test-tags.test.ts` が**付け忘れと使われない語彙を落とします**。
+`strictTags` が捕まえるのは「宣言していないタグを使った」だけで、逆向きは捕まえません。
+
 ## UI で見る
 
 ```bash

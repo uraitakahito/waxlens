@@ -1,3 +1,4 @@
+// @module-tag tui
 /**
  * ServerEndpoint.parse(--server の値オブジェクト生成)の単体テスト。
  *

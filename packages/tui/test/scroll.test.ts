@@ -1,3 +1,4 @@
+// @module-tag tui
 /**
  * scrollWindow / clampOffset の純ロジックのテスト(実測高は呼び出し側が渡す前提)。
  * React も I/O も関わらないので常時走る。

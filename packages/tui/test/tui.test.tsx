@@ -1,3 +1,4 @@
+// @module-tag tui
 /**
  * TUI rendering テスト。
  *

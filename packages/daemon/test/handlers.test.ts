@@ -1,3 +1,4 @@
+// @module-tag daemon
 /**
  * daemon ハンドラのテスト。
  *

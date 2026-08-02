@@ -1,3 +1,4 @@
+// @module-tag tui
 /**
  * `render/tree.ts`(flat entries → §5.1 ツリー / マーカー)の純関数テスト。
  */

@@ -1,3 +1,4 @@
+// @module-tag corpus
 /**
  * waxlens-corpus 生成エントリ (案 3)。
  *

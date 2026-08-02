@@ -1,3 +1,5 @@
+// @module-tag i18n
+// @module-tag docs
 /**
  * カタログの健全性チェック。
  *

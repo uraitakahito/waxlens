@@ -1,3 +1,4 @@
+// @module-tag docs
 /**
  * spec カバレッジ拡充で追加した 5 rule のテスト。
  *
