@@ -34,6 +34,60 @@ suite that does is skipped unless you ask for it — see below.
 `@waxlens/protocol` has no tests — it is the wire contract, and its `check` stops
 after `build`. That is not an omission: there is nothing there to run.
 
+## Filtering by concern
+
+Tests carry **concern tags**. They let you ask what a test covers, rather than
+where its file happens to live.
+
+```bash
+pnpm exec vitest --listTags                        # the vocabulary
+pnpm exec vitest run --tagsFilter frictionless     # 13 tests
+pnpm exec vitest run --tagsFilter 'docs && i18n'   # 2
+pnpm exec vitest run --tagsFilter '!corpus'
+pnpm test:ui --tagsFilter frictionless             # open the UI already filtered
+```
+
+Once the UI is open, typing `tag:frictionless` in its search box does the same.
+
+| Tag | Covers |
+| --- | --- |
+| `frictionless` | The Data Package base WACZ is built on |
+| `wacz` | WACZ structure — required files, reserved directories |
+| `cdxj` | The index format and wabac compatibility |
+| `warc` | WARC records and digests |
+| `engine` | The layer that runs rules and collects issues |
+| `corpus` | Corpus-driven — opens real archives |
+| `docs` | Documentation agreeing with the code |
+| `i18n` | Messages and translations |
+| `cli` | The command-line surface |
+| `remote` | Reading an archive over S3 |
+| `daemon` / `tui` | The respective package |
+
+:::caution[Not for speed]
+All 203 tests finish in 3.5s. Filtering here buys **findability, not time**.
+Vitest's tags can also carry `timeout` and `retry` for the tests they mark;
+this repository does not use that half, because no class of test here wants a
+different execution policy.
+:::
+
+### Adding a tag
+
+**The order matters.**
+
+1. Declare the name in `tags` in the root `vitest.config.ts`
+2. Write `// @module-tag <name>` at the top of the test file
+
+The other way round, `strictTags` (on by default) stops the run before a single
+test executes.
+
+To tag one test rather than a whole file, use the test's own options:
+`it("…", { tags: ["frictionless"] }, () => {…})`. `rule-docs.test.ts` is the
+worked example — the file is `docs`, but one test in it is also `frictionless`.
+
+`packages/core/test/test-tags.test.ts` fails on a file with no tag and on a
+declared tag nothing uses. `strictTags` catches only the opposite direction —
+using a tag that was never declared.
+
 ## Watching it in a UI
 
 ```bash

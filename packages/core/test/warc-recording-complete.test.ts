@@ -1,3 +1,4 @@
+// @module-tag warc
 /**
  * `warc/recording-complete`(info/warning · browserhive profile 限定)のテスト。
  *

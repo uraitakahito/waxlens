@@ -1,5 +1,7 @@
 import { defineConfig } from "vitest/config";
 
+import { TEST_TAGS } from "./test-tags.js";
+
 /**
  * Root config — exists so `--ui` can show the whole workspace at once.
  *
@@ -18,5 +20,6 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     projects: ["packages/core", "packages/daemon", "packages/tui"],
+    tags: TEST_TAGS,
   },
 });

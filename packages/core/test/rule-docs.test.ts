@@ -1,3 +1,4 @@
+// @module-tag docs
 /**
  * RULE_DOCS の健全性チェック。
  *
@@ -22,7 +23,9 @@ describe("rule-docs", () => {
     }
   });
 
-  it("frictionless-structure は 2 spec を持つ", () => {
+  // このファイルは全体としては `docs` だが、この 1 件だけは frictionless の
+  // 検査でもある。ファイル単位のタグでは拾えないので個別に付ける。
+  it("frictionless-structure は 2 spec を持つ", { tags: ["frictionless"] }, () => {
     expect(docsForRule("datapackage/frictionless-structure")).toHaveLength(2);
   });
 });

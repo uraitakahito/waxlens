@@ -1,3 +1,4 @@
+// @module-tag tui
 /**
  * `render/detail.ts`(Layout 右ペインの純関数)のテスト。
  * Ink に依存しないので文字列化・突合だけを決定的に検証する。

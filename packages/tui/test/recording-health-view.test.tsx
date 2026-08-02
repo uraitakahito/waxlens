@@ -1,3 +1,4 @@
+// @module-tag tui
 /**
  * Recording health パネル(案3)の描画テスト。
  *

@@ -1,3 +1,4 @@
+// @module-tag frictionless
 /**
  * `datapackage/frictionless-structure`(MUST/error)のテスト。
  *

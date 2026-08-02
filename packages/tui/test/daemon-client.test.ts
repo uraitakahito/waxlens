@@ -1,3 +1,4 @@
+// @module-tag tui
 /**
  * daemon-client(WS クライアント)の単体テスト。
  *

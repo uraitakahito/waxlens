@@ -1,3 +1,4 @@
+// @module-tag corpus
 /**
  * renderCatalog / injectCatalog の単体テスト。
  *

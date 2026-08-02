@@ -1,3 +1,4 @@
+// @module-tag remote
 /**
  * `buildS3Client(forcePathStyle)` のユニット。 引数の boolean が
  * `S3Client.config.forcePathStyle` に乗ることを確認する。 SDK v3 の
