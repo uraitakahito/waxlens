@@ -74,11 +74,17 @@ different execution policy.
 
 **The order matters.**
 
-1. Declare the name in `tags` in the root `vitest.config.ts`
+1. Declare the name in **`test-tags.ts`** at the repository root
 2. Write `// @module-tag <name>` at the top of the test file
 
 The other way round, `strictTags` (on by default) stops the run before a single
 test executes.
+
+The vocabulary sits in its own file rather than in `vitest.config.ts` because
+there are **two ways to run these tests**: `pnpm test:ui` goes through the root
+config, while `pnpm test` (`pnpm -r test`) and `pnpm check` read only the
+per-package configs. `test-tags.ts` is imported by the root and all three
+package configs, so both paths see the same vocabulary.
 
 To tag one test rather than a whole file, use the test's own options:
 `it("…", { tags: ["frictionless"] }, () => {…})`. `rule-docs.test.ts` is the
@@ -93,6 +99,18 @@ using a tag that was never declared.
 ```bash
 pnpm test:ui
 ```
+
+It can open already filtered by concern:
+
+```bash
+pnpm test:ui --tagsFilter frictionless        # only frictionless
+pnpm test:ui --tagsFilter 'docs && i18n'
+```
+
+To switch once it is open, type **`tag:frictionless`** in the sidebar's search
+box — anything after `tag:` is the same expression `--tagsFilter` takes. For
+what tags exist, see the table under [Filtering by concern](#filtering-by-concern)
+or run `pnpm exec vitest --listTags`.
 
 Shows `core`, `daemon` and `tui` **in one screen**. The root `vitest.config.ts`
 does nothing but point `projects` at the per-package configs, so `include` and
