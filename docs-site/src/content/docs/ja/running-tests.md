@@ -136,7 +136,7 @@ pnpm test:ui --tagsFilter 'docs && i18n'
 ## corpus テスト
 
 `@waxlens/core` にはもう 1 種類のテストがあります。インラインで組み立てた fixture ではなく、
-[waxlens-corpus](/corpus/) リポジトリの**実物の WACZ** を検証するものです。
+[waxlens-corpus](https://uraitakahito.github.io/waxlens-corpus/ja/) リポジトリの**実物の WACZ** を検証するものです。
 アーカイブ本体が要るので `CORPUS_DIR` を読み、**未設定なら skip します**。
 
 ```
