@@ -16,6 +16,21 @@ issue を 1 件報告します。下の表は **rule 定義そのものから生
 
 **適合レベル**は spec が要求する強さ(`MUST` / `SHOULD` / `MAY` / `MUST NOT`)、
 **severity** は違反に対して waxlens が取る扱いで、この 2 つは必ずしも一致しません。
+
+`MUST` / `MUST NOT` / `SHOULD` / `SHOULD NOT` / `MAY` は
+[RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) の意味で用います。
+表に出る適合レベルは **waxlens が付けた重要度ではなく、spec 側の記述を写したもの**です。
+
+:::note[出典側の事情]
+明示的に RFC 2119 を宣言しているのは
+[Data Package](https://uraitakahito.github.io/datapackage/ja/) だけです
+（各仕様書の冒頭に「本文書のキーワードは RFC 2119 に記述されたとおりに解釈される」とある）。
+**WACZ 1.1.1 / 1.2.0・wacz-auth 0.1.0・WARC 1.1 は `MUST` や `SHOULD` を使いながら、
+RFC 2119 への言及がありません**（本文中に一度も現れないことを確認済み）。
+
+そこで waxlens は、**どの仕様に由来する適合レベルでも RFC 2119 の意味で扱います**。
+慣例に従った解釈であり、出典側が明示していない部分については waxlens の側の取り決めです。
+:::
 `datapackage/resources-complete` は `MUST` ですが `warning` です — `resources[]`
 が不完全でも、それだけで replay が壊れるわけではないからです。
 

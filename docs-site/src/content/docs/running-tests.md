@@ -141,7 +141,7 @@ longer — cheap gates first.
 ## The corpus tests
 
 `@waxlens/core` carries a second kind of test: it validates **real WACZ archives**
-from the [waxlens-corpus](/corpus/) repository rather than fixtures built inline.
+from the [waxlens-corpus](https://uraitakahito.github.io/waxlens-corpus/) repository rather than fixtures built inline.
 Those need the archives, so they read `CORPUS_DIR` and **skip when it is unset**:
 
 ```
