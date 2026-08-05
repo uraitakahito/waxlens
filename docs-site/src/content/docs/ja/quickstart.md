@@ -91,4 +91,4 @@ waxlens-validate --json samples/wikipedia.wacz | jq '{valid, summary}'
 ## 次に読むもの
 
 - 各 rule が何を見るか → [Rules](/waxlens/ja/rules/)
-- 意図的に失敗する archive → [Corpus](/waxlens/ja/corpus/)
+- 意図的に失敗する archive → [Corpus](https://uraitakahito.github.io/waxlens-corpus/ja/)
