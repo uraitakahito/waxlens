@@ -35,8 +35,8 @@ export interface FixtureEntry {
    * が無い / `$schema` を持たない / 文字列でない場合は `null`。
    *
    * **optional にしない** — 省略可にすると「宣言が無い」と「まだ記録して
-   * いない (古い manifest)」が同じ形になり区別できなくなる。現状 29 件すべて
-   * が `null` なので、この区別が付かないと再生成しても差分すら出ない。
+   * いない (古い manifest)」が同じ形になり区別できなくなる。ほぼ全件が
+   * `null` なので、この区別が付かないと再生成しても差分がほとんど出ない。
    */
   $schema: string | null;
   expect?: ProfileResult;
