@@ -25,10 +25,16 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { injectCatalog, renderCatalog, type CatalogLang, type Manifest } from "./catalog.js";
 import { corpusRoot } from "./corpus-dir.js";
+import { assertPinnedCorpus } from "./corpus-version.js";
 
 const corpusRootDir = corpusRoot();
 // WAXLENS_DOCS_CHECK=1 のときは書き換えず、committed な docs と突き合わせる。
 const checkMode = process.env["WAXLENS_DOCS_CHECK"] === "1";
+
+// 版の固定を要求するのは**検査モードだけ**。書き込みモード (`corpus:docs`) は
+// 次のリリースを作るために固定先と違う版へ書くのが仕事なので、ここで止めたら
+// 新しい catalogue を生成できない。build-corpus を素通しにするのと同じ理由。
+if (checkMode && corpusRootDir !== undefined) assertPinnedCorpus(corpusRootDir);
 
 // 出力先は **corpus repo の** docs site。標本の一覧が標本と別 repo にある状態を
 // 解消するため、カタログは fixtures/ と manifest.json と同じ経路 (CORPUS_DIR) で

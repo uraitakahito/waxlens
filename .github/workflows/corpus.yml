@@ -25,19 +25,24 @@ jobs:
       # import する(dist 解決)ため、test 前に全 workspace を build しておく。
       - run: pnpm build
 
-      # corpus を sibling に clone。git-lfs は ubuntu-latest にプリインストール
-      # 済みで、clone 時に LFS 実体まで smudge される (念のため pull も明示)。
+      # corpus を sibling に clone。版は `.corpus-version` に固定してあり、
+      # 動く main は追わない — corpus をマージしただけでは waxlens の結果は
+      # 変わらず、追随は `.corpus-version` を書き換えるという明示的な行為になる。
       # corpus が private な場合はここで token / deploy key が要る (public なら不要)。
-      # 特定バージョンに固定したいなら `--branch <tag|sha>` を付ける。
       - name: Fetch waxlens-corpus
         run: |
-          git clone --depth 1 https://github.com/uraitakahito/waxlens-corpus.git ../waxlens-corpus
+          CORPUS_REF="$(cat .corpus-version)"
+          echo "corpus pin: $CORPUS_REF"
+          git clone --depth 1 --branch "$CORPUS_REF" \
+            https://github.com/uraitakahito/waxlens-corpus.git ../waxlens-corpus
+          # clone 直後は LFS がポインタのまま残ることがある (実測)。この pull は
+          # 「念のため」ではなく、無いと fixtures が 130 バイトのテキストになる。
           git -C ../waxlens-corpus lfs pull
 
-      # docs/examples.md のカタログ表が manifest.json と一致しているか検査する。
+      # corpus 側の catalogue.md が manifest.json と一致しているか検査する。
       # manifest は LFS 対象外なので、この step 自体は `lfs pull` に依存しない。
       # ズレていれば fail させ、`corpus:docs` での再生成 + commit を促す。
-      - name: Check docs/examples.md is fresh
+      - name: Check the corpus catalogue is fresh
         run: CORPUS_DIR="$(cd ../waxlens-corpus && pwd)" pnpm --filter @waxlens/core corpus:docs:check
 
       - name: Run corpus-driven regression
