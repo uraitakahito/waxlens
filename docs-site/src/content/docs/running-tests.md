@@ -152,12 +152,29 @@ Test Files  20 passed | 2 skipped (22)
 That is what a normal `pnpm check` looks like. The skip is why the routine
 command stays hermetic.
 
-To run them, clone the corpus beside this repository and point at it with an
-**absolute** path:
+To run them, clone the corpus beside this repository **at the pinned version**,
+then point at it with an **absolute** path:
 
 ```sh
+git clone --branch "$(cat .corpus-version)" \
+  https://github.com/uraitakahito/waxlens-corpus.git ../waxlens-corpus
+git -C ../waxlens-corpus lfs pull
+
 CORPUS_DIR="$(cd ../waxlens-corpus && pwd)" pnpm --filter @waxlens/core test:corpus
 ```
+
+`.corpus-version` at the repository root holds a single tag — the corpus release
+this checkout is tested against. CI reads the same file, so a green pipeline and
+a green local run mean the same thing. **Hand it a different revision and the
+suite refuses to run**, naming what it got rather than failing later with
+expectations that do not match:
+
+```
+CORPUS_DIR は 28bcc70 を指していますが、この waxlens は v0.1.0 に固定されています。
+```
+
+An unpacked release tarball is not a git checkout, so its version cannot be read
+— that case is allowed through rather than blocked.
 
 The `$(cd … && pwd)` is not decoration. `pnpm --filter` runs the script with its
 working directory set to `packages/core`, and a relative `CORPUS_DIR` is resolved
@@ -169,8 +186,26 @@ the question.
 | Script | What it does |
 | --- | --- |
 | `test:corpus` | validate every archive in the corpus, compare against `manifest.json` |
-| `corpus:docs:check` | fail if `docs/examples.md` has drifted from the corpus |
+| `corpus:docs:check` | fail if the corpus catalogue has drifted from `manifest.json` |
 | `corpus:build` | **regenerate** the archives and the manifest |
+
+### Moving to a newer corpus
+
+Merging something into the corpus changes nothing here — this checkout keeps
+testing against the tag in `.corpus-version`. Following it is a deliberate act,
+in three steps:
+
+1. land the change in waxlens-corpus and **cut a release** there
+2. edit `.corpus-version` to the new tag
+3. open one waxlens PR carrying that edit **and** whatever code has to change
+   with it
+
+The last point is why the pin exists: the PR is judged against a corpus that
+cannot move underneath it, so it is green or red on its own terms.
+
+`corpus:build` and `corpus:docs` deliberately skip the version check — they are
+how the *next* corpus release gets produced, so they have to run against
+something other than the pin.
 
 :::danger[`corpus:build` deletes before it writes]
 It removes `$CORPUS_DIR/fixtures` **entirely** and rebuilds it. Anything in there
@@ -189,7 +224,7 @@ Five workflows, and only the first is the one you reproduce locally with
 | Workflow | Runs |
 | --- | --- |
 | `check` | `pnpm check` — the whole routine suite |
-| `corpus` | clones waxlens-corpus, then `corpus:docs:check` and `test:corpus` |
+| `corpus` | clones waxlens-corpus **at `.corpus-version`**, then `corpus:docs:check` and `test:corpus` |
 | `pack-smoke` | `npm pack` for `@waxlens/core` and `@waxlens/tui`, then installs each into a clean directory and runs its binary |
 | `site` | builds the documentation and verifies its references |
 | `docs` | publishes the site |
