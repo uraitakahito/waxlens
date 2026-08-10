@@ -40,6 +40,51 @@ waxlens-validate --json samples/wikipedia.wacz | jq '{valid, summary}'
   カタログで解決します。TUI と将来の browser frontend が同じ report を別の言語で
   提示できるのはこのためです。
 - `location` — rule が言える場合の、archive 内の位置。
+- `details` — rule 固有の付加情報（hash の差分、hex dump など）。意図的に型を
+  持たせておらず、renderer が rule ごとに整形します。
+- `docs` — 出典となる仕様の該当箇所へのリンク。指摘から根拠の本文までたどれます。
+- `conformance` — **仕様**がどれだけ強く要求しているか（`MUST` / `MUST NOT` /
+  `SHOULD` / `SHOULD NOT` / `MAY`）。rule が書くのではなく rule 名から解決するので、
+  rule 定義が唯一の情報源のままになります。
+
+### `severity` と `conformance` は別の問いに答えます
+
+`severity` は違反に対して waxlens がどうするか、`conformance` は仕様が何を
+要求しているかです。この 2 つは**直交**しており、しかも実際によくずれるので、
+**片方で絞ってももう片方の代わりにはなりません**。
+
+corpus の 29 標本での実測:
+
+| conformance | error | warning | info |
+| --- | ---: | ---: | ---: |
+| `MUST` | 19 | **10** | 0 |
+| `SHOULD` | **1** | 8 | 0 |
+| `MAY` / `MUST NOT` | 0 | 4 | 1 |
+
+11 件が対角から外れています。`datapackage/resources-complete` は `MUST` ですが
+`warning` です —— ZIP に未宣言のファイルがあっても replay は止まりません。
+`datapackage/digest` は逆向きで、仕様は `SHOULD` に留めていますが、hash が
+合わないのはアーカイブが変更された可能性があるため waxlens は `error` にします。
+
+なお **`valid` は `severity` だけから導かれます** —— `error` の数しか見ません。
+**`MUST` に違反していても `valid` になりえます**。仕様準拠の観点が要るなら、
+issue から自分で読み取ってください。
+
+```sh
+# waxlens が「壊れている」と判断したもの
+waxlens archive.wacz | jq '[.issues[] | select(.severity == "error")]'
+
+# 仕様が要求しているもの
+waxlens archive.wacz | jq '[.issues[] | select(.conformance == "MUST" or .conformance == "MUST NOT")]'
+
+# 両者が食い違っている箇所 —— たいていここがいちばん情報量があります
+waxlens archive.wacz | jq '[.issues[]
+  | select((.conformance == "MUST" and .severity != "error")
+        or (.conformance != "MUST" and .severity == "error"))]'
+```
+
+これを行う CLI フラグはまだありません。report は 2 軸とも持っており、絞り込みは
+呼び出し側に委ねています。
 
 ## 安定性の約束
 
