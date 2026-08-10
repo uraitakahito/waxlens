@@ -42,6 +42,53 @@ by rule without parsing prose:
   locale catalogue. That is what lets the TUI and a future browser frontend
   present the same report in different languages.
 - `location` — where in the archive, when the rule can say.
+- `details` — rule-specific extras: a hash diff, a hex dump. Deliberately
+  untyped; a renderer formats it per rule.
+- `docs` — links to the clause in the source specification, so a reader can go
+  from a finding to the text that motivates it.
+- `conformance` — how strongly the **specification** demands it: `MUST`,
+  `MUST NOT`, `SHOULD`, `SHOULD NOT`, `MAY`. Resolved from the rule name rather
+  than written by the rule, so the rule definition stays the single source.
+
+### `severity` and `conformance` answer different questions
+
+`severity` is what waxlens does about a violation; `conformance` is what the
+specification asks for. They are **orthogonal**, and they diverge often enough
+that filtering on one is not a substitute for the other.
+
+Across the 29 corpus specimens:
+
+| conformance | error | warning | info |
+| --- | ---: | ---: | ---: |
+| `MUST` | 19 | **10** | 0 |
+| `SHOULD` | **1** | 8 | 0 |
+| `MAY` / `MUST NOT` | 0 | 4 | 1 |
+
+Eleven findings fall off the diagonal. `datapackage/resources-complete` is a
+`MUST` reported as a `warning` — an undeclared file in the ZIP does not stop
+replay. `datapackage/digest` runs the other way: the spec only says `SHOULD`,
+but a hash that does not match may mean the archive was altered, so waxlens
+calls it an `error`.
+
+Note that **`valid` is derived from `severity` alone** — it counts `error` and
+nothing else. An archive can be `valid` and still violate a `MUST`. If you need
+the conformance view, read it off the issues:
+
+```sh
+# What waxlens judges to be broken
+waxlens archive.wacz | jq '[.issues[] | select(.severity == "error")]'
+
+# What the specification requires
+waxlens archive.wacz | jq '[.issues[] | select(.conformance == "MUST" or .conformance == "MUST NOT")]'
+
+# Where the two disagree — usually the most informative list
+waxlens archive.wacz | jq '[.issues[]
+  | select((.conformance == "MUST" and .severity != "error")
+        or (.conformance != "MUST" and .severity == "error"))]'
+```
+
+There is no CLI flag for this yet; the report carries both axes and the
+filtering is left to the caller.
 
 ## What is promised
 
