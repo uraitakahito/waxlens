@@ -35,12 +35,51 @@ import type { ProfileResult } from "./manifest.js";
 
 const corpusRootDir = corpusRoot();
 
-const validateFixture = async (absPath: string, profile: RuleProfile): Promise<ProfileResult> => {
-  const sourceResult = parseReportSource(absPath);
-  if (!sourceResult.ok || sourceResult.value.kind !== "file") {
+const DATAPACKAGE_ENTRY = "datapackage.json";
+
+/**
+ * 絶対パスの fixture を開く。`fileTransport` は branded な `AbsolutePath` しか
+ * 受けないので、その変換 (と失敗の潰し方) をここ 1 箇所に閉じる。
+ */
+const openFixture = async (absPath: string): Promise<WaczReader> => {
+  const source = parseReportSource(absPath);
+  if (!source.ok || source.value.kind !== "file") {
     throw new Error(`unreachable: ${absPath} did not parse as a file source`);
   }
-  const reader = await WaczReader.open(fileTransport(sourceResult.value.path));
+  return WaczReader.open(fileTransport(source.value.path));
+};
+
+/**
+ * 標本が宣言する `$schema` を、書き出した WACZ から実測する。
+ *
+ * 生成元の `spec.options` ではなく成果物から読む — manifest の `issues` と
+ * 同じで、記録するのは「宣言したつもり」ではなく「実際に入っているもの」。
+ * descriptor 不在 (datapackage-absent) / JSON として読めない / `$schema` が
+ * 文字列でない、はすべて `null` に落とす。ここは観測であって検査ではないので、
+ * 理由の区別は rule 側 (datapackage/*) の責務。
+ *
+ * `parseDatapackage()` は使わない。あれは permissive な shape 変換で失敗を
+ * `null` に潰すが、ここで欲しいのは「ファイルに何と書いてあるか」なので生の
+ * `JSON.parse` が正しい層。
+ */
+const declaredSchema = async (absPath: string): Promise<string | null> => {
+  const reader = await openFixture(absPath);
+  try {
+    const buf = await reader.readEntry(DATAPACKAGE_ENTRY);
+    if (buf === undefined) return null;
+    const raw: unknown = JSON.parse(buf.toString("utf8"));
+    if (typeof raw !== "object" || raw === null) return null;
+    const value = (raw as Record<string, unknown>)["$schema"];
+    return typeof value === "string" ? value : null;
+  } catch {
+    return null;
+  } finally {
+    await reader.close();
+  }
+};
+
+const validateFixture = async (absPath: string, profile: RuleProfile): Promise<ProfileResult> => {
+  const reader = await openFixture(absPath);
   try {
     const result = await runValidation(reader, {
       waxlensVersion: "0.0.0",
@@ -88,6 +127,9 @@ describe.skipIf(corpusRootDir === undefined)("build-corpus", () => {
         const abs = join(out, rel);
         await buildWaczToFile(abs, spec.options);
 
+        // 何を名乗っているか (Data Package v2 の `$schema`)。宣言が無ければ null。
+        const $schema = await declaredSchema(abs);
+
         // 3 profile で実 validation。
         const byProfile: Record<string, ProfileResult> = {};
         for (const profile of ALL_PROFILES) {
@@ -112,8 +154,8 @@ describe.skipIf(corpusRootDir === undefined)("build-corpus", () => {
         const uniform = keys.every((k) => k === keys[0]);
         entries.push(
           uniform
-            ? { file: rel, description: spec.description, expect: byProfile["spec"] }
-            : { file: rel, description: spec.description, byProfile },
+            ? { file: rel, description: spec.description, $schema, expect: byProfile["spec"] }
+            : { file: rel, description: spec.description, $schema, byProfile },
         );
       }
 
