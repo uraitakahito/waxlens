@@ -31,8 +31,8 @@ const HEADS: Record<CatalogLang, { main: string[]; profile: string[] }> = {
     main: [
       "### 全標本(`spec` profile)",
       "",
-      "| fixture | 説明 | `spec` の発火 rule | exit |",
-      "| --- | --- | --- | --- |",
+      "| fixture | 説明 | `$schema` | `spec` の発火 rule | exit |",
+      "| --- | --- | --- | --- | --- |",
     ],
     profile: [
       "### profile で severity が変わる標本",
@@ -45,8 +45,8 @@ const HEADS: Record<CatalogLang, { main: string[]; profile: string[] }> = {
     main: [
       "### Every specimen (`spec` profile)",
       "",
-      "| fixture | description | rules fired under `spec` | exit |",
-      "| --- | --- | --- | --- |",
+      "| fixture | description | `$schema` | rules fired under `spec` | exit |",
+      "| --- | --- | --- | --- | --- |",
     ],
     profile: [
       "### Specimens whose severity changes by profile",
@@ -70,6 +70,16 @@ const specOf = (entry: FixtureEntry): ProfileResult => {
   }
   return result;
 };
+
+/**
+ * 標本が宣言する `$schema`。宣言が無ければ `—`。
+ *
+ * `=== null` ではなく `typeof === "string"` で判定する — 記録前の古い manifest
+ * を渡されたときに来る `undefined` を、`undefined` という文字列としてレンダリング
+ * してはならない。
+ */
+const declaredSchema = (entry: FixtureEntry): string =>
+  typeof entry.$schema === "string" ? `\`${cell(entry.$schema)}\`` : "—";
 
 /** 発火 rule を `\`rule\` (severity)` の列に。同一 rule は 1 度だけ (dedup)。 */
 const firedRules = (result: ProfileResult): string => {
@@ -105,7 +115,10 @@ export const renderCatalog = (manifest: Manifest, lang: CatalogLang = "ja"): str
   const mainRows = manifest.fixtures.map((entry) => {
     const spec = specOf(entry);
     const exit = spec.valid ? 0 : 1;
-    return `| \`${base(entry.file)}\` | ${cell(entry.description)} | ${firedRules(spec)} | ${String(exit)} |`;
+    return (
+      `| \`${base(entry.file)}\` | ${cell(entry.description)} | ` +
+      `${declaredSchema(entry)} | ${firedRules(spec)} | ${String(exit)} |`
+    );
   });
 
   const profileRows: string[] = [];

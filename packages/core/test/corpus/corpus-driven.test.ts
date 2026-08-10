@@ -52,6 +52,15 @@ const probe = (): { manifest?: Manifest; reason?: string } => {
       reason: `manifest が古い (description 無し ${String(undescribed.length)} 件) — corpus:build 要`,
     };
   }
+  // `$schema` は「宣言が無い」ことを null で明示する。キーごと無ければ、記録
+  // より前の corpus:build が書いた古い manifest を掴んでいる。expect /
+  // byProfile しか読まないこのテストは、それでも緑になってしまうので止める。
+  const unrecorded = manifest.fixtures.filter((f) => !("$schema" in f));
+  if (unrecorded.length > 0) {
+    return {
+      reason: `manifest が古い ($schema 未記録 ${String(unrecorded.length)} 件) — corpus:build 要`,
+    };
+  }
   const first = manifest.fixtures[0]?.file;
   if (first !== undefined) {
     const head = readFileSync(join(root, first)).subarray(0, LFS_POINTER.length).toString("utf8");
