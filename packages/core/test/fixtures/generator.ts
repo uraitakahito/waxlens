@@ -49,6 +49,20 @@ export interface FixtureOptions {
    */
   profile?: string | null;
   /**
+   * `$schema` field of datapackage.json — Data Package **v2** の名乗り
+   * (v2 は v1 の `profile` を廃止しこれに置き換えた)。`undefined` なら
+   * field ごと書かない。
+   *
+   * `profile` と非対称なのは意図的。`profile` は既定で書かれるので「既定 /
+   * 上書き / 省略」の 3 値が要るが、`schema` は既定で書かれないため値を渡す
+   * かどうかの 2 値で足りる。
+   *
+   * 値の妥当性 (v2 が要求する「解決可能な URL であること」など) はここでは
+   * 検証しない — 生成側は「何を名乗らせるか」だけを決め、判断は rule 側の
+   * 責務。現状 waxlens に `$schema` を読む rule は無い。
+   */
+  schema?: string;
+  /**
    * Override the body of `datapackage.json#resources[]`. When `undefined`,
    * the generator computes hashes from the actual content (the "good"
    * baseline). Pass `(default) => default.map(...)` to mutate specific
@@ -497,6 +511,8 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
     : declaredDefaults;
 
   const datapackage: Record<string, unknown> = {
+    // `$schema` は慣例どおり先頭に置く (JSON Schema 系の descriptor の書式)。
+    ...(options.schema !== undefined && { $schema: options.schema }),
     wacz_version: waczVersion,
     name: `waxlens-fixture-${taskId}`,
     software,

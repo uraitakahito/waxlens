@@ -90,4 +90,4 @@ The shape is stable and documented in [JSON report](/waxlens/json-report/).
 ## Next
 
 - What every rule checks → [Rules](/waxlens/rules/)
-- Archives that deliberately fail → [Corpus](/waxlens/corpus/)
+- Archives that deliberately fail → [Corpus](https://uraitakahito.github.io/waxlens-corpus/)

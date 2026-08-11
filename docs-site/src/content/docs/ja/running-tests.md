@@ -136,7 +136,7 @@ pnpm test:ui --tagsFilter 'docs && i18n'
 ## corpus テスト
 
 `@waxlens/core` にはもう 1 種類のテストがあります。インラインで組み立てた fixture ではなく、
-[waxlens-corpus](/corpus/) リポジトリの**実物の WACZ** を検証するものです。
+[waxlens-corpus](https://uraitakahito.github.io/waxlens-corpus/ja/) リポジトリの**実物の WACZ** を検証するものです。
 アーカイブ本体が要るので `CORPUS_DIR` を読み、**未設定なら skip します**。
 
 ```
@@ -147,11 +147,30 @@ Test Files  20 passed | 2 skipped (22)
 通常の `pnpm check` はこう見えます。この skip があるおかげで、日常のコマンドは
 外部に依存しないままでいられます。
 
-走らせるには、corpus をこのリポジトリの隣にクローンし、**絶対パス**で指し示します。
+走らせるには、corpus を**固定してある版で**このリポジトリの隣にクローンし、
+**絶対パス**で指し示します。
 
 ```sh
+git clone --branch "$(cat .corpus-version)" \
+  https://github.com/uraitakahito/waxlens-corpus.git ../waxlens-corpus
+git -C ../waxlens-corpus lfs pull
+
 CORPUS_DIR="$(cd ../waxlens-corpus && pwd)" pnpm --filter @waxlens/core test:corpus
 ```
+
+リポジトリ直下の `.corpus-version` は tag を 1 つだけ持ちます —— このチェック
+アウトが検証対象とする corpus のリリースです。CI も同じファイルを読むので、
+**CI が緑なのと手元が緑なのは同じ意味**になります。違う版を渡すと
+**スイートは走らずに落ちます**。期待値が合わないという分かりにくい失敗になる前に、
+渡されたものを名指しします。
+
+```
+CORPUS_DIR は 28bcc70 を指していますが、この waxlens は v0.1.0 に固定されています。
+```
+
+リリース資産の tarball を展開したものは git のチェックアウトではないので版を
+読めません。その場合は**止めずに通します** —— 「判定できない」と「判定して違う」は
+別だからです。
 
 `$(cd … && pwd)` は飾りではありません。`pnpm --filter` は作業ディレクトリを
 `packages/core` に移してスクリプトを走らせるので、相対パスの `CORPUS_DIR` は
@@ -163,8 +182,23 @@ CORPUS_DIR="$(cd ../waxlens-corpus && pwd)" pnpm --filter @waxlens/core test:cor
 | script | 内容 |
 | --- | --- |
 | `test:corpus` | corpus の全アーカイブを検証し、`manifest.json` と突き合わせる |
-| `corpus:docs:check` | `docs/examples.md` が corpus からずれていたら失敗させる |
+| `corpus:docs:check` | corpus のカタログが `manifest.json` からずれていたら失敗させる |
 | `corpus:build` | アーカイブと manifest を**再生成する** |
+
+### 新しい corpus へ移る
+
+corpus に何かをマージしても、ここは何も変わりません —— このチェックアウトは
+`.corpus-version` の tag に対して検証し続けます。追随は明示的な行為で、3 段階です。
+
+1. waxlens-corpus 側で変更をマージし、**リリースを切る**
+2. `.corpus-version` を新しい tag に書き換える
+3. その書き換えと、それに伴うコード変更を**1 つの waxlens PR** にまとめて出す
+
+最後の点が固定する理由です。PR は**自分の足元で動かない corpus**に対して測られるので、
+緑か赤かがその PR だけで決まります。
+
+`corpus:build` と `corpus:docs` は版の検査を意図的に素通りします —— あれらは
+*次の* corpus リリースを作る側なので、固定先と違う版に対して走る必要があります。
 
 :::danger[`corpus:build` は書く前に消します]
 `$CORPUS_DIR/fixtures` を**丸ごと**削除してから作り直します。corpus リポジトリが
@@ -181,7 +215,7 @@ CORPUS_DIR="$(cd ../waxlens-corpus && pwd)" pnpm --filter @waxlens/core test:cor
 | workflow | 内容 |
 | --- | --- |
 | `check` | `pnpm check` ― 日常のスイート全部 |
-| `corpus` | waxlens-corpus をクローンし、`corpus:docs:check` と `test:corpus` |
+| `corpus` | waxlens-corpus を **`.corpus-version` の版で**クローンし、`corpus:docs:check` と `test:corpus` |
 | `pack-smoke` | `@waxlens/core` と `@waxlens/tui` を `npm pack` し、まっさらなディレクトリに入れてバイナリを実行 |
 | `site` | ドキュメントをビルドし、参照を検証 |
 | `docs` | サイトを公開 |

@@ -16,16 +16,21 @@ const MANIFEST: Manifest = {
     {
       file: "fixtures/good.wacz",
       description: "全 rule を pass する正常系 WACZ",
+      $schema: null,
       expect: { valid: true, issues: [] },
     },
     {
       file: "fixtures/wacz-missing-archive.wacz",
       description: "archive/ に WARC が無い (§5.2.1)",
+      $schema: null,
       expect: { valid: false, issues: [{ rule: "wacz/required-files", severity: "error" }] },
     },
     {
+      // 実 corpus には `$schema` を宣言する標本がまだ 1 つも無い。列が実際に
+      // レンダリングされることは、ここで押さえておかないとどこでも通らない。
       file: "fixtures/good-webrecorder.wacz",
       description: "webrecorder producer の正常系",
+      $schema: "https://datapackage.org/profiles/2.0/datapackage.json",
       byProfile: {
         spec: { valid: true, issues: [{ rule: "cdxj/index-not-gzipped", severity: "warning" }] },
         browserhive: {
@@ -42,13 +47,18 @@ describe("renderCatalog", () => {
   const md = renderCatalog(MANIFEST);
 
   it("正常系は発火 rule が — / exit 0", () => {
-    expect(md).toContain("| `good.wacz` | 全 rule を pass する正常系 WACZ | — | 0 |");
+    // — が 2 つ並ぶ: $schema 無し、発火 rule 無し。
+    expect(md).toContain("| `good.wacz` | 全 rule を pass する正常系 WACZ | — | — | 0 |");
   });
 
   it("error issue を持つ標本は rule(severity) / exit 1", () => {
     expect(md).toContain(
-      "| `wacz-missing-archive.wacz` | archive/ に WARC が無い (§5.2.1) | `wacz/required-files` (error) | 1 |",
+      "| `wacz-missing-archive.wacz` | archive/ に WARC が無い (§5.2.1) | — | `wacz/required-files` (error) | 1 |",
     );
+  });
+
+  it("宣言された $schema はコードスパンで出る", () => {
+    expect(md).toContain("| `https://datapackage.org/profiles/2.0/datapackage.json` |");
   });
 
   it("byProfile 標本は spec を主表に、3 profile を差分表に出す", () => {

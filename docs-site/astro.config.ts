@@ -84,7 +84,13 @@ export default defineConfig({
               translations: { ja: "Apple Container スタック" },
               slug: "container",
             },
-            { label: "Corpus", translations: { ja: "Corpus" }, slug: "corpus" },
+            // corpus のドキュメントは corpus repo 側に移した。標本の一覧が標本と
+            // 別 repo にある状態を解消するため。カタログの生成先も CORPUS_DIR 配下。
+            {
+              label: "Corpus ↗",
+              translations: { ja: "Corpus ↗" },
+              link: "https://uraitakahito.github.io/waxlens-corpus/",
+            },
             { label: "Terminology", translations: { ja: "用語" }, slug: "terminology" },
           ],
         },

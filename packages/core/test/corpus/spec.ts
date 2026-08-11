@@ -58,6 +58,18 @@ export const CORPUS: CorpusSpec[] = [
     expectRules: ["datapackage/profile-required"],
   },
   {
+    name: "datapackage-schema-only",
+    description:
+      "Data Package v2 に忠実な descriptor — $schema で名乗り、v2 が廃止した profile を持たない。" +
+      "WACZ 1.1 は profile を MUST とするので datapackage-no-profile と同じ error になる " +
+      "(仕様どうしの衝突であって書き忘れではない)",
+    options: {
+      schema: "https://datapackage.org/profiles/2.0/datapackage.json",
+      profile: null,
+    },
+    expectRules: ["datapackage/profile-required"],
+  },
+  {
     name: "datapackage-unknown-version",
     description: "wacz_version が未知の値 (9.9.9) — warning",
     options: { waczVersion: "9.9.9" },

@@ -34,6 +34,7 @@ import { DEFAULT_RULES } from "../../src/validate/rules/index.js";
 import { ALL_PROFILES, parseReportSource, type RuleProfile } from "../../src/validate/domain.js";
 import type { Manifest, ProfileResult } from "./manifest.js";
 import { corpusRoot } from "./corpus-dir.js";
+import { assertPinnedCorpus } from "./corpus-version.js";
 
 const LFS_POINTER = "version https://git-lfs.github.com/spec/v1";
 const root = corpusRoot();
@@ -42,6 +43,9 @@ const root = corpusRoot();
 // 重い validation だけ it() の中 (async) で行う。
 const probe = (): { manifest?: Manifest; reason?: string } => {
   if (root === undefined) return { reason: "CORPUS_DIR 未設定" };
+  // 版ずれは skip ではなく throw。以降の「期待値が合わない」より、渡された
+  // corpus が固定先と違うことを先に名指しするほうが早い。
+  assertPinnedCorpus(root);
   if (!existsSync(join(root, "manifest.json"))) return { reason: `manifest が無い: ${root}` };
   const manifest = JSON.parse(readFileSync(join(root, "manifest.json"), "utf8")) as Manifest;
   // description は型では必須だが、上は検査なしのキャスト。corpus を古い
@@ -50,6 +54,15 @@ const probe = (): { manifest?: Manifest; reason?: string } => {
   if (undescribed.length > 0) {
     return {
       reason: `manifest が古い (description 無し ${String(undescribed.length)} 件) — corpus:build 要`,
+    };
+  }
+  // `$schema` は「宣言が無い」ことを null で明示する。キーごと無ければ、記録
+  // より前の corpus:build が書いた古い manifest を掴んでいる。expect /
+  // byProfile しか読まないこのテストは、それでも緑になってしまうので止める。
+  const unrecorded = manifest.fixtures.filter((f) => !("$schema" in f));
+  if (unrecorded.length > 0) {
+    return {
+      reason: `manifest が古い ($schema 未記録 ${String(unrecorded.length)} 件) — corpus:build 要`,
     };
   }
   const first = manifest.fixtures[0]?.file;

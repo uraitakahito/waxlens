@@ -30,6 +30,15 @@ export interface FixtureEntry {
    * エラーになる。省略可にすると、いずれ半分が説明なしになる。
    */
   description: string;
+  /**
+   * その標本の `datapackage.json` が宣言する `$schema` の実測値。descriptor
+   * が無い / `$schema` を持たない / 文字列でない場合は `null`。
+   *
+   * **optional にしない** — 省略可にすると「宣言が無い」と「まだ記録して
+   * いない (古い manifest)」が同じ形になり区別できなくなる。ほぼ全件が
+   * `null` なので、この区別が付かないと再生成しても差分がほとんど出ない。
+   */
+  $schema: string | null;
   expect?: ProfileResult;
   byProfile?: Record<string, ProfileResult>;
 }
