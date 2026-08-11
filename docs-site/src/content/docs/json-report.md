@@ -1,14 +1,16 @@
 ---
 title: JSON report
-description: The shape of --json output, and what is promised about it.
+description: The shape of what waxlens-validate prints, and what is promised about it.
 ---
 
-`waxlens-validate --json` prints one JSON object. It is the interface for CI
-scripts and for anything downstream of waxlens, so its shape is deliberate
+`waxlens-validate` prints one JSON object to stdout. **That is its only output
+format** — there is no flag to switch (to read the same report interactively,
+use the separate `waxlens` binary from `@waxlens/tui`). It is the interface for
+CI scripts and for anything downstream of waxlens, so its shape is deliberate
 rather than incidental.
 
 ```sh
-waxlens-validate --json samples/wikipedia.wacz | jq '{valid, summary}'
+waxlens-validate samples/wikipedia.wacz | jq '{valid, summary}'
 ```
 
 ## Top level

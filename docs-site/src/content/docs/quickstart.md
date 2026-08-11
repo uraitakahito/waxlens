@@ -81,8 +81,10 @@ suppress a check the spec requires. See [Profiles](/waxlens/profiles/).
 
 ## Machine-readable output
 
+`waxlens-validate` always writes JSON to stdout; there is no flag to switch.
+
 ```sh
-waxlens-validate --json samples/wikipedia.wacz | jq '{valid, summary}'
+waxlens-validate samples/wikipedia.wacz | jq '{valid, summary}'
 ```
 
 The shape is stable and documented in [JSON report](/waxlens/json-report/).
