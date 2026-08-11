@@ -6,12 +6,10 @@ description: Every validation rule, its severity, and what it is grounded in.
 import RuleTable from "../../components/RuleTable.astro";
 
 waxlens runs a fixed set of rules over an archive and reports one issue per
-violation. This table is **generated from the rule definitions themselves**, so
-it cannot fall behind the code: name, severity, conformance level, per-profile
-overrides and spec links all come out of
+violation. [The table](#every-rule) is **generated from the rule definitions
+themselves**, so it cannot fall behind the code: name, severity, conformance
+level, per-profile overrides and spec links all come out of
 `packages/core/src/validate/`.
-
-<RuleTable />
 
 ## Reading the table
 
@@ -19,12 +17,14 @@ overrides and spec links all come out of
 **Severity** is what waxlens does about a violation, and the two are not always
 the same: `datapackage/resources-complete` is a `MUST` reported as a `warning`,
 because an incomplete `resources[]` does not by itself break replay. It runs the
-other way too: `datapackage/digest` is a `SHOULD` in the specification but an
-`error` here, because a hash that does not match may mean the archive was
-altered.
+other way too: `datapackage/digest` defaults to `warning`, but reports an
+`error` when the hash does not match, because that may mean the archive was
+altered. **The column shows a rule's default severity; the same rule can emit
+issues at other severities depending on what it finds.**
 
-The divergence is not exceptional — **eleven findings across the 29 corpus
-specimens fall off the diagonal**. How to filter on each axis separately is in
+The divergence is not exceptional — **5 of the 22 rules fall off the diagonal**,
+and across the 30 corpus specimens (`spec` profile) **15 of the 44 findings** do.
+How to filter on each axis separately is in
 [JSON report](/waxlens/json-report/#severity-and-conformance-answer-different-questions).
 
 `MUST`, `MUST NOT`, `SHOULD`, `SHOULD NOT` and `MAY` carry their
@@ -46,7 +46,12 @@ statement.
 :::
 
 **Profile overrides** re-grade a rule under a given `--profile`. An empty cell
-means the default severity applies everywhere. See [Profiles](/waxlens/profiles/).
+means the default severity applies everywhere. Conformance never moves with the
+profile — it is what the spec says. See [Profiles](/waxlens/profiles/).
+
+## Every rule
+
+<RuleTable />
 
 ## What the rules are grounded in
 
