@@ -1,14 +1,15 @@
 ---
 title: JSON レポート
-description: --json 出力の形式と、その安定性の約束。
+description: waxlens-validate が出力する JSON の形式と、その安定性の約束。
 ---
 
-`waxlens-validate --json` は JSON オブジェクトを 1 つ出力します。CI スクリプトや
-waxlens の下流にとってのインターフェースなので、形式は偶然ではなく意図的に
-決めてあります。
+`waxlens-validate` は JSON オブジェクトを 1 つ標準出力に書きます。**これが唯一の
+出力形式**で、切り替えるフラグはありません（同じ report を対話的に読むなら、別
+バイナリの `waxlens` — `@waxlens/tui` — を使います）。CI スクリプトや waxlens の
+下流にとってのインターフェースなので、形式は偶然ではなく意図的に決めてあります。
 
 ```sh
-waxlens-validate --json samples/wikipedia.wacz | jq '{valid, summary}'
+waxlens-validate samples/wikipedia.wacz | jq '{valid, summary}'
 ```
 
 ## トップレベル
