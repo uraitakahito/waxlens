@@ -48,12 +48,17 @@ export const cdxjNonGzippedRule: ValidationRule = {
   // ケースがあるため (wabac.js の `loadIDX` 経路がこれを扱う)。
   // `browserhive` profile はより厳しく、plain な `.cdxj` を期待し
   // どんな `.gz` index も error 扱いにする。
-  severity: "warning",
   conformance: "MAY",
   applicability: {
     severityByProfile: {
-      browserhive: "error",
-      lenient: "info",
+      browserhive: {
+        "cdxj/index-not-gzipped.gzipped-entry": "error",
+        "cdxj/index-not-gzipped.gzip-magic": "error",
+      },
+      lenient: {
+        "cdxj/index-not-gzipped.gzipped-entry": "info",
+        "cdxj/index-not-gzipped.gzip-magic": "info",
+      },
     },
   },
 

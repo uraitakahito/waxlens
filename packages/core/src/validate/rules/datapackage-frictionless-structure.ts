@@ -30,7 +30,6 @@ const isNonEmptyString = (v: unknown): v is string => typeof v === "string" && v
 export const datapackageFrictionlessStructureRule: ValidationRule = {
   name: "datapackage/frictionless-structure",
   descriptionKey: "datapackage/frictionless-structure.desc",
-  severity: "error",
   conformance: "MUST",
   // 構造 MUST は spec / browserhive で error。legacy トリアージ用の lenient では
   // generic な findings を出したくないので除外する(frictionless-schema と同方針)。

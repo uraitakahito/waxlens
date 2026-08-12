@@ -31,7 +31,6 @@ const DATAPACKAGE_ENTRY = "datapackage.json";
 export const datapackageHashesRule: ValidationRule = {
   name: "datapackage/resource-hashes",
   descriptionKey: "datapackage/resource-hashes.desc",
-  severity: "error",
   conformance: "MUST",
 
   run: async (wacz) => {

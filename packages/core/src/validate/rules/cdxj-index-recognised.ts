@@ -46,7 +46,6 @@ const parseIdxPairFilename = (text: string): string | null =>
 export const cdxjIndexRecognisedRule: ValidationRule = {
   name: "cdxj/index-recognised-by-wabac",
   descriptionKey: "cdxj/index-recognised-by-wabac.desc",
-  severity: "error",
   conformance: "MUST",
 
   run: async (wacz) => {

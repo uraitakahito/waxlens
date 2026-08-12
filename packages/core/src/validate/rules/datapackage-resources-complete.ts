@@ -26,11 +26,10 @@ const MANIFEST_FILES: ReadonlySet<string> = new Set([
 export const datapackageResourcesCompleteRule: ValidationRule = {
   name: "datapackage/resources-complete",
   descriptionKey: "datapackage/resources-complete.desc",
-  severity: "warning",
   conformance: "MUST",
   applicability: {
     severityByProfile: {
-      lenient: "info",
+      lenient: { "datapackage/resources-complete.orphan": "info" },
     },
   },
 

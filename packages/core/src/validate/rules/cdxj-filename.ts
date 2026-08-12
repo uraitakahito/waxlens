@@ -38,10 +38,14 @@ const CDXJ_ENTRY = "indexes/index.cdxj";
 export const cdxjFilenameRule: ValidationRule = {
   name: "cdxj/filename-archive-relative",
   descriptionKey: "cdxj/filename-archive-relative.desc",
-  severity: "error",
   conformance: "MUST",
   applicability: {
-    severityByProfile: { lenient: "warning" },
+    severityByProfile: {
+      lenient: {
+        "cdxj/filename-archive-relative.no-filename": "warning",
+        "cdxj/filename-archive-relative.starts-with-archive": "warning",
+      },
+    },
   },
 
   run: async (wacz) => {

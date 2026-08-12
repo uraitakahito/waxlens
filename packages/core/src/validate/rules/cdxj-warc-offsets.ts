@@ -43,10 +43,15 @@ const EXPECTED_FILENAME = "data.warc.gz";
 export const cdxjWarcOffsetsRule: ValidationRule = {
   name: "cdxj/warc-offsets",
   descriptionKey: "cdxj/warc-offsets.desc",
-  severity: "error",
   conformance: "MUST",
   applicability: {
-    severityByProfile: { lenient: "warning" },
+    severityByProfile: {
+      lenient: {
+        "cdxj/warc-offsets.missing-or-nonnumeric": "warning",
+        "cdxj/warc-offsets.offset-no-match": "warning",
+        "cdxj/warc-offsets.length-mismatch": "warning",
+      },
+    },
   },
 
   run: async (wacz) => {
