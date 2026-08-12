@@ -26,11 +26,13 @@ const GZIP_MAGIC_1 = 0x8b;
 export const warcExtensionRule: ValidationRule = {
   name: "warc/extension-gzip-match",
   descriptionKey: "warc/extension-gzip-match.desc",
-  severity: "warning",
   conformance: "MUST",
   applicability: {
     severityByProfile: {
-      lenient: "info",
+      lenient: {
+        "warc/extension-gzip-match.gz-needs-gz-ext": "info",
+        "warc/extension-gzip-match.plain-has-gz-ext": "info",
+      },
     },
   },
 

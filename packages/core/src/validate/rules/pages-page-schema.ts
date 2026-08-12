@@ -24,11 +24,13 @@ const PAGES_ENTRY = "pages/pages.jsonl";
 export const pagesPageSchemaRule: ValidationRule = {
   name: "pages/page-schema",
   descriptionKey: "pages/page-schema.desc",
-  severity: "warning",
   conformance: "MUST",
   applicability: {
     severityByProfile: {
-      lenient: "info",
+      lenient: {
+        "pages/page-schema.not-json": "info",
+        "pages/page-schema.missing-prop": "info",
+      },
     },
   },
 

@@ -56,8 +56,19 @@ export type RuleProfile = (typeof ALL_PROFILES)[number];
  * — ある producer の慣習を離れると意味を持たない check で使う)。
  */
 export interface RuleApplicability {
-  /** profile 別の severity override。指定なしの profile は `ValidationRule.severity` に fallback する。 */
-  severityByProfile?: Partial<Record<RuleProfile, Severity>>;
+  /**
+   * profile 別・messageKey 別の severity 上書き。
+   *
+   * **列挙した issue だけが書き換わる。** 書かなかった issue は rule が
+   * push した severity のまま。
+   *
+   * 以前は profile ごとに severity を 1 つ書き、engine が「issue の
+   * severity が rule のベースラインと一致するか」で対象を選んでいた。
+   * あれは「作者にこだわりが無い」ことを値の一致で*推測*していたので、
+   * 宣言を読んでも挙動が分からず、意図的にベースラインと同じ severity に
+   * した issue も書き換わってしまった。ここでは推測せず対象を列挙する。
+   */
+  severityByProfile?: Partial<Record<RuleProfile, Record<string, Severity>>>;
   /** その profile で rule を完全に skip する (issue を 1 件も出さない)。 */
   excludeProfiles?: readonly RuleProfile[];
 }
@@ -102,14 +113,7 @@ export interface ValidationRule {
   /** rationale の i18n キー(`<rule>/desc`)。locale 別カタログで解決。 */
   descriptionKey: string;
   /**
-   * baseline の severity。profile 固有の override が無いときに使う。
-   * profile 固有の override が無くても engine は profile logic を通すので、
-   * baseline `error` の rule は `lenient` profile 下で
-   * `applicability.severityByProfile` 経由で `warning` に降格しうる。
-   */
-  severity: Severity;
-  /**
-   * spec の規範レベル(RFC 2119)。`severity` と独立で profile に依存しない —
+   * spec の規範レベル(RFC 2119)。severity と独立で profile に依存しない —
    * 「spec が MUST と言っているか SHOULD か」を表す。renderer が rule 名から
    * 解決して表示する({@link Conformance})。
    */

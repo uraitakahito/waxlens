@@ -25,7 +25,6 @@ const EXPECTED_PROFILE = "data-package";
 export const datapackageProfileRule: ValidationRule = {
   name: "datapackage/profile-required",
   descriptionKey: "datapackage/profile-required.desc",
-  severity: "error",
   conformance: "MUST",
 
   run: async (wacz) => {

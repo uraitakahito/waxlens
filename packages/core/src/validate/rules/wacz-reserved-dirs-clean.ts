@@ -29,11 +29,10 @@ const RESERVED: readonly { dir: string; allow: RegExp }[] = [
 export const waczReservedDirsCleanRule: ValidationRule = {
   name: "wacz/reserved-dirs-clean",
   descriptionKey: "wacz/reserved-dirs-clean.desc",
-  severity: "warning",
   conformance: "MUST NOT",
   applicability: {
     severityByProfile: {
-      lenient: "info",
+      lenient: { "wacz/reserved-dirs-clean.unexpected": "info" },
     },
   },
 

@@ -54,7 +54,6 @@ const IDX_RE = /^indexes\/.+\.idx$/;
 export const cdxjIndexValidDataRule: ValidationRule = {
   name: "cdxj/index-valid-data",
   descriptionKey: "cdxj/index-valid-data.desc",
-  severity: "error",
   conformance: "MUST",
 
   run: async (wacz) => {

@@ -35,12 +35,25 @@ export interface RuleLink {
 export interface RuleFact {
   /** `wacz/required-files` のような rule 名。docs 本文の参照もこの文字列。 */
   name: string;
-  /** 既定の severity。profile で上書きされることがある（下記）。 */
-  severity: string;
+  /**
+   * その rule が出しうる severity の**全部**（出現順、重複除去）。
+   *
+   * `ValidationRule` には severity field が無い。実体は `issues.push` が
+   * 書く値なので、そこから集める。1 つの rule が状況によって別の severity
+   * を出すことがあり（例: `datapackage/digest` は不在なら warning、hash
+   * 不一致なら error）、その場合は 2 値になる。
+   */
+  severities: string[];
   /** spec 上の要求レベル（MUST / SHOULD / MAY / MUST NOT）。 */
   conformance: string;
-  /** profile 名 → その profile での severity。空なら全 profile で既定どおり。 */
-  severityByProfile: Record<string, string>;
+  /**
+   * profile 名 → その profile で書き換わる severity の集合。
+   *
+   * 宣言は messageKey 単位だが、表では「その profile でどう変わるか」の
+   * 概観だけ示す（messageKey 単位の詳細は rule のソースを見る）。
+   * **その rule の全 issue が変わるとは限らない** ので、件数を併記する。
+   */
+  severityByProfile: Record<string, { levels: string[]; count: number }>;
   /** 出典リンク。未登録の rule は空配列。 */
   links: RuleLink[];
 }
@@ -60,19 +73,33 @@ export function rules(): RuleFact[] {
   const facts = files.map((file): RuleFact => {
     const source = read(resolve(RULES_DIR, file));
     const name = literal(source, "name");
-    const severity = literal(source, "severity");
     const conformance = literal(source, "conformance");
-    if (name === undefined || severity === undefined || conformance === undefined) {
-      throw new Error(`rules/${file}: could not read name / severity / conformance`);
+    if (name === undefined || conformance === undefined) {
+      throw new Error(`rules/${file}: could not read name / conformance`);
     }
 
-    const byProfile: Record<string, string> = {};
-    const block = /severityByProfile:\s*\{([^}]*)\}/.exec(source)?.[1];
-    for (const [, profile, level] of (block ?? "").matchAll(/(\w+):\s*"([^"]+)"/g)) {
-      byProfile[profile] = level;
+    // その rule が出しうる severity。三項演算子で決まるもの（1 件だけ:
+    // warc/recording-complete）があるので、行ごとに両方の枝を拾う。
+    const severities = [
+      ...new Set(
+        [...source.matchAll(/severity:\s*([^,\n]+)/g)].flatMap(([, expr]) =>
+          [...expr.matchAll(/"(error|warning|info)"/g)].map(([, level]) => level),
+        ),
+      ),
+    ];
+    if (severities.length === 0) {
+      throw new Error(`rules/${file}: no severity found in issues.push`);
     }
 
-    return { name, severity, conformance, severityByProfile: byProfile, links: docLinks[name] ?? [] };
+    // profile 上書きは messageKey 単位。表向けに profile ごとへ畳む。
+    const byProfile: Record<string, { levels: string[]; count: number }> = {};
+    const block = /severityByProfile:\s*\{([\s\S]*?)\n {2}\},/.exec(source)?.[1];
+    for (const [, profile, body] of (block ?? "").matchAll(/(\w+):\s*\{([\s\S]*?)\}/g)) {
+      const levels = [...body.matchAll(/:\s*"(error|warning|info)"/g)].map(([, level]) => level);
+      byProfile[profile] = { levels: [...new Set(levels)], count: levels.length };
+    }
+
+    return { name, severities, conformance, severityByProfile: byProfile, links: docLinks[name] ?? [] };
   });
 
   // DEFAULT_RULES の配列要素だけを数える。import 行にも `…Rule,` が並ぶので

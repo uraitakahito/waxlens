@@ -27,10 +27,17 @@ const KNOWN_VERSIONS = ["1.0.0", "1.1.0", "1.1.1"] as const;
 export const datapackageWaczVersionRule: ValidationRule = {
   name: "datapackage/wacz-version-required",
   descriptionKey: "datapackage/wacz-version-required.desc",
-  severity: "error",
   conformance: "MUST",
   applicability: {
-    severityByProfile: { lenient: "warning" },
+    severityByProfile: {
+      // 欠落・型違いは lenient では warning へ。
+      // `.unknown-version` は列挙しない — もともと warning で出しており、
+      // 下げる先も warning なので書いても意味がない。
+      lenient: {
+        "datapackage/wacz-version-required.missing-field": "warning",
+        "datapackage/wacz-version-required.not-string": "warning",
+      },
+    },
   },
 
   run: async (wacz) => {
