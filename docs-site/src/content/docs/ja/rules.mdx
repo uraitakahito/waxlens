@@ -15,13 +15,23 @@ issue を 1 件報告します。[全 rule の表](#全-rule)は **rule 定義�
 **適合レベル**は spec が要求する強さ(`MUST` / `SHOULD` / `MAY` / `MUST NOT`)、
 **severity** は違反に対して waxlens が取る扱いで、この 2 つは必ずしも一致しません。
 
+severity は `error` / `warning` / `info` の 3 値です。**判定に効くのは `error` だけ**で、
+`valid` は `error` が 0 件かどうかだけで決まります —— `warning` と `info` は何件あっても
+`valid` を覆しません。
+
+| severity | 意味 | `valid` |
+| --- | --- | --- |
+| `error` | これがあると使えない(再生が壊れる / 検証が成立しない) | `false` にする |
+| `warning` | 直すべきだが、それだけでは壊れない | 変えない |
+| `info` | 観察の記録。良し悪しの判断を含まない | 変えない |
+
 `MUST` / `MUST NOT` / `SHOULD` / `SHOULD NOT` / `MAY` は
 [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) の意味で用います。
 表に出る適合レベルは **waxlens が付けた重要度ではなく、spec 側の記述を写したもの**です。
 
-`datapackage/resources-complete` は `MUST` ですが `warning` です — `resources[]`
+[`datapackage/resources-complete`](#datapackage-resources-complete) は `MUST` ですが `warning` です — `resources[]`
 が不完全でも、それだけで replay が壊れるわけではないからです。逆向きもあります:
-`datapackage/digest` は既定こそ `warning` ですが、hash が合わない場合は `error` を
+[`datapackage/digest`](#datapackage-digest) は既定こそ `warning` ですが、hash が合わない場合は `error` を
 出します — アーカイブが変更された可能性を意味するからです。**表に出るのは rule の
 既定 severity で、同じ rule が状況に応じて別の severity の issue を出します。**
 
@@ -65,13 +75,13 @@ RFC 2119 への言及がありません**（本文中に一度も現れないこ
 
 ## 同じファイルを 2 つの rule が見る理由
 
-観点が違うので意図的にそうしています。`wacz/required-files` は index が
-**存在するか**を assert し、`cdxj/index-recognised-by-wabac` は wabac.js が実際に
+観点が違うので意図的にそうしています。[`wacz/required-files`](#wacz-required-files) は index が
+**存在するか**を assert し、[`cdxj/index-recognised-by-wabac`](#cdxj-index-recognised-by-wabac) は wabac.js が実際に
 **ロードできるか**を assert します。前者を通って後者で落ちる archive はあり得て、
 その区別こそが producer に問題の所在を教えます。
 
 同様に `datapackage.json` の存在チェックは `wacz/required-files` が担うので、
-`datapackage/profile-required` は `profile` の**値**に専念できます(不在を
+[`datapackage/profile-required`](#datapackage-profile-required) は `profile` の**値**に専念できます(不在を
 二重に報告しません)。
 
 ## rule を追加するとき
