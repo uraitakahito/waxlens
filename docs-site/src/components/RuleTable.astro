@@ -18,6 +18,12 @@ interface Props {
 
 const { lang = "en" } = Astro.props;
 
+/**
+ * rule 名 → 行の id。本文から `[\`x/y\`](#x-y)` で該当行へ飛べるようにする。
+ * rule 名は `[a-z-]+/[a-z-]+` なので `/` を `-` にするだけで衝突しない。
+ */
+const anchor = (name: string): string => name.replace("/", "-");
+
 const head =
   lang === "ja"
     ? { rule: "Rule", severity: "既定 severity", conformance: "適合レベル", profile: "profile 上書き", spec: "出典" }
@@ -39,7 +45,7 @@ const all = rules();
   <tbody>
     {
       all.map((rule) => (
-        <tr>
+        <tr id={anchor(rule.name)}>
           <td>
             <code>{rule.name}</code>
           </td>
