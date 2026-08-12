@@ -1,0 +1,38 @@
+{
+  "name": "@waxlens/validate-cli",
+  "version": "0.0.0",
+  "description": "waxlens-validate — the non-interactive CLI over @waxlens/core. Emits a machine-readable JSON report to stdout.",
+  "license": "Unlicense",
+  "type": "module",
+  "engines": {
+    "node": ">=24.15.0"
+  },
+  "bin": {
+    "waxlens-validate": "dist/waxlens-validate.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "postbuild": "chmod +x dist/waxlens-validate.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "check": "pnpm typecheck && pnpm lint && pnpm build && pnpm test",
+    "prepublishOnly": "pnpm check && pnpm build"
+  },
+  "dependencies": {
+    "@waxlens/core": "workspace:*",
+    "commander": "^14.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.2",
+    "eslint": "^10.3.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.5"
+  }
+}

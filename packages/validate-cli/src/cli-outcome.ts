@@ -1,6 +1,10 @@
 /**
- * CLI outcome — `@waxlens/core` の bin (`waxlens-validate`) と
- * `@waxlens/tui` の bin (`waxlens`) の共通 return shape。
+ * CLI outcome — `waxlens-validate` の return shape。
+ *
+ * `@waxlens/tui` の bin (`waxlens`) も同じ exit code 契約を守るが、
+ * あちらは `@waxlens/protocol` が持つ同名の定義を使う。tui は core
+ * にも この package にも依存しないので、共有ではなく 2 実装で、
+ * 契約 (0 / 1 / 2) だけが揃っている。
  *
  * `runCli` は exit code (数値) を返すのではなく「何が起きたか」を表す
  * この discriminated union を返す。数値 exit code に変換するのは
@@ -19,7 +23,7 @@
  * outcome を組み立てるだけにする。これによって bin 名 prefix の差
  * (`waxlens-validate:` vs `waxlens:`) が共有モジュールに漏れない。
  */
-import type { Report } from "./validate/domain.js";
+import type { Report } from "@waxlens/core";
 
 export type CliOutcome =
   | { kind: "valid"; report: Report }

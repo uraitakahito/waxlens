@@ -44,9 +44,6 @@ importers:
       ajv-draft-04:
         specifier: ^1.0.0
         version: 1.0.0(ajv@8.20.0)
-      commander:
-        specifier: ^14.0.3
-        version: 14.0.3
       intl-messageformat:
         specifier: ^11.2.7
         version: 11.2.12
@@ -165,6 +162,28 @@ importers:
       ink-testing-library:
         specifier: ^4.0.0
         version: 4.0.0(@types/react@19.2.17)
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: ^4.1.5
+        version: 4.1.10(@types/node@25.9.5)(@vitest/ui@4.1.10)(vite@8.1.5(@types/node@25.9.5))
+
+  packages/validate-cli:
+    dependencies:
+      '@waxlens/core':
+        specifier: workspace:*
+        version: link:../core
+      commander:
+        specifier: ^14.0.3
+        version: 14.0.3
+    devDependencies:
+      '@types/node':
+        specifier: ^25.6.2
+        version: 25.9.5
+      eslint:
+        specifier: ^10.3.0
+        version: 10.8.0(supports-color@7.2.0)
       typescript:
         specifier: ^6.0.3
         version: 6.0.3

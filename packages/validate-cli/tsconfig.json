@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.json",
+  "include": [
+    "src/**/*",
+    "test/**/*",
+    "*.config.ts",
+    // CLI の integration test は WACZ fixture を core 側の generator で
+    // 組み立てる (core の 12 test と共有しているので複製できない)。その
+    // generator は archiver 8 の type shim に依存していて、ambient
+    // declaration は import では引き込まれない — program に入れる必要が
+    // あるので、fixtures ディレクトリごと明示する。
+    "../core/test/fixtures/*.d.ts"
+  ],
+  "exclude": ["node_modules", "dist"]
+}

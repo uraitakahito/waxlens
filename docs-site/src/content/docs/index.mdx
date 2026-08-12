@@ -37,7 +37,8 @@ project whose output waxlens happens to check.
 flowchart LR
     tui["@waxlens/tui (bin: waxlens)"] ==>|"WS / JSON-RPC"| daemon["@waxlens/daemon"]
     browser(["browser (planned)"]) -.->|"WS"| daemon
-    daemon -->|validates with| core["@waxlens/core (bin: waxlens-validate)"]
+    cli["@waxlens/validate-cli (bin: waxlens-validate)"] -->|validates with| core["@waxlens/core"]
+    daemon -->|validates with| core
     tui -->|import| protocol["@waxlens/protocol"]
     daemon -->|import| protocol
     protocol -.->|"import type only"| core

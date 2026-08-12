@@ -20,7 +20,7 @@
     "test:ui": "vitest --ui",
     "test:report": "vitest run --reporter=html",
     "lint": "pnpm -r lint",
-    "check": "pnpm audit --audit-level=moderate && pnpm --filter @waxlens/core check && pnpm --filter @waxlens/protocol check && pnpm --filter @waxlens/daemon check && pnpm --filter @waxlens/tui check",
+    "check": "pnpm audit --audit-level=moderate && pnpm --filter @waxlens/core check && pnpm --filter @waxlens/validate-cli check && pnpm --filter @waxlens/protocol check && pnpm --filter @waxlens/daemon check && pnpm --filter @waxlens/tui check",
     "site:dev": "npm --prefix docs-site run dev",
     "site:build": "npm --prefix docs-site run build",
     "site:preview": "npm --prefix docs-site run preview",

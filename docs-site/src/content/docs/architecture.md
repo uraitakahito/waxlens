@@ -1,13 +1,14 @@
 ---
 title: Architecture
-description: Why waxlens is four packages and a stateless daemon.
+description: Why waxlens is five packages and a stateless daemon.
 ---
 
-## The four packages
+## The five packages
 
 | Package | bin | Role |
 | ------- | --- | ---- |
-| `@waxlens/core` | `waxlens-validate` | The validation engine. Reads a WACZ, runs the rules, produces a machine-readable report. Usable directly from CI without the rest. |
+| `@waxlens/core` | — | The validation engine. Reads a WACZ, runs the rules, produces a machine-readable report. A library: it carries no bin and no `commander`. |
+| `@waxlens/validate-cli` | `waxlens-validate` | The non-interactive command over core. Parses the arguments, writes the JSON report, sets the exit code. Usable directly from CI without the rest. |
 | `@waxlens/daemon` | `waxlens-daemon` | A stateless HTTP/WS daemon that owns core and answers with a resolved report (message, spec URL and conformance inlined). |
 | `@waxlens/tui` | `waxlens` | The interactive terminal UI — a thin client of the daemon. |
 | `@waxlens/protocol` | — | The wire types and CLI contract the clients and the daemon share. Runtime-independent of core, so it is browser-safe. |
@@ -25,7 +26,8 @@ frontend can present the same report**:
 flowchart LR
     tui["@waxlens/tui"] ==>|"WS / JSON-RPC"| daemon["@waxlens/daemon"]
     browser(["browser (planned)"]) -.->|"WS"| daemon
-    daemon -->|validates with| core["@waxlens/core"]
+    cli["@waxlens/validate-cli"] -->|validates with| core["@waxlens/core"]
+    daemon -->|validates with| core
     tui -->|import| protocol["@waxlens/protocol"]
     daemon -->|import| protocol
     protocol -.->|"import type only"| core
