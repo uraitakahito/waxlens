@@ -1,7 +1,7 @@
 {
-  "name": "@waxlens/protocol",
+  "name": "@waxlens/contract",
   "version": "0.0.0",
-  "description": "Shared wire types for the waxlens daemon protocol (tui / daemon / future browser).",
+  "description": "The vocabulary every waxlens surface agrees on — rule profiles, locales, and the CLI exit-code contract. Depends on nothing.",
   "license": "Unlicense",
   "type": "module",
   "engines": {
@@ -15,16 +15,15 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "check": "pnpm typecheck && pnpm lint && pnpm build"
-  },
-  "dependencies": {
-    "@waxlens/contract": "workspace:*",
-    "@waxlens/core": "workspace:*"
+    "check": "pnpm typecheck && pnpm lint && pnpm build && pnpm test"
   },
   "devDependencies": {
     "eslint": "^10.3.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.5"
   }
 }

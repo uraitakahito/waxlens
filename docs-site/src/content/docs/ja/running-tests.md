@@ -10,7 +10,7 @@ pnpm check
 ```
 
 `pnpm audit` を走らせたあと、パッケージごとに `typecheck → lint → build → test`
-を回します。5 パッケージを依存順に処理するので、壊れたときは**原因のパッケージ**で
+を回します。6 パッケージを依存順に処理するので、壊れたときは**原因のパッケージ**で
 止まります ― 3 つ下流で気づくことにはなりません。
 
 **ここまでにネットワークもコンテナも、ディスク上の WACZ も必要ありません。**
@@ -20,7 +20,7 @@ pnpm check
 
 | コマンド | 範囲 |
 | --- | --- |
-| `pnpm check` | audit + 5 パッケージ全部。**CI が回すもの。** |
+| `pnpm check` | audit + 6 パッケージ全部。**CI が回すもの。** |
 | `pnpm test` | テストのみ、全パッケージ |
 | `pnpm --filter @waxlens/core test` | 1 パッケージだけ |
 | `pnpm --filter @waxlens/core test:watch` | 1 パッケージを watch |
@@ -29,7 +29,8 @@ pnpm check
 | `pnpm test:report` | `html/` に静的レポート |
 
 `--filter` に渡すのはディレクトリ名ではなく**パッケージ名**です ―
-`@waxlens/core`、`@waxlens/validate-cli`、`@waxlens/daemon`、`@waxlens/protocol`、`@waxlens/tui`。
+`@waxlens/contract`、`@waxlens/core`、`@waxlens/validate-cli`、`@waxlens/daemon`、
+`@waxlens/protocol`、`@waxlens/tui`。
 
 `@waxlens/protocol` にはテストがありません。ここは wire contract そのもので、
 `check` は `build` で終わります。抜けているのではなく、**走らせるものが無い**からです。
@@ -216,7 +217,7 @@ corpus に何かをマージしても、ここは何も変わりません ——
 | --- | --- |
 | `check` | `pnpm check` ― 日常のスイート全部 |
 | `corpus` | waxlens-corpus を **`.corpus-version` の版で**クローンし、`corpus:docs:check` と `test:corpus` |
-| `pack-smoke` | `@waxlens/core`・`@waxlens/validate-cli`・`@waxlens/tui` を `npm pack` し、まっさらなディレクトリに入れてバイナリを実行 |
+| `pack-smoke` | `@waxlens/contract`・`@waxlens/core`・`@waxlens/validate-cli`・`@waxlens/tui` を `npm pack` し、まっさらなディレクトリに入れてバイナリを実行 |
 | `site` | ドキュメントをビルドし、参照を検証 |
 | `docs` | サイトを公開 |
 

@@ -26,6 +26,7 @@
     "prepublishOnly": "pnpm check && pnpm build"
   },
   "dependencies": {
+    "@waxlens/contract": "workspace:*",
     "@waxlens/core": "workspace:*",
     "commander": "^14.0.3"
   },

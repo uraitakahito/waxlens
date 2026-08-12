@@ -1,12 +1,13 @@
 ---
 title: アーキテクチャ
-description: なぜ 5 つの package と stateless な daemon なのか。
+description: なぜ 6 つの package と stateless な daemon なのか。
 ---
 
-## 5 つの package
+## 6 つの package
 
 | Package | bin | 役割 |
 | ------- | --- | ---- |
+| `@waxlens/contract` | — | すべての面が従う共有語彙。rule profile・locale・CLI の exit code 契約。何にも依存しないので、browser クライアントが engine を引き込まずに使える。 |
 | `@waxlens/core` | — | Validation engine。WACZ を読み、rule を実行し、machine-readable な report を返す。library であり、bin も `commander` も持たない。 |
 | `@waxlens/validate-cli` | `waxlens-validate` | core の上に載る非対話コマンド。引数を解釈し、JSON report を書き、exit code を立てる。他を使わず CI から直接呼べる。 |
 | `@waxlens/daemon` | `waxlens-daemon` | stateless な HTTP/WS daemon。core を所有し、解決済み(message / specUrl / conformance を inline した)report を返す。 |
@@ -32,9 +33,9 @@ flowchart LR
     daemon -->|import| protocol
     protocol -.->|"import type のみ"| core
 
-    classDef contract fill:#fff3cd,stroke:#d4a72c,color:#5c4500;
+    classDef shared fill:#fff3cd,stroke:#d4a72c,color:#5c4500;
     classDef future fill:#eeeeee,stroke:#999999,color:#666666;
-    class protocol contract;
+    class shared,protocol shared;
     class browser future;
 ```
 

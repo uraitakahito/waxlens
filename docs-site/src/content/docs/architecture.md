@@ -1,12 +1,13 @@
 ---
 title: Architecture
-description: Why waxlens is five packages and a stateless daemon.
+description: Why waxlens is six packages and a stateless daemon.
 ---
 
-## The five packages
+## The six packages
 
 | Package | bin | Role |
 | ------- | --- | ---- |
+| `@waxlens/contract` | — | The vocabulary every surface agrees on: rule profiles, locales, and the CLI exit-code contract. Depends on nothing, so a browser client can use it without pulling in the engine. |
 | `@waxlens/core` | — | The validation engine. Reads a WACZ, runs the rules, produces a machine-readable report. A library: it carries no bin and no `commander`. |
 | `@waxlens/validate-cli` | `waxlens-validate` | The non-interactive command over core. Parses the arguments, writes the JSON report, sets the exit code. Usable directly from CI without the rest. |
 | `@waxlens/daemon` | `waxlens-daemon` | A stateless HTTP/WS daemon that owns core and answers with a resolved report (message, spec URL and conformance inlined). |
@@ -31,10 +32,13 @@ flowchart LR
     tui -->|import| protocol["@waxlens/protocol"]
     daemon -->|import| protocol
     protocol -.->|"import type only"| core
+    core -->|import| shared["@waxlens/contract"]
+    protocol -->|import| shared
+    cli -->|import| shared
 
-    classDef contract fill:#fff3cd,stroke:#d4a72c,color:#5c4500;
+    classDef shared fill:#fff3cd,stroke:#d4a72c,color:#5c4500;
     classDef future fill:#eeeeee,stroke:#999999,color:#666666;
-    class protocol contract;
+    class shared,protocol shared;
     class browser future;
 ```
 
