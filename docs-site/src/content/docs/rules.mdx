@@ -68,7 +68,10 @@ statement.
 
 **Profile overrides** re-grade findings under a given `--profile`. An empty cell
 means the rule reports the same everywhere. **Not every finding from a rule
-necessarily moves**, so a count is shown when more than one does. Conformance
+necessarily moves**, so a count is shown when more than one does. A cell like
+`browserhive: >=1.11.0` is a **producer version range**: name a version outside
+it (`--profile browserhive@1.10.0`) and the rule does not run, which the report
+records under `skipped`. Conformance
 never moves with the profile — it is what the spec says.
 See [Profiles](/waxlens/profiles/).
 

@@ -118,7 +118,16 @@ export interface RpcResponse {
 // 足しても何もエラーにならず、waxlens-validate は受理するのに waxlens は
 // 拒否する、という食い違いが型検査も全 test も緑のまま成立していた。
 
-export { ALL_PROFILES, DEFAULT_PROFILE, SUPPORTED_LOCALES, exitCodeFor } from "@waxlens/contract";
+export {
+  ALL_PROFILES,
+  DEFAULT_PROFILE,
+  DEFAULT_SELECTOR,
+  SUPPORTED_LOCALES,
+  exitCodeFor,
+  formatProfileSelector,
+  parseProfileSelector,
+} from "@waxlens/contract";
+export type { ProfileSelector, SemVer } from "@waxlens/contract";
 
 import type { CliOutcome as Outcome } from "@waxlens/contract";
 

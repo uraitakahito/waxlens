@@ -38,7 +38,7 @@ const issuesFor = async (
     const result = await runValidation(reader, {
       waxlensVersion: "0.0.0",
       rules: DEFAULT_RULES,
-      profile,
+      profile: { name: profile },
     });
     if (!result.ok) throw new Error("runValidation returned err — unreachable");
     return result.value.issues.map((i) => ({ rule: i.rule, severity: i.severity }));

@@ -10,6 +10,7 @@
  * exercise できる。
  */
 
+import { ALL_PROFILES } from "@waxlens/contract";
 import type { FixtureEntry, Manifest, ProfileResult } from "./manifest.js";
 
 // 既存の import 元 (build-docs.test.ts / catalog.test.ts) を壊さないよう、
@@ -17,8 +18,8 @@ import type { FixtureEntry, Manifest, ProfileResult } from "./manifest.js";
 // する」だけを担う。
 export type { FixtureEntry, Manifest, ProfileResult };
 
-/** profile 差テーブルの列順 (= build-corpus の ALL_PROFILES と同じ並び)。 */
-const PROFILES = ["spec", "browserhive", "lenient"] as const;
+/** profile 差テーブルの列順。持ち主は @waxlens/contract。 */
+const PROFILES = ALL_PROFILES;
 
 /**
  * カタログは docs site の en / ja 両方へ注入する。表の中身 (fixture 名・rule 名・

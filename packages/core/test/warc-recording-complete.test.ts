@@ -14,7 +14,13 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { parseReportSource, type Issue, type RuleProfile } from "../src/validate/domain.js";
+import type { ProfileSelector } from "@waxlens/contract";
+import {
+  parseReportSource,
+  type Issue,
+  type Report,
+  type RuleProfile,
+} from "../src/validate/domain.js";
 import { runValidation } from "../src/validate/engine.js";
 import { DEFAULT_RULES } from "../src/validate/rules/index.js";
 import { fileTransport } from "../src/wacz/transport.js";
@@ -39,7 +45,7 @@ const issuesFor = async (
     const result = await runValidation(reader, {
       waxlensVersion: "0.0.0",
       rules: DEFAULT_RULES,
-      profile,
+      profile: { name: profile },
     });
     if (!result.ok) throw new Error("runValidation returned err — unreachable");
     return result.value.issues;
@@ -102,5 +108,74 @@ describe("warc/recording-complete", () => {
     )?.recording;
     expect(recording?.byResourceType).toEqual({ Image: 2, Script: 1 });
     expect(recording?.byBlockedReason).toEqual({ inspector: 1 });
+  });
+});
+
+describe("producer 版によるゲート", () => {
+  let tmpDir: string;
+  beforeEach(async () => {
+    tmpDir = await mkdtemp(join(tmpdir(), "waxlens-recording-version-"));
+  });
+  afterEach(async () => {
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  /** fixture を 1 本作り、指定 selector で validate した report を返す。 */
+  const reportFor = async (selector: ProfileSelector): Promise<Report> => {
+    const { bytes } = await buildWacz({ warcIncompleteRecords: 30 });
+    const path = join(tmpDir, "fixture.wacz");
+    await writeFile(path, bytes);
+    const parsed = parseReportSource(path);
+    if (!parsed.ok || parsed.value.kind !== "file") throw new Error("unreachable");
+    const reader = await WaczReader.open(fileTransport(parsed.value.path));
+    try {
+      const result = await runValidation(reader, {
+        waxlensVersion: "0.0.0",
+        rules: DEFAULT_RULES,
+        profile: selector,
+      });
+      if (!result.ok) throw new Error("unreachable");
+      return result.value;
+    } finally {
+      await reader.close();
+    }
+  };
+
+  it("版を名乗らなければ従来どおり走る（skipped は key ごと出ない）", async () => {
+    // 既定を「版を問わない」に置いている根拠。ここが崩れると、版を書かない
+    // 既存の呼び出しの出力が変わる。
+    const report = await reportFor({ name: "browserhive" });
+    expect(report.skipped).toBeUndefined();
+    expect(report.issues.some((i) => i.rule === RULE)).toBe(true);
+  });
+
+  it("範囲内の版でも走る", async () => {
+    const report = await reportFor({
+      name: "browserhive",
+      version: { major: 2, minor: 1, patch: 0 },
+    });
+    expect(report.skipped).toBeUndefined();
+    expect(report.issues.some((i) => i.rule === RULE)).toBe(true);
+  });
+
+  it("範囲外の版では走らず、落としたことが report に残る", async () => {
+    // 黙って消さないのが要点 — 読者が「問題なし」と「見ていない」を
+    // 区別できないと、報告が嘘に近づく。
+    const report = await reportFor({
+      name: "browserhive",
+      version: { major: 1, minor: 10, patch: 0 },
+    });
+    expect(report.issues.some((i) => i.rule === RULE)).toBe(false);
+    expect(report.skipped).toEqual([
+      { rule: RULE, reason: "profile-version", range: ">=1.11.0", version: "1.10.0" },
+    ]);
+  });
+
+  it("下限そのものは範囲内", async () => {
+    const report = await reportFor({
+      name: "browserhive",
+      version: { major: 1, minor: 11, patch: 0 },
+    });
+    expect(report.skipped).toBeUndefined();
   });
 });
