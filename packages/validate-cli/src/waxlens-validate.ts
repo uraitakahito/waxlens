@@ -33,10 +33,19 @@ import {
   SUPPORTED_LOCALES,
   WaczReader,
   type Locale,
+  type Report,
   type ReportSource,
   type RuleProfile,
 } from "@waxlens/core";
-import { exitCodeFor, type CliOutcome } from "./cli-outcome.js";
+import { exitCodeFor, type CliOutcome as Outcome } from "@waxlens/contract";
+
+/**
+ * この CLI が運ぶのは engine が返す `Report` そのもの。
+ *
+ * tui (`waxlens`) は同じ union を daemon が解決済みで返す `WireReport` で
+ * 特殊化する — 違いはそこだけなので、契約側は型引数 1 つで両方を賄っている。
+ */
+type CliOutcome = Outcome<Report>;
 
 const here = dirname(fileURLToPath(import.meta.url));
 const manifestPath = join(here, "..", "package.json");

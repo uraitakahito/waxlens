@@ -13,11 +13,15 @@
  *   ため、ajv-draft-04 と同じく `createRequire` で値(クラス)を取得する。
  */
 import { createRequire } from "node:module";
+import { SUPPORTED_LOCALES, type Locale } from "@waxlens/contract";
 import en from "./locales/en.json" with { type: "json" };
 import ja from "./locales/ja.json" with { type: "json" };
 
-export const SUPPORTED_LOCALES = ["en", "ja"] as const;
-export type Locale = (typeof SUPPORTED_LOCALES)[number];
+// 定義の持ち主は @waxlens/contract (cf. validate/domain.ts の ALL_PROFILES)。
+// カタログを読む `t()` / `resolveLocale()` は core に残る — contract は
+// 何も import しない葉 module でいる必要がある。
+export { SUPPORTED_LOCALES };
+export type { Locale };
 /** メッセージに差し込むランタイム値(path・行番号・理由など)。 */
 export type MsgParams = Record<string, string | number>;
 

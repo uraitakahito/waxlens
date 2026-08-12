@@ -45,9 +45,13 @@ export type Conformance = "MUST" | "MUST NOT" | "SHOULD" | "SHOULD NOT" | "MAY";
  *   降格させる。legacy archive をトリアージしていて "replay 破損"
  *   系の hard error だけを見たいときに便利。
  */
-export const ALL_PROFILES = ["spec", "browserhive", "lenient"] as const;
+// 定義の持ち主は @waxlens/contract。engine も i18n も読まない葉 package に
+// 置いてあるので、browser 側 (@waxlens/protocol 経由) が core を引き込まずに
+// 同じ値を使える。ここは従来どおりの import 経路を保つための re-export。
+import { ALL_PROFILES, type RuleProfile } from "@waxlens/contract";
 
-export type RuleProfile = (typeof ALL_PROFILES)[number];
+export { ALL_PROFILES };
+export type { RuleProfile };
 
 /**
  * 各 rule が profile にどう反応するか。`severityByProfile` を使うと、

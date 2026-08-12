@@ -28,6 +28,7 @@
  * が rule のベースラインと一致するか」で対象を選んでいた。あれは作者の
  * 意図を値の一致で推測するもので、宣言を読んでも挙動が分からなかった。
  */
+import { DEFAULT_PROFILE } from "@waxlens/contract";
 import type { Result } from "../result.js";
 import { ok } from "../result.js";
 import type { WaczReader } from "../wacz/reader.js";
@@ -48,7 +49,8 @@ export interface RunOptions {
   profile?: RuleProfile;
 }
 
-export const DEFAULT_PROFILE: RuleProfile = "spec";
+// 定義の持ち主は @waxlens/contract (cf. domain.ts の ALL_PROFILES)。
+export { DEFAULT_PROFILE };
 
 export const runValidation = async (
   wacz: WaczReader,

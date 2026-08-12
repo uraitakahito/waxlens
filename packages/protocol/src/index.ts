@@ -2,9 +2,9 @@
  * waxlens daemon protocol — tui / daemon / 将来の browser が共有する契約。
  *
  * 大半は型(`import type` で core を参照するが runtime には残らない)。加えて
- * クライアントが `@waxlens/core` を一切 import せずに済むよう、軽量な CLI 契約
- * (profile/locale 定数・`exitCodeFor`・`CliOutcome`)も持つ — これらは
- * validation engine も i18n カタログも読み込まない純粋な定数 / 関数で、
+ * クライアントが validation engine を引き込まずに済むよう、軽量な CLI 契約
+ * (profile/locale 定数・`exitCodeFor`・`CliOutcome`)も通す — 実体は
+ * `@waxlens/contract` に在り、あちらは何も import しない葉 package なので
  * browser でも安全に bundle できる。
  *
  * daemon が validation を所有し、i18n は `renderJson(report, locale)` で解決して
@@ -110,32 +110,22 @@ export interface RpcResponse {
 }
 
 // ── CLI 契約 ───────────────────────────────────────────────────────────
-// クライアントが core を import せずに使えるよう protocol が持つ軽量定数 / 関数。
+// 持ち主は @waxlens/contract。あちらは何も import しない葉 package なので、
+// ここを経由してもクライアントに validation engine は付いてこない。
+//
+// 以前はこの節が同じ定義を手で複製していた。型 (`RuleProfile`) は core から
+// re-export しつつ値 (`ALL_PROFILES`) だけ複製していたので、core に profile を
+// 足しても何もエラーにならず、waxlens-validate は受理するのに waxlens は
+// 拒否する、という食い違いが型検査も全 test も緑のまま成立していた。
 
-export const ALL_PROFILES = ["spec", "browserhive", "lenient"] as const;
-export const DEFAULT_PROFILE = "spec";
-export const SUPPORTED_LOCALES = ["en", "ja"] as const;
+export { ALL_PROFILES, DEFAULT_PROFILE, SUPPORTED_LOCALES, exitCodeFor } from "@waxlens/contract";
 
-/** CLI の outcome(exit code に map する前の「何が起きたか」)。 */
-export type CliOutcome =
-  | { kind: "valid"; report: WireReport }
-  | { kind: "invalid"; report: WireReport }
-  | { kind: "openFailed"; filePath: string; cause: unknown }
-  | { kind: "engineFailed" };
+import type { CliOutcome as Outcome } from "@waxlens/contract";
 
 /**
- * outcome → 数値 exit code(0 成功 / 1 検証失敗 / 2 operational 失敗)。
- * core の同名関数と同じ契約だが、クライアントが core を import せずに済むよう
- * protocol 側に置く。
+ * クライアントが運ぶのは daemon が解決済みで返す {@link WireReport}。
+ *
+ * `waxlens-validate` は同じ union を engine の `Report` で特殊化する —
+ * 違いはそこだけなので、契約側は型引数 1 つで両方を賄っている。
  */
-export const exitCodeFor = (outcome: CliOutcome): number => {
-  switch (outcome.kind) {
-    case "valid":
-      return 0;
-    case "invalid":
-      return 1;
-    case "openFailed":
-    case "engineFailed":
-      return 2;
-  }
-};
+export type CliOutcome = Outcome<WireReport>;

@@ -5,7 +5,7 @@ description: waxlens を入れて最初の WACZ を検証するまで。
 
 ## インストール
 
-waxlens は 5 つの package からなる pnpm workspace です。ビルドしてから
+waxlens は 6 つの package からなる pnpm workspace です。ビルドしてから
 bin を system-wide に登録します。
 
 ```sh
