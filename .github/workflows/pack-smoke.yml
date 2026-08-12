@@ -44,6 +44,14 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
 
+      - name: Pack @waxlens/contract
+        id: pack-contract
+        working-directory: packages/contract
+        run: |
+          tarball=$(pnpm pack --silent | tail -n 1)
+          echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
+          echo "Packed: $tarball"
+
       - name: Pack @waxlens/core
         id: pack-core
         working-directory: packages/core
@@ -71,15 +79,18 @@ jobs:
       - name: Smoke waxlens-validate from a clean directory
         run: |
           mkdir -p /tmp/waxlens-smoke-cli
+          cp "${GITHUB_WORKSPACE}/packages/contract/${{ steps.pack-contract.outputs.tarball }}" /tmp/waxlens-smoke-cli/
           cp "${GITHUB_WORKSPACE}/packages/core/${{ steps.pack-core.outputs.tarball }}" /tmp/waxlens-smoke-cli/
           cp "${GITHUB_WORKSPACE}/packages/validate-cli/${{ steps.pack-cli.outputs.tarball }}" /tmp/waxlens-smoke-cli/
           cd /tmp/waxlens-smoke-cli
-          # Installing both tarballs at once is what keeps this a real
-          # gate: the CLI's manifest asks for `@waxlens/core@<version>`,
-          # and the local core tarball supplies exactly that, so npm
-          # never reaches for the (unpublished) registry package.
+          # Installing the whole local chain at once is what keeps this a
+          # real gate: the CLI asks for `@waxlens/core@<version>` and core
+          # asks for `@waxlens/contract@<version>`, and these tarballs
+          # supply exactly those, so npm never reaches for the
+          # (unpublished) registry packages.
           npm init -y > /dev/null
           npm install --no-audit --no-fund \
+            "./${{ steps.pack-contract.outputs.tarball }}" \
             "./${{ steps.pack-core.outputs.tarball }}" \
             "./${{ steps.pack-cli.outputs.tarball }}"
           npx waxlens-validate --version
@@ -112,6 +123,7 @@ jobs:
         # workflow that requires the NPM_TOKEN secret — never automate
         # `pnpm publish` from a `push` / `pull_request` trigger.
         run: |
+          pnpm publish --dry-run --no-git-checks --filter @waxlens/contract
           pnpm publish --dry-run --no-git-checks --filter @waxlens/protocol
           pnpm publish --dry-run --no-git-checks --filter @waxlens/core
           pnpm publish --dry-run --no-git-checks --filter @waxlens/validate-cli

@@ -42,10 +42,12 @@ flowchart LR
     tui -->|import| protocol["@waxlens/protocol"]
     daemon -->|import| protocol
     protocol -.->|"import type only"| core
+    core -->|import| shared["@waxlens/contract"]
+    protocol -->|import| shared
 
-    classDef contract fill:#fff3cd,stroke:#d4a72c,color:#5c4500;
+    classDef shared fill:#fff3cd,stroke:#d4a72c,color:#5c4500;
     classDef future fill:#eeeeee,stroke:#999999,color:#666666;
-    class protocol contract;
+    class shared,protocol shared;
     class browser future;
 ```
 
