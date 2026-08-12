@@ -5,16 +5,16 @@ description: waxlens を入れて最初の WACZ を検証するまで。
 
 ## インストール
 
-waxlens は 4 つの package からなる pnpm workspace です。ビルドしてから
+waxlens は 5 つの package からなる pnpm workspace です。ビルドしてから
 bin を system-wide に登録します。
 
 ```sh
 pnpm install --frozen-lockfile
 pnpm build
 
-pnpm --dir packages/core   add -g .   # waxlens-validate
-pnpm --dir packages/tui    add -g .   # waxlens
-pnpm --dir packages/daemon add -g .   # waxlens-daemon (常駐 daemon を使うときだけ)
+pnpm --dir packages/validate-cli add -g .   # waxlens-validate
+pnpm --dir packages/tui          add -g .   # waxlens
+pnpm --dir packages/daemon       add -g .   # waxlens-daemon (常駐 daemon を使うときだけ)
 ```
 
 登録後は monorepo の外でも waxlens 直下でも、bin 名だけで呼べます。

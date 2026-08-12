@@ -1,19 +1,25 @@
 name: pack-smoke
 
-# Asserts the published shape of BOTH workspace packages works
-# end-to-end, WITHOUT actually publishing anything. For each
-# workspace (@waxlens/core, @waxlens/tui):
+# Asserts the published shape of the bin-carrying workspaces works
+# end-to-end, WITHOUT actually publishing anything:
 #
-#   1. `pnpm pack` produces a tarball with `dist/cli.js` executable
-#   2. `npx <tarball> --version` runs from a directory with no project state
+#   1. `pnpm pack` produces a tarball whose `bin` target is executable
+#   2. the binary runs from a directory with no project state
 #   3. `pnpm publish --dry-run` reports a clean publish plan (no auth, no
 #      registry traffic — purely a local validation that `files` /
 #      `bin` / `prepublishOnly` would behave correctly if we DID push)
 #
+# `@waxlens/core` carries no bin — it is the library. It is still packed
+# here because `@waxlens/validate-cli` declares it as a runtime dep, and
+# `pnpm pack` rewrites `workspace:*` to a concrete version: installing
+# both tarballs side by side satisfies that range locally, so the smoke
+# step stays a real gate instead of degrading to a registry lookup for
+# an unpublished package (which is why the @waxlens/tui step below is
+# allowed to fail soft).
+#
 # Catches packaging regressions (missing `bin`, lost shebang, excluded
-# files, broken postbuild chmod, `files` field drift, missing
-# `@waxlens/core` workspace dep when @waxlens/tui is consumed via npx)
-# that `pnpm check` alone cannot see.
+# files, broken postbuild chmod, `files` field drift) that `pnpm check`
+# alone cannot see.
 #
 # Why `npx` and not `pnpm dlx` for the consumer simulation: most end
 # users will reach for `npx <tarball>` since npm ships with Node;
@@ -46,6 +52,14 @@ jobs:
           echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
           echo "Packed: $tarball"
 
+      - name: Pack @waxlens/validate-cli
+        id: pack-cli
+        working-directory: packages/validate-cli
+        run: |
+          tarball=$(pnpm pack --silent | tail -n 1)
+          echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
+          echo "Packed: $tarball"
+
       - name: Pack @waxlens/tui
         id: pack-tui
         working-directory: packages/tui
@@ -54,15 +68,21 @@ jobs:
           echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
           echo "Packed: $tarball"
 
-      - name: Smoke @waxlens/core from a clean directory
+      - name: Smoke waxlens-validate from a clean directory
         run: |
-          mkdir -p /tmp/waxlens-smoke-core
-          # `npx --yes /absolute/path.tgz` is mis-parsed by some npx
-          # versions as a script to execute; copy + relative-path
-          # form is the empirically-reliable workaround.
-          cp "${GITHUB_WORKSPACE}/packages/core/${{ steps.pack-core.outputs.tarball }}" /tmp/waxlens-smoke-core/
-          cd /tmp/waxlens-smoke-core
-          npx --yes "./${{ steps.pack-core.outputs.tarball }}" --version
+          mkdir -p /tmp/waxlens-smoke-cli
+          cp "${GITHUB_WORKSPACE}/packages/core/${{ steps.pack-core.outputs.tarball }}" /tmp/waxlens-smoke-cli/
+          cp "${GITHUB_WORKSPACE}/packages/validate-cli/${{ steps.pack-cli.outputs.tarball }}" /tmp/waxlens-smoke-cli/
+          cd /tmp/waxlens-smoke-cli
+          # Installing both tarballs at once is what keeps this a real
+          # gate: the CLI's manifest asks for `@waxlens/core@<version>`,
+          # and the local core tarball supplies exactly that, so npm
+          # never reaches for the (unpublished) registry package.
+          npm init -y > /dev/null
+          npm install --no-audit --no-fund \
+            "./${{ steps.pack-core.outputs.tarball }}" \
+            "./${{ steps.pack-cli.outputs.tarball }}"
+          npx waxlens-validate --version
 
       - name: Smoke @waxlens/tui from a clean directory
         run: |
@@ -80,7 +100,7 @@ jobs:
           npx --yes "./${{ steps.pack-tui.outputs.tarball }}" --version || \
             echo "::warning::@waxlens/tui smoke skipped — @waxlens/core not yet on the registry"
 
-      - name: Publish dry-run (both workspaces)
+      - name: Publish dry-run (all workspaces)
         # `pnpm publish --dry-run` writes nothing to the registry and
         # makes no network requests beyond resolving the package name.
         # It runs `prepublishOnly` (check + build) up-front, so this
@@ -94,5 +114,6 @@ jobs:
         run: |
           pnpm publish --dry-run --no-git-checks --filter @waxlens/protocol
           pnpm publish --dry-run --no-git-checks --filter @waxlens/core
+          pnpm publish --dry-run --no-git-checks --filter @waxlens/validate-cli
           pnpm publish --dry-run --no-git-checks --filter @waxlens/daemon
           pnpm publish --dry-run --no-git-checks --filter @waxlens/tui

@@ -2,7 +2,7 @@
 /**
  * CLI integration テスト。
  *
- * 生成された fixture に対してビルド済みの `dist/cli.js` を spawn し、
+ * 生成された fixture に対してビルド済みの `dist/waxlens-validate.js` を spawn し、
  * 以下を assert する:
  *   - exit code     — valid なら 0、invalid なら 1、operational な失敗なら 2
  *   - JSON shape    — snapshot ベース。非決定的な field は scrub する
@@ -22,12 +22,15 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { buildWacz, type FixtureOptions } from "./fixtures/generator.js";
+// fixture generator は core の test/ に居る (core の 12 test が共有して
+// いるので複製しない)。package 境界をまたぐ相対 import で、ambient な
+// archiver shim は tsconfig.json の include が拾う。
+import { buildWacz, type FixtureOptions } from "../../core/test/fixtures/generator.js";
 
 const execFileAsync = promisify(execFile);
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const CLI_PATH = resolve(HERE, "..", "dist", "cli.js");
+const CLI_PATH = resolve(HERE, "..", "dist", "waxlens-validate.js");
 
 interface RunResult {
   stdout: string;
@@ -36,7 +39,7 @@ interface RunResult {
 }
 
 /**
- * ビルド済み CLI を実行する。`dist/cli.js` は `node` 経由で起動して
+ * ビルド済み CLI を実行する。`dist/waxlens-validate.js` は `node` 経由で起動して
  * いるので、この test の session で chmod が走っているかどうかに
  * 依存しない (test スイートが test 走行前に `pnpm build` 自体を
  * 駆動する)。

@@ -4,6 +4,12 @@
  *
  * machine-readable な出力のみ
  *
+ * この package が持つのは引数の解釈と出力の発火だけで、validation は
+ * `@waxlens/core` が全部やる。分けてあるのは core を library として
+ * 使う consumer に commander を背負わせないため、そして bin 名
+ * (`waxlens-validate`) を package 名・ファイル名と一致させて入口を
+ * 名前から辿れるようにするため。
+ *
  * Exit codes:
  *   0 — validation 成功 (error 重大度の issue なし)
  *   1 — validation 失敗 (error 重大度の issue が 1 件以上)
@@ -13,19 +19,24 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Command, InvalidArgumentError } from "commander";
-import { exitCodeFor, type CliOutcome } from "./cli-outcome.js";
-import { renderJson } from "./render/json.js";
-import { resolveLocale, SUPPORTED_LOCALES, type Locale } from "./i18n/translate.js";
-import { DEFAULT_PROFILE, runValidation } from "./validate/engine.js";
-import { DEFAULT_RULES } from "./validate/rules/index.js";
-import type { ReportSource, RuleProfile } from "./validate/domain.js";
 import {
   ALL_PROFILES,
+  DEFAULT_PROFILE,
+  DEFAULT_RULES,
+  fileTransport,
   formatParseSourceError,
   parseReportSource,
-} from "./validate/domain.js";
-import { fileTransport, s3Transport } from "./wacz/transport.js";
-import { WaczReader } from "./wacz/reader.js";
+  renderJson,
+  resolveLocale,
+  runValidation,
+  s3Transport,
+  SUPPORTED_LOCALES,
+  WaczReader,
+  type Locale,
+  type ReportSource,
+  type RuleProfile,
+} from "@waxlens/core";
+import { exitCodeFor, type CliOutcome } from "./cli-outcome.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const manifestPath = join(here, "..", "package.json");

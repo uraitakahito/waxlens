@@ -5,16 +5,16 @@ description: Install waxlens and validate your first WACZ.
 
 ## Install
 
-waxlens is a pnpm workspace of four packages. Build them, then register the
+waxlens is a pnpm workspace of five packages. Build them, then register the
 binaries globally:
 
 ```sh
 pnpm install --frozen-lockfile
 pnpm build
 
-pnpm --dir packages/core   add -g .   # waxlens-validate
-pnpm --dir packages/tui    add -g .   # waxlens
-pnpm --dir packages/daemon add -g .   # waxlens-daemon (only for a long-running daemon)
+pnpm --dir packages/validate-cli add -g .   # waxlens-validate
+pnpm --dir packages/tui          add -g .   # waxlens
+pnpm --dir packages/daemon       add -g .   # waxlens-daemon (only for a long-running daemon)
 ```
 
 After that the names work from anywhere, inside the repository or out.
