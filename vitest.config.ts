@@ -19,7 +19,7 @@ import { TEST_TAGS } from "./test-tags.js";
  */
 export default defineConfig({
   test: {
-    projects: ["packages/core", "packages/daemon", "packages/tui"],
+    projects: ["packages/core", "packages/validate-cli", "packages/daemon", "packages/tui"],
     tags: TEST_TAGS,
   },
 });

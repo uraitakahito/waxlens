@@ -1,13 +1,14 @@
 ---
 title: アーキテクチャ
-description: なぜ 4 つの package と stateless な daemon なのか。
+description: なぜ 5 つの package と stateless な daemon なのか。
 ---
 
-## 4 つの package
+## 5 つの package
 
 | Package | bin | 役割 |
 | ------- | --- | ---- |
-| `@waxlens/core` | `waxlens-validate` | Validation engine。WACZ を読み、rule を実行し、machine-readable な report を出す。他を使わず CI から直接呼べる。 |
+| `@waxlens/core` | — | Validation engine。WACZ を読み、rule を実行し、machine-readable な report を返す。library であり、bin も `commander` も持たない。 |
+| `@waxlens/validate-cli` | `waxlens-validate` | core の上に載る非対話コマンド。引数を解釈し、JSON report を書き、exit code を立てる。他を使わず CI から直接呼べる。 |
 | `@waxlens/daemon` | `waxlens-daemon` | stateless な HTTP/WS daemon。core を所有し、解決済み(message / specUrl / conformance を inline した)report を返す。 |
 | `@waxlens/tui` | `waxlens` | 対話的な terminal UI。daemon の薄いクライアント。 |
 | `@waxlens/protocol` | — | クライアントと daemon が共有する wire 型と CLI 契約。runtime では core に依存しないので browser-safe。 |
@@ -25,7 +26,8 @@ validator は単一バイナリでも作れます。分離しているのは、*
 flowchart LR
     tui["@waxlens/tui"] ==>|"WS / JSON-RPC"| daemon["@waxlens/daemon"]
     browser(["browser (将来)"]) -.->|"WS"| daemon
-    daemon -->|"検証に使う"| core["@waxlens/core"]
+    cli["@waxlens/validate-cli"] -->|"検証に使う"| core["@waxlens/core"]
+    daemon -->|"検証に使う"| core
     tui -->|import| protocol["@waxlens/protocol"]
     daemon -->|import| protocol
     protocol -.->|"import type のみ"| core

@@ -37,7 +37,8 @@ archive を **replay しません** — それは [ReplayWeb.page](https://repla
 flowchart LR
     tui["@waxlens/tui (bin: waxlens)"] ==>|"WS / JSON-RPC"| daemon["@waxlens/daemon"]
     browser(["browser (将来)"]) -.->|"WS"| daemon
-    daemon -->|"検証に使う"| core["@waxlens/core (bin: waxlens-validate)"]
+    cli["@waxlens/validate-cli (bin: waxlens-validate)"] -->|"検証に使う"| core["@waxlens/core"]
+    daemon -->|"検証に使う"| core
     tui -->|import| protocol["@waxlens/protocol"]
     daemon -->|import| protocol
     protocol -.->|"import type のみ"| core

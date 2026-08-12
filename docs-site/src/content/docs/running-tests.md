@@ -10,7 +10,7 @@ pnpm check
 ```
 
 It runs `pnpm audit` and then, package by package, `typecheck → lint → build → test`.
-Four packages, in dependency order, so a break surfaces in the package that
+Five packages, in dependency order, so a break surfaces in the package that
 caused it rather than three packages downstream.
 
 **Nothing here needs a network, a container, or a WACZ file on disk.** The one
@@ -20,7 +20,7 @@ suite that does is skipped unless you ask for it — see below.
 
 | Command | Scope |
 | --- | --- |
-| `pnpm check` | audit + all four packages. **What CI runs.** |
+| `pnpm check` | audit + all five packages. **What CI runs.** |
 | `pnpm test` | tests only, all packages |
 | `pnpm --filter @waxlens/core test` | one package |
 | `pnpm --filter @waxlens/core test:watch` | one package, watching |
@@ -29,7 +29,7 @@ suite that does is skipped unless you ask for it — see below.
 | `pnpm test:report` | a static report into `html/` |
 
 `--filter` takes the package name, not the directory: `@waxlens/core`,
-`@waxlens/daemon`, `@waxlens/protocol`, `@waxlens/tui`.
+`@waxlens/validate-cli`, `@waxlens/daemon`, `@waxlens/protocol`, `@waxlens/tui`.
 
 `@waxlens/protocol` has no tests — it is the wire contract, and its `check` stops
 after `build`. That is not an omission: there is nothing there to run.
@@ -225,7 +225,7 @@ Five workflows, and only the first is the one you reproduce locally with
 | --- | --- |
 | `check` | `pnpm check` — the whole routine suite |
 | `corpus` | clones waxlens-corpus **at `.corpus-version`**, then `corpus:docs:check` and `test:corpus` |
-| `pack-smoke` | `npm pack` for `@waxlens/core` and `@waxlens/tui`, then installs each into a clean directory and runs its binary |
+| `pack-smoke` | `npm pack` for `@waxlens/core`, `@waxlens/validate-cli` and `@waxlens/tui`, then installs them into a clean directory and runs the binaries |
 | `site` | builds the documentation and verifies its references |
 | `docs` | publishes the site |
 

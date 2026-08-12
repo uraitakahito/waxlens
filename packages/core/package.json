@@ -9,9 +9,6 @@
   },
   "main": "dist/public.js",
   "types": "dist/public.d.ts",
-  "bin": {
-    "waxlens-validate": "dist/cli.js"
-  },
   "files": [
     "dist",
     "README.md",
@@ -19,7 +16,7 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "postbuild": "chmod +x dist/cli.js && mkdir -p dist/validate/frictionless && cp src/validate/frictionless/data-package.schema.json dist/validate/frictionless/ && mkdir -p dist/i18n/locales && cp src/i18n/locales/*.json dist/i18n/locales/",
+    "postbuild": "mkdir -p dist/validate/frictionless && cp src/validate/frictionless/data-package.schema.json dist/validate/frictionless/ && mkdir -p dist/i18n/locales && cp src/i18n/locales/*.json dist/i18n/locales/",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -36,7 +33,6 @@
     "@aws-sdk/client-s3": "^3.1045.0",
     "ajv": "^8.20.0",
     "ajv-draft-04": "^1.0.0",
-    "commander": "^14.0.3",
     "intl-messageformat": "^11.2.7",
     "yauzl-promise": "^4.0.0",
     "zod": "^4.4.3"
