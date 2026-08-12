@@ -30,7 +30,7 @@ const reportFor = async (tmpDir: string, options: FixtureOptions = {}): Promise<
     const result = await runValidation(reader, {
       waxlensVersion: "0.0.0",
       rules: DEFAULT_RULES,
-      profile: "spec",
+      profile: { name: "spec" },
     });
     if (!result.ok) throw new Error("unreachable");
     return result.value;

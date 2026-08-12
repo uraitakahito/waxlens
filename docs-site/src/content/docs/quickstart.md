@@ -72,7 +72,8 @@ The default profile is `spec`. An archive that exits 0 under it is expected to
 replay correctly in [ReplayWeb.page](https://replayweb.page/).
 
 ```sh
-waxlens-validate --profile browserhive samples/wikipedia.wacz   # stricter
+waxlens-validate --profile browserhive        samples/wikipedia.wacz   # stricter
+waxlens-validate --profile browserhive@2.1.0  samples/wikipedia.wacz   # pin the producer version
 waxlens-validate --profile lenient     samples/wikipedia.wacz   # triage mode
 ```
 

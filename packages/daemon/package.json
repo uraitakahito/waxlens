@@ -26,6 +26,7 @@
     "check": "pnpm typecheck && pnpm lint && pnpm build && pnpm test"
   },
   "dependencies": {
+    "@waxlens/contract": "workspace:*",
     "@waxlens/core": "workspace:*",
     "@waxlens/protocol": "workspace:*",
     "commander": "^14.0.3",

@@ -31,6 +31,40 @@ Use it when the archive is known to come from BrowserHive and you want its house
 rules enforced too. On any other producer's output it will report conventions
 that archive never agreed to follow.
 
+#### Pinning the producer version
+
+BrowserHive's output changes between versions. Append `@<x.y.z>` and only the
+rules known to be correct for that version run.
+
+```sh
+waxlens-validate --profile browserhive@2.1.0 archive.wacz
+```
+
+Without a version, every rule runs, including the version-conditional ones —
+that is the previous behaviour, kept as the default.
+
+A rule held back by a version mismatch is reported in `skipped`. It is **not
+dropped silently**: a reader who cannot tell "nothing wrong" from "not looked
+at" is being misled.
+
+```json
+"skipped": [
+  {
+    "rule": "warc/recording-complete",
+    "reason": "profile-version",
+    "range": ">=1.11.0",
+    "version": "1.10.0"
+  }
+]
+```
+
+:::caution[The version is not checked against the archive]
+`--profile browserhive@1.0.0` is taken at face value; nothing verifies that the
+archive was really produced by 1.0.0. `datapackage.json` carries a `software`
+field naming the producer and its version, but waxlens does not read it yet.
+**The version is the operator's claim.**
+:::
+
 ### `lenient`
 
 Demotes every producer-specific and stylistic finding to `info`, leaving only

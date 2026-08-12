@@ -107,7 +107,32 @@ Within a major version:
 `stats` is best-effort and optional by design: a WARC broken enough to defeat
 statistics must not block the report that says so.
 
+## `skipped` — recording what was not looked at
+
+Append a producer version to `--profile` (`browserhive@1.10.0`) and any rule
+that cannot judge that version correctly does not run. **That omission is
+written down**, in `skipped`:
+
+```json
+"skipped": [
+  {
+    "rule": "warc/recording-complete",
+    "reason": "profile-version",
+    "range": ">=1.11.0",
+    "version": "1.10.0"
+  }
+]
+```
+
+Like `stats`, the key is absent when there is nothing to report, so a run
+without a version produces byte-identical JSON to before.
+
+It is explicit rather than omitted because an empty `issues` has two possible
+meanings — "looked, found nothing" and "never looked". A consumer that assumes
+the first is being misled.
+
 ## Exit codes
+
 
 The exit code is derived from the report by `exitCodeFor` in
 `@waxlens/protocol`, shared by the CLI and the TUI so the two cannot disagree.

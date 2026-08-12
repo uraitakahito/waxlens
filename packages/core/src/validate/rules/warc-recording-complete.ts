@@ -50,7 +50,16 @@ export const warcRecordingCompleteRule: ValidationRule = {
   descriptionKey: "warc/recording-complete.desc",
   conformance: "MAY",
   // 規格外の producer 指標。browserhive profile のときだけ走る。
-  applicability: { excludeProfiles: ["spec", "lenient"] },
+  applicability: {
+    excludeProfiles: ["spec", "lenient"],
+    // 下の classify() が読む `skipBodyReason` の "too-large" / "task-cap" は
+    // browserhive v1.11.0 (PR #281 / #282) で入った値。metadata 慣習そのもの
+    // は v1.4.0 からあるが、それ未満の archive にこの分類を当てると、
+    // 切り詰められた応答を "incomplete" に丸めて数字が静かに嘘になる。
+    // 誤った内訳を出すくらいなら走らせない — 落としたことは Report.skipped
+    // に残るので、読者は「問題なし」と「見ていない」を区別できる。
+    profileVersions: { browserhive: ">=1.11.0" },
+  },
 
   run: async (wacz) => {
     const buf = await wacz.readEntry(WARC_ENTRY);

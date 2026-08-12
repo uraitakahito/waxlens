@@ -28,7 +28,7 @@ const rulesFor = async (tmpDir: string, options: FixtureOptions = {}): Promise<s
     const result = await runValidation(reader, {
       waxlensVersion: "0.0.0",
       rules: DEFAULT_RULES,
-      profile: "spec",
+      profile: { name: "spec" },
     });
     if (!result.ok) throw new Error("unreachable: runValidation err");
     return result.value.issues.map((i) => i.rule);
@@ -48,7 +48,7 @@ const issuesFor = async (tmpDir: string, options: FixtureOptions = {}) => {
     const result = await runValidation(reader, {
       waxlensVersion: "0.0.0",
       rules: DEFAULT_RULES,
-      profile: "spec",
+      profile: { name: "spec" },
     });
     if (!result.ok) throw new Error("unreachable: runValidation err");
     return result.value.issues;

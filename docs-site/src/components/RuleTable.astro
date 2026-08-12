@@ -52,14 +52,22 @@ const all = rules();
           <td>{rule.severities.join(" / ")}</td>
           <td>{rule.conformance}</td>
           <td>
-            {Object.keys(rule.severityByProfile).length === 0
+            {Object.keys(rule.severityByProfile).length === 0 &&
+            Object.keys(rule.profileVersions).length === 0
               ? "—"
-              : Object.entries(rule.severityByProfile).map(([profile, { levels, count }]) => (
-                  <code class="env">
-                    {profile}: {levels.join(" / ")}
-                    {count > 1 ? ` (${String(count)} 件)` : ""}
-                  </code>
-                ))}
+              : [
+                  ...Object.entries(rule.severityByProfile).map(([profile, { levels, count }]) => (
+                    <code class="env">
+                      {profile}: {levels.join(" / ")}
+                      {count > 1 ? ` (${String(count)} 件)` : ""}
+                    </code>
+                  )),
+                  ...Object.entries(rule.profileVersions).map(([profile, range]) => (
+                    <code class="env">
+                      {profile}: {range}
+                    </code>
+                  )),
+                ]}
           </td>
           <td>
             {rule.links.length === 0
