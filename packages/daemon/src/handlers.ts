@@ -7,6 +7,11 @@
  */
 import { fileURLToPath } from "node:url";
 import {
+  DEFAULT_SELECTOR,
+  parseProfileSelector,
+  type ProfileSelector,
+} from "@waxlens/contract";
+import {
   DEFAULT_RULES,
   WaczReader,
   fileTransport,
@@ -16,7 +21,6 @@ import {
   runValidation,
   s3Transport,
   type ReportSource,
-  type RuleProfile,
 } from "@waxlens/core";
 import type {
   ReadEntryParams,
@@ -30,7 +34,6 @@ import { previewEntry } from "./entry-preview.js";
 
 /** content プレビューの上限(byte 相当)。これを超えたら truncated。 */
 const PREVIEW_CAP = 64 * 1024;
-const PROFILES: readonly string[] = ["spec", "browserhive", "lenient"];
 
 /** RpcError に map できる、コード付きの daemon エラー。 */
 export class DaemonError extends Error {
@@ -64,13 +67,24 @@ const openFromSource = async (
   }
 };
 
-const toProfile = (profile: string | undefined): RuleProfile | undefined =>
-  profile !== undefined && PROFILES.includes(profile) ? (profile as RuleProfile) : undefined;
+/**
+ * wire の `profile` 文字列を selector に。
+ *
+ * 未知の値を**既定に落とさない**のが要点 — 以前はここが `undefined` を
+ * 返し、`runValidation` が黙って `spec` を使っていた。クライアントは
+ * 自分の指定が無視されたことに気づけなかった。
+ */
+const toSelector = (profile: string | undefined): ProfileSelector => {
+  if (profile === undefined) return DEFAULT_SELECTOR;
+  const selector = parseProfileSelector(profile);
+  if (selector === null) throw new DaemonError("badRequest", `unknown profile: ${profile}`);
+  return selector;
+};
 
 /** WACZ を検証し、解決済みの WireReport を返す(stateless)。 */
 export const validate = async (params: ValidateParams): Promise<WireReport> => {
   const locale = resolveLocale(params.locale);
-  const profile = toProfile(params.profile);
+  const profile = toSelector(params.profile);
   const parsed = parseSourceUri(params.source.uri);
   if (!parsed.ok) throw new DaemonError("openFailed", parsed.error.kind);
   const reader = await openFromSource(parsed.value, params.s3ForcePathStyle ?? false);
@@ -78,7 +92,7 @@ export const validate = async (params: ValidateParams): Promise<WireReport> => {
     const result = await runValidation(reader, {
       waxlensVersion: BUILD_INFO.version,
       rules: DEFAULT_RULES,
-      ...(profile !== undefined && { profile }),
+      profile,
     });
     if (!result.ok) throw new DaemonError("engineFailed", "validation engine failed");
     return JSON.parse(renderJson(result.value, locale)) as WireReport;

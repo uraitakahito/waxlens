@@ -54,6 +54,13 @@ export interface RuleFact {
    * **その rule の全 issue が変わるとは限らない** ので、件数を併記する。
    */
   severityByProfile: Record<string, { levels: string[]; count: number }>;
+  /**
+   * profile 別の producer 版の範囲 (`profileVersions`)。
+   *
+   * 範囲外の版を名乗った実行では rule が走らない。表に出さないと
+   * 「この rule はいつ効くのか」が rule ソースを開くまで分からない。
+   */
+  profileVersions: Record<string, string>;
   /** 出典リンク。未登録の rule は空配列。 */
   links: RuleLink[];
 }
@@ -99,7 +106,21 @@ export function rules(): RuleFact[] {
       byProfile[profile] = { levels: [...new Set(levels)], count: levels.length };
     }
 
-    return { name, severities, conformance, severityByProfile: byProfile, links: docLinks[name] ?? [] };
+    // 版の範囲。severityByProfile と同じく profile 名で引く。
+    const profileVersions: Record<string, string> = {};
+    const versionBlock = /profileVersions:\s*\{([^}]*)\}/.exec(source)?.[1];
+    for (const [, profile, range] of (versionBlock ?? "").matchAll(/(\w+):\s*"([^"]+)"/g)) {
+      profileVersions[profile] = range;
+    }
+
+    return {
+      name,
+      severities,
+      conformance,
+      severityByProfile: byProfile,
+      profileVersions,
+      links: docLinks[name] ?? [],
+    };
   });
 
   // DEFAULT_RULES の配列要素だけを数える。import 行にも `…Rule,` が並ぶので

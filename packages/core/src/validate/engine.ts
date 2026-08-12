@@ -28,7 +28,14 @@
  * が rule のベースラインと一致するか」で対象を選んでいた。あれは作者の
  * 意図を値の一致で推測するもので、宣言を読んでも挙動が分からなかった。
  */
-import { DEFAULT_PROFILE } from "@waxlens/contract";
+import {
+  DEFAULT_PROFILE,
+  DEFAULT_SELECTOR,
+  formatProfileSelector,
+  formatSemVer,
+  satisfies,
+  type ProfileSelector,
+} from "@waxlens/contract";
 import type { Result } from "../result.js";
 import { ok } from "../result.js";
 import type { WaczReader } from "../wacz/reader.js";
@@ -39,14 +46,21 @@ import type {
   Report,
   ReportSummary,
   RuleProfile,
+  SkippedRule,
   ValidationRule,
 } from "./domain.js";
 
 export interface RunOptions {
   waxlensVersion: string;
   rules: readonly ValidationRule[];
-  /** Profile selector. Defaults to `"spec"`. */
-  profile?: RuleProfile;
+  /**
+   * Profile selector。既定は `"spec"`(版なし)。
+   *
+   * 版を持たない selector は、版に条件を持つ rule の条件を**見ない** —
+   * つまり従来どおり全部走る。既定をそちらに置いているので、版を書かない
+   * 呼び出しの挙動は変わらない。
+   */
+  profile?: ProfileSelector;
 }
 
 // 定義の持ち主は @waxlens/contract (cf. domain.ts の ALL_PROFILES)。
@@ -57,11 +71,34 @@ export const runValidation = async (
   opts: RunOptions,
 ): Promise<Result<Report, never>> => {
   const startedAt = Date.now();
-  const profile: RuleProfile = opts.profile ?? DEFAULT_PROFILE;
+  const selector: ProfileSelector = opts.profile ?? DEFAULT_SELECTOR;
+  const profile: RuleProfile = selector.name;
 
-  const activeRules = opts.rules.filter(
+  const eligible = opts.rules.filter(
     (rule) => !rule.applicability?.excludeProfiles?.includes(profile),
   );
+  // 版で落とす分は「除外」ではなく「見なかった」なので、記録して report
+  // に出す。excludeProfiles との違いはそこ — あちらは profile の定義上
+  // 最初から対象外で、報告すべき欠落ではない。
+  const skipped: SkippedRule[] = [];
+  const { version } = selector;
+  const activeRules =
+    version === undefined
+      ? eligible
+      : eligible.filter((rule) => {
+          const range = rule.applicability?.profileVersions?.[profile];
+          if (range === undefined) return true;
+          // satisfies は解せない範囲式で throw する — 宣言の書き間違いが
+          // 「範囲外」に化けて rule が静かに消えるより、ここで落ちるほうがよい。
+          if (satisfies(version, range)) return true;
+          skipped.push({
+            rule: rule.name,
+            reason: "profile-version",
+            range,
+            version: formatSemVer(version),
+          });
+          return false;
+        });
 
   const [perRule, stats] = await Promise.all([
     Promise.all(
@@ -84,7 +121,7 @@ export const runValidation = async (
 
   const report: Report = {
     waxlensVersion: opts.waxlensVersion,
-    profile,
+    profile: formatProfileSelector(selector),
     source: wacz.source,
     valid: summary.failed === 0,
     summary,
@@ -94,6 +131,9 @@ export const runValidation = async (
     // はなく「不在」として表現できる — exactOptionalPropertyTypes が
     // これを要求する。
     ...(stats !== undefined && { stats }),
+    // 同上。版を指定しない実行では 1 件も入らないので key ごと出ず、
+    // 従来の JSON と完全に一致する。
+    ...(skipped.length > 0 && { skipped }),
   };
   return ok(report);
 };

@@ -72,7 +72,8 @@ waxlens --server ws://127.0.0.1:7333 samples/wikipedia.wacz
 期待されます。
 
 ```sh
-waxlens-validate --profile browserhive samples/wikipedia.wacz   # より厳しく
+waxlens-validate --profile browserhive        samples/wikipedia.wacz   # より厳しく
+waxlens-validate --profile browserhive@2.1.0  samples/wikipedia.wacz   # producer の版まで指定
 waxlens-validate --profile lenient     samples/wikipedia.wacz   # トリアージ用
 ```
 

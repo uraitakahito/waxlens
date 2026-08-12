@@ -31,6 +31,38 @@ BrowserHive 生成の archive だと分かっていて、その house rule も�
 使います。他の producer の出力に当てると、その archive が従うと約束していない
 慣習まで指摘することになります。
 
+#### producer の版を添える
+
+BrowserHive は版によって出力が変わります。`@` で版を添えると、その版で正しいと
+分かっている rule だけが走ります。
+
+```sh
+waxlens-validate --profile browserhive@2.1.0 archive.wacz
+```
+
+版を添えなければ、版に条件を持つ rule も**すべて走ります**（従来どおり）。
+
+版が合わずに走らせなかった rule は、JSON の `skipped` に残ります —— **黙って
+消しません**。読者が「問題なし」と「見ていない」を区別できないと、報告が嘘に
+近づくからです。
+
+```json
+"skipped": [
+  {
+    "rule": "warc/recording-complete",
+    "reason": "profile-version",
+    "range": ">=1.11.0",
+    "version": "1.10.0"
+  }
+]
+```
+
+:::caution[版は archive と照合されません]
+`--profile browserhive@1.0.0` と打っても、その archive が本当に 1.0.0 製かは
+検査しません。`datapackage.json` の `software` には producer 名と版が書かれて
+いますが、waxlens はまだそれを読んでいません。**版は操作者の申告です。**
+:::
+
 ### `lenient`
 
 producer 固有 / 様式的な findings をすべて `info` に降格させ、replay を壊す

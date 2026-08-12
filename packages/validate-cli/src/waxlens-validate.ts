@@ -20,8 +20,6 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Command, InvalidArgumentError } from "commander";
 import {
-  ALL_PROFILES,
-  DEFAULT_PROFILE,
   DEFAULT_RULES,
   fileTransport,
   formatParseSourceError,
@@ -35,9 +33,16 @@ import {
   type Locale,
   type Report,
   type ReportSource,
-  type RuleProfile,
 } from "@waxlens/core";
-import { exitCodeFor, type CliOutcome as Outcome } from "@waxlens/contract";
+import {
+  ALL_PROFILES,
+  DEFAULT_PROFILE,
+  DEFAULT_SELECTOR,
+  exitCodeFor,
+  parseProfileSelector,
+  type CliOutcome as Outcome,
+  type ProfileSelector,
+} from "@waxlens/contract";
 
 /**
  * この CLI が運ぶのは engine が返す `Report` そのもの。
@@ -57,14 +62,17 @@ const manifest = JSON.parse(readFileSync(manifestPath, "utf-8")) as { version: s
 const envS3ForcePathStyle = process.env["WAXLENS_S3_FORCE_PATH_STYLE"] === "true";
 
 interface CliOptions {
-  profile: RuleProfile;
+  profile: ProfileSelector;
   s3ForcePathStyle: boolean;
   lang?: string;
 }
 
-const parseProfile = (raw: string): RuleProfile => {
-  if ((ALL_PROFILES as readonly string[]).includes(raw)) return raw as RuleProfile;
-  throw new InvalidArgumentError(`Unknown profile "${raw}". Valid: ${ALL_PROFILES.join(", ")}.`);
+const parseProfile = (raw: string): ProfileSelector => {
+  const selector = parseProfileSelector(raw);
+  if (selector !== null) return selector;
+  throw new InvalidArgumentError(
+    `Unknown profile "${raw}". Valid: ${ALL_PROFILES.join(", ")}, optionally @<x.y.z>.`,
+  );
 };
 
 const openWacz = (
@@ -120,9 +128,10 @@ program
   )
   .option(
     "--profile <name>",
-    `Rule profile (${ALL_PROFILES.join(" | ")}). Defaults to "${DEFAULT_PROFILE}".`,
+    `Rule profile (${ALL_PROFILES.join(" | ")}), optionally @<x.y.z> for a producer version ` +
+      `(e.g. browserhive@2.1.0). Defaults to "${DEFAULT_PROFILE}".`,
     parseProfile,
-    DEFAULT_PROFILE,
+    DEFAULT_SELECTOR,
   )
   .option(
     "--s3-force-path-style",

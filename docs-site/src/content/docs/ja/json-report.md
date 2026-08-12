@@ -102,7 +102,31 @@ drift を推測ではなく検出できるようにするために存在しま�
 `stats` が best-effort かつ optional なのは設計です。統計を取れないほど壊れた
 WARC があったとしても、**それを報告する report 自体を止めてはいけない**からです。
 
+## `skipped` — 見なかったものを書く
+
+`--profile` に producer の版を添えると（`browserhive@1.10.0`）、その版では正しく
+判定できない rule が走りません。**走らせなかった事実は `skipped` に書きます。**
+
+```json
+"skipped": [
+  {
+    "rule": "warc/recording-complete",
+    "reason": "profile-version",
+    "range": ">=1.11.0",
+    "version": "1.10.0"
+  }
+]
+```
+
+`stats` と同じく**該当が無ければ key ごと出ません**。だから版を添えない実行の
+JSON は従来と 1 バイトも変わりません。
+
+省略ではなく明示にしているのは、`issues` が空であることの意味が 2 通りあるから
+です —— 「見て、問題が無かった」と「そもそも見ていない」。consumer が前者だと
+思い込むと、報告が嘘に近づきます。
+
 ## exit code
+
 
 exit code は `@waxlens/protocol` の `exitCodeFor` が report から導出します。
 CLI と TUI が共有しているので両者がずれることはありません。よくある用途なら

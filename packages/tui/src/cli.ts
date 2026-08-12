@@ -26,12 +26,15 @@ import { Command, InvalidArgumentError } from "commander";
 import {
   ALL_PROFILES,
   DEFAULT_PROFILE,
+  DEFAULT_SELECTOR,
   exitCodeFor,
+  formatProfileSelector,
+  parseProfileSelector,
   SUPPORTED_LOCALES,
   type CliOutcome,
   type HealthStatus,
   type ReadEntryResult,
-  type RuleProfile,
+  type ProfileSelector,
   type WireReport,
 } from "@waxlens/protocol";
 import {
@@ -57,7 +60,7 @@ const manifest = JSON.parse(readFileSync(manifestPath, "utf-8")) as { version: s
 const envS3ForcePathStyle = process.env["WAXLENS_S3_FORCE_PATH_STYLE"] === "true";
 
 interface CliOptions {
-  profile: RuleProfile;
+  profile: ProfileSelector;
   s3ForcePathStyle: boolean;
   lang?: string;
   server?: ServerEndpoint;
@@ -72,9 +75,12 @@ type RequestContent = (path: string) => Promise<ReadEntryResult>;
 const toUri = (source: string): string =>
   source.startsWith("s3://") ? source : pathToFileURL(resolve(source)).href;
 
-const parseProfile = (raw: string): RuleProfile => {
-  if ((ALL_PROFILES as readonly string[]).includes(raw)) return raw as RuleProfile;
-  throw new InvalidArgumentError(`Unknown profile "${raw}". Valid: ${ALL_PROFILES.join(", ")}.`);
+const parseProfile = (raw: string): ProfileSelector => {
+  const selector = parseProfileSelector(raw);
+  if (selector !== null) return selector;
+  throw new InvalidArgumentError(
+    `Unknown profile "${raw}". Valid: ${ALL_PROFILES.join(", ")}, optionally @<x.y.z>.`,
+  );
 };
 
 const program = new Command();
@@ -85,9 +91,10 @@ program
   .argument("<source>", "Local path or s3://bucket/key URI of the .wacz to validate")
   .option(
     "--profile <name>",
-    `Rule profile (${ALL_PROFILES.join(" | ")}). Defaults to "${DEFAULT_PROFILE}".`,
+    `Rule profile (${ALL_PROFILES.join(" | ")}), optionally @<x.y.z> for a producer version ` +
+      `(e.g. browserhive@2.1.0). Defaults to "${DEFAULT_PROFILE}".`,
     parseProfile,
-    DEFAULT_PROFILE,
+    DEFAULT_SELECTOR,
   )
   .option(
     "--s3-force-path-style",
@@ -160,7 +167,7 @@ async function validateOnce(
   try {
     const report = await client.request<WireReport>("waxlens/validate", {
       source: { kind: "uri", uri },
-      profile: opts.profile,
+      profile: formatProfileSelector(opts.profile),
       locale: opts.lang ?? "",
       ...(opts.s3ForcePathStyle && { s3ForcePathStyle: true }),
     });

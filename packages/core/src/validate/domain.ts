@@ -75,6 +75,22 @@ export interface RuleApplicability {
   severityByProfile?: Partial<Record<RuleProfile, Record<string, Severity>>>;
   /** その profile で rule を完全に skip する (issue を 1 件も出さない)。 */
   excludeProfiles?: readonly RuleProfile[];
+  /**
+   * profile 別・**producer 版の範囲**。この rule が正しく判定できると
+   * 分かっている版を宣言する。
+   *
+   * selector が版を名乗り (`--profile browserhive@1.10.0`)、それが範囲外
+   * なら rule は走らず、その事実が `Report.skipped` に残る。**黙って
+   * 消さない**のが要点 — 落ちた rule が見えないと、報告が「問題なし」
+   * なのか「見ていない」なのか読者に区別できない。
+   *
+   * selector が版を名乗らなければ範囲は見ない (＝ 従来どおり走る)。
+   * 既定をそちらに置いているので、版を書かない呼び出しの挙動は変わらない。
+   *
+   * 範囲式は `@waxlens/contract` の最小部分集合 (`>=x.y.z` / `<x.y.z` と
+   * 空白区切りの AND)。解せない式は engine 実行時に throw する。
+   */
+  profileVersions?: Partial<Record<RuleProfile, string>>;
 }
 
 export interface IssueLocation {
@@ -137,6 +153,22 @@ export interface ReportSummary {
   warnings: number;
   info: number;
   durationMs: number;
+}
+
+/**
+ * producer 版が合わずに走らせなかった rule。
+ *
+ * `Report.skipped` は該当が 1 件も無ければ **key ごと出力されない**
+ * (`stats` と同じ条件付き spread)。だから版を指定しない実行の JSON は
+ * 従来と 1 バイトも変わらない。
+ */
+export interface SkippedRule {
+  rule: string;
+  reason: "profile-version";
+  /** rule が要求した範囲 (例 `">=1.11.0"`)。 */
+  range: string;
+  /** selector が名乗った版 (例 `"1.10.0"`)。 */
+  version: string;
 }
 // #endregion report-summary
 
@@ -297,8 +329,13 @@ export interface ReportEntry {
 // #region report
 export interface Report {
   waxlensVersion: string;
-  /** report を評価する際に使った rule profile。{@link RuleProfile} を参照。 */
-  profile: RuleProfile;
+  /**
+   * report を評価する際に使った profile selector の文字列形。
+   *
+   * 版を指定しなければ profile 名そのもの (`"spec"`)、指定すれば
+   * `"browserhive@2.1.0"`。{@link RuleProfile} と `ProfileSelector` を参照。
+   */
+  profile: string;
   /** validate された WACZ の identity。{@link ReportSource} を参照。 */
   source: ReportSource;
   /** `summary.failed === 0` のときだけ `true`。JSON consumer が再計算しなくていいように cache してある。 */
@@ -309,5 +346,10 @@ export interface Report {
   entries: ReportEntry[];
   /** best-effort な metadata — {@link ReportStats} を参照。 */
   stats?: ReportStats;
+  /**
+   * producer 版が合わず走らせなかった rule。**該当が無ければ key ごと
+   * 出ない** — {@link SkippedRule} を参照。
+   */
+  skipped?: readonly SkippedRule[];
 }
 // #endregion report

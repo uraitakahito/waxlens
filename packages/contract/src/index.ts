@@ -14,16 +14,16 @@
  * その余地を無くしたのがここ。
  */
 
-/**
- * 選べる rule profile の全体。順序は CLI のヘルプ表示にそのまま出る。
- *
- * 増やすときはここだけを触る — core も protocol も re-export しているので、
- * 両方の CLI が同時に追随する。
- */
-export const ALL_PROFILES = ["spec", "browserhive", "lenient"] as const;
-export type RuleProfile = (typeof ALL_PROFILES)[number];
-
-export const DEFAULT_PROFILE: RuleProfile = "spec";
+export {
+  ALL_PROFILES,
+  DEFAULT_PROFILE,
+  DEFAULT_SELECTOR,
+  formatProfileSelector,
+  parseProfileSelector,
+} from "./profile.js";
+export type { ProfileSelector, RuleProfile } from "./profile.js";
+export { formatSemVer, parseSemVer, satisfies } from "./version.js";
+export type { SemVer } from "./version.js";
 
 export const SUPPORTED_LOCALES = ["en", "ja"] as const;
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
