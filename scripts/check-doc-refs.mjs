@@ -88,7 +88,19 @@ for (const file of walk(DOCS).filter((f) => isPage(f))) {
       continue;
     }
     const source = readFileSync(abs, "utf8");
-    const re = new RegExp(String.raw`//\s*#region\s+${region}\b[\s\S]*?//\s*#endregion`);
+    // docs-site/src/lib/extract.ts の `sourceRegion` と **同じ判定** にする。
+    // ここが緩いと「番人は通すのに本体は切り出せない」= 空のコードフェンスが
+    // そのまま公開される、という最悪の組み合わせになる。
+    //
+    // 以前は `${region}\b` だった。`\b` は語境界なので `report` が
+    // `report-summary` にも `report-BROKEN` にも一致し、region を改名しても
+    // 「別の region が在るからヨシ」と誤判定していた (この repo は
+    // `report` と `report-summary` が同じファイルに居るので実際に踏める)。
+    // 名前の直後が改行であることを要求して終端を固定する。
+    //
+    // 名前は正規表現ではなくリテラルとして扱う (extract.ts と同じ)。
+    const name = region.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+    const re = new RegExp(String.raw`//\s*#region\s+${name}[ \t]*\r?\n[\s\S]*?//\s*#endregion`);
     if (!re.test(source)) {
       problems.push(
         `${rel}: region "${region}" not found in ${path} (renamed, removed, or missing #endregion?)`,
