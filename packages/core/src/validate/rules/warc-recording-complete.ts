@@ -48,7 +48,6 @@ const classify = (f: Record<string, string>): Reason => {
 export const warcRecordingCompleteRule: ValidationRule = {
   name: "warc/recording-complete",
   descriptionKey: "warc/recording-complete.desc",
-  severity: "info",
   conformance: "MAY",
   // 規格外の producer 指標。browserhive profile のときだけ走る。
   applicability: { excludeProfiles: ["spec", "lenient"] },

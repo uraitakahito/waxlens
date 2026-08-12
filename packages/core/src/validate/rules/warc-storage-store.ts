@@ -33,10 +33,11 @@ const WARC_ENTRY = "archive/data.warc.gz";
 export const warcStorageStoreRule: ValidationRule = {
   name: "warc/storage-store",
   descriptionKey: "warc/storage-store.desc",
-  severity: "warning",
   conformance: "SHOULD",
   applicability: {
-    severityByProfile: { lenient: "info" },
+    severityByProfile: {
+      lenient: { "warc/storage-store.zip-compressed": "info" },
+    },
   },
 
   run: async (wacz) => {

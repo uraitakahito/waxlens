@@ -12,18 +12,21 @@
  * 将来 profiler ベースで予算を支配する rule を直列化することはあり
  * うる — 現状はシンプルな形が正しく速い。
  *
- * Profile dispatch:
- *   1. `excludeProfiles` に当たれば rule を完全に除外する (issue なし)。
- *   2. `severityByProfile[profile]` があれば各 issue の severity を上書き。
- *   3. それ以外なら rule のベースライン `severity` field をそのまま使う。
+ * Profile dispatch (粒度が 2 つある):
+ *   1. **rule 単位** — `excludeProfiles` に当たれば rule ごと実行しない
+ *      (issue が 1 件も生まれない)。
+ *   2. **issue 単位** — `severityByProfile[profile]` に messageKey として
+ *      列挙された issue だけ severity を書き換える。列挙されていない issue
+ *      は rule が push した severity のまま。
  *
- * Step 2/3 は rule 単位ではなく issue 単位で適用される。これは、ある
- * issue が rule のベースラインより既に "弱い" severity を持っている
- * ことがあるため (例: `warc/payload-digest` は rule のベースラインが
- * `warning` でも非 sha256 アルゴリズムの場合は `info` issue を出す)。
- * 個別 issue の severity は floor として扱い、profile override は
- * 当該 issue が rule のベースラインに一致する場合のみ発火する。これに
- * よって mixed-severity な rule が綺麗に振る舞う。
+ * 1 つの rule が状況に応じて別の severity を出すことがある (例:
+ * `datapackage/digest` は不在なら `warning`、hash 不一致なら `error`)。
+ * 列挙式なので、「lenient では不在だけ `info` に落とし、改変の疑いは
+ * `error` のまま残す」が宣言だけで表現できる。
+ *
+ * 以前は profile ごとに severity を 1 つ書き、engine が「issue の severity
+ * が rule のベースラインと一致するか」で対象を選んでいた。あれは作者の
+ * 意図を値の一致で推測するもので、宣言を読んでも挙動が分からなかった。
  */
 import type { Result } from "../result.js";
 import { ok } from "../result.js";
@@ -35,7 +38,6 @@ import type {
   Report,
   ReportSummary,
   RuleProfile,
-  Severity,
   ValidationRule,
 } from "./domain.js";
 
@@ -95,16 +97,19 @@ export const runValidation = async (
 };
 
 /**
- * rule が生成した各 issue に、現在 profile の severity override を
- * 適用する。override は issue の severity が rule のベースラインに
- * 一致するときのみ発火する — floor の根拠はファイルヘッダ参照。
+ * rule が生成した各 issue に、現在 profile の severity override を適用する。
+ *
+ * 対象は `severityByProfile[profile]` に **messageKey として列挙された**
+ * issue だけ。列挙されていない issue は rule が push した severity のまま
+ * 通る。engine は何も推測しない。
  */
 const applyProfile = (issues: Issue[], rule: ValidationRule, profile: RuleProfile): Issue[] => {
-  const override: Severity | undefined = rule.applicability?.severityByProfile?.[profile];
-  if (override === undefined || override === rule.severity) return issues;
-  return issues.map((issue) =>
-    issue.severity === rule.severity ? { ...issue, severity: override } : issue,
-  );
+  const override = rule.applicability?.severityByProfile?.[profile];
+  if (override === undefined) return issues;
+  return issues.map((issue) => {
+    const next = override[issue.messageKey];
+    return next === undefined ? issue : { ...issue, severity: next };
+  });
 };
 
 const summarise = (issues: Issue[], ruleCount: number, durationMs: number): ReportSummary => {

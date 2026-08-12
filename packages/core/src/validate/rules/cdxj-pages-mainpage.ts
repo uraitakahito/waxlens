@@ -30,10 +30,14 @@ const CDXJ_ENTRY = "indexes/index.cdxj";
 export const cdxjPagesMainpageRule: ValidationRule = {
   name: "cdxj/pages-mainpage",
   descriptionKey: "cdxj/pages-mainpage.desc",
-  severity: "warning",
   conformance: "SHOULD",
   applicability: {
-    severityByProfile: { lenient: "info" },
+    severityByProfile: {
+      lenient: {
+        "cdxj/pages-mainpage.not-in-pages": "info",
+        "cdxj/pages-mainpage.no-cdxj-record": "info",
+      },
+    },
   },
 
   run: async (wacz) => {

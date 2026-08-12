@@ -26,11 +26,16 @@ const DATAPACKAGE_ENTRY = "datapackage.json";
 export const datapackageDigestRule: ValidationRule = {
   name: "datapackage/digest",
   descriptionKey: "datapackage/digest.desc",
-  severity: "warning",
   conformance: "SHOULD",
   applicability: {
     severityByProfile: {
-      lenient: "info",
+      // 不在は SHOULD 未達なので lenient では info まで下げる。
+      //
+      // 内容が壊れている系 (.invalid-json / .bad-path / .no-hash /
+      // .hash-mismatch) は**あえて列挙しない** = lenient でも error のまま。
+      // digest があるのに合わないのはアーカイブ改変の疑いを意味するので、
+      // トリアージ目的の profile でも埋もれさせない。
+      lenient: { "datapackage/digest.absent": "info" },
     },
   },
 

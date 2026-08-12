@@ -50,7 +50,6 @@ const validateSchema = new Ajv04({
 export const datapackageFrictionlessSchemaRule: ValidationRule = {
   name: "datapackage/frictionless-schema",
   descriptionKey: "datapackage/frictionless-schema.desc",
-  severity: "warning",
   conformance: "SHOULD",
   // 公式スキーマは WACZ より厳しい箇所があるため warning。legacy トリアージ
   // 用の lenient profile では generic な findings を出したくないので除外する。
