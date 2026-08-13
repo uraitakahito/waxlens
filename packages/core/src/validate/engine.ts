@@ -111,6 +111,17 @@ export const runValidation = async (
     computeStats(wacz),
   ]);
 
+  // `Issue[][]`(rule ごとの箱)を 1 本の列に均す。空の箱は消え、1 つの rule が
+  // 複数出したものは並んで入る。
+  //
+  // **並列に走らせているのに、この並びは実行ごとに変わらない。**
+  // `Promise.all` が返すのは「終わった順」ではなく「**渡した配列の順**」で、
+  // ここでは `activeRules` の順 = rule の登録順になる。見落としやすいが、
+  // これに依存しているものが 2 つある:
+  //   - JSON レポートが「構造的な check が先に来る」と約束している
+  //     (rules/index.ts の並びがそのまま出力の並び)
+  //   - CLI の snapshot テストは JSON 全体をバイト単位で比べている
+  // 完了順に push する形へ書き換えると、両方が静かに壊れる。
   const issues = perRule.flat();
   const summary = summarise(issues, activeRules.length, Date.now() - startedAt);
   // ファイル一覧 + issue 紐付け(best-effort)。entryNames/getEntryMeta は
