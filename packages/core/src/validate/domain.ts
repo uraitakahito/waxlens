@@ -42,7 +42,7 @@ export type Conformance = "MUST" | "MUST NOT" | "SHOULD" | "SHOULD NOT" | "MAY";
  * - `browserhive` — `spec` の上に BrowserHive の producer 慣習を
  *   重ねる (例: plain な `indexes/index.cdxj` を要求、`.idx` と
  *   ペアでも `index.cdxj.gz` は許さない、など)。
- * - `lenient` — producer 固有 / 様式的な findings をすべて `info` に
+ * - `lenient` — producer 固有 / 様式的な指摘をすべて `info` に
  *   降格させる。legacy archive をトリアージしていて "replay 破損"
  *   系の hard error だけを見たいときに便利。
  */
