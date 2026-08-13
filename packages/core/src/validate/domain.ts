@@ -104,9 +104,8 @@ export interface IssueLocation {
 
 export interface Issue {
   /**
-   * `<area>/<short-name>` 形式の安定した rule identifier。 将来の
-   * `--rule` filter や log を grep する人が使う。localise しない;
-   * version 間で書式を変えない。
+   * `<area>/<short-name>` 形式の安定した rule identifier。localise しない;
+   * バージョン間で書式を変えない。
    */
   rule: string;
   severity: Severity;

@@ -41,8 +41,7 @@ export type Locale = (typeof SUPPORTED_LOCALES)[number];
  * に閉じ込められる。
  *
  * 副作用 (stderr / stdout / Ink render) はこの outcome を消費する側が持つ。
- * outcome を組み立てる側は I/O を起こさない — これによって bin 名 prefix の差
- * (`waxlens-validate:` vs `waxlens:`) が共有モジュールに漏れない。
+ * outcome を組み立てる側は I/O を起こさない。
  */
 export type CliOutcome<TReport> =
   | { kind: "valid"; report: TReport }
