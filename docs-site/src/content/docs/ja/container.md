@@ -67,7 +67,7 @@ export AWS_REGION=us-east-1
 export AWS_ACCESS_KEY_ID=waxlens AWS_SECRET_ACCESS_KEY=waxlens
 export WAXLENS_S3_FORCE_PATH_STYLE=true
 
-./packages/core/dist/cli.js s3://waxlens/wikipedia.wacz
+./packages/validate-cli/dist/waxlens-validate.js s3://waxlens/wikipedia.wacz
 ```
 
 port は loopback に publish してあるので、container 名の代わりに
