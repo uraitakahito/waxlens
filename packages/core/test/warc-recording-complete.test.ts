@@ -111,7 +111,7 @@ describe("warc/recording-complete", () => {
   });
 });
 
-describe("producer 版によるゲート", () => {
+describe("producer のバージョンによるゲート", () => {
   let tmpDir: string;
   beforeEach(async () => {
     tmpDir = await mkdtemp(join(tmpdir(), "waxlens-recording-version-"));
@@ -141,15 +141,15 @@ describe("producer 版によるゲート", () => {
     }
   };
 
-  it("版を名乗らなければ従来どおり走る（skipped は key ごと出ない）", async () => {
-    // 既定を「版を問わない」に置いている根拠。ここが崩れると、版を書かない
+  it("バージョンを名乗らなければ従来どおり走る（skipped は key ごと出ない）", async () => {
+    // 既定を「バージョンを問わない」に置いている根拠。ここが崩れると、バージョンを書かない
     // 既存の呼び出しの出力が変わる。
     const report = await reportFor({ name: "browserhive" });
     expect(report.skipped).toBeUndefined();
     expect(report.issues.some((i) => i.rule === RULE)).toBe(true);
   });
 
-  it("範囲内の版でも走る", async () => {
+  it("範囲内のバージョンでも走る", async () => {
     const report = await reportFor({
       name: "browserhive",
       version: { major: 2, minor: 1, patch: 0 },
@@ -158,7 +158,7 @@ describe("producer 版によるゲート", () => {
     expect(report.issues.some((i) => i.rule === RULE)).toBe(true);
   });
 
-  it("範囲外の版では走らず、落としたことが report に残る", async () => {
+  it("範囲外のバージョンでは走らず、落としたことが report に残る", async () => {
     // 黙って消さないのが要点 — 読者が「問題なし」と「見ていない」を
     // 区別できないと、報告が嘘に近づく。
     const report = await reportFor({
@@ -167,7 +167,7 @@ describe("producer 版によるゲート", () => {
     });
     expect(report.issues.some((i) => i.rule === RULE)).toBe(false);
     expect(report.skipped).toEqual([{ rule: RULE, reason: "profile-version", range: ">=1.11.0" }]);
-    // 版は skipped に複製せず、profile に 1 箇所だけ持つ。
+    // バージョンは skipped に複製せず、profile に 1 箇所だけ持つ。
     expect(report.profile).toEqual({ name: "browserhive", version: "1.10.0" });
   });
 

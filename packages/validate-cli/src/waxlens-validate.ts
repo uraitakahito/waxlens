@@ -5,10 +5,7 @@
  * machine-readable な出力のみ
  *
  * この package が持つのは引数の解釈と出力の発火だけで、validation は
- * `@waxlens/core` が全部やる。分けてあるのは core を library として
- * 使う consumer に commander を背負わせないため、そして bin 名
- * (`waxlens-validate`) を package 名・ファイル名と一致させて入口を
- * 名前から辿れるようにするため。
+ * `@waxlens/core` が全部やる。
  *
  * Exit codes:
  *   0 — validation 成功 (error 重大度の issue なし)
