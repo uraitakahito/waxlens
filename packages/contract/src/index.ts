@@ -14,6 +14,7 @@
  * その余地を無くしたのがここ。
  */
 
+export { describeCause } from "./describe-cause.js";
 export {
   ALL_PROFILES,
   DEFAULT_PROFILE,
@@ -48,8 +49,10 @@ export type CliOutcome<TReport> =
   | { kind: "invalid"; report: TReport }
   /**
    * WACZ を開けなかった。`cause` は型情報を持たない (Node の fs / aws-sdk の
-   * エラーは多形) ので `unknown` のまま運び、stderr formatter 側で
-   * `error instanceof Error ? error.message : String(error)` する。
+   * エラーは多形) ので `unknown` のまま運び、表示する側が
+   * {@link describeCause} で 1 行にする。`.message` を直接読んではいけない —
+   * aws-sdk は本文の無い応答で placeholder しか入れないので、そこだけを見ると
+   * 404 も 403 も `"UnknownError"` になる。
    */
   | { kind: "openFailed"; filePath: string; cause: unknown }
   /**
