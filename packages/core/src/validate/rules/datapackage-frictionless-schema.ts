@@ -60,7 +60,7 @@ export const datapackageFrictionlessSchemaRule: ValidationRule = {
       },
   ],
   // 公式スキーマは WACZ より厳しい箇所があるため warning。legacy トリアージ
-  // 用の lenient profile では generic な findings を出したくないので除外する。
+  // 用の lenient profile では generic な指摘を出したくないので除外する。
   applicability: { excludeProfiles: ["lenient"] },
 
   run: async (wacz) => {
