@@ -31,7 +31,6 @@
 import {
   DEFAULT_PROFILE,
   DEFAULT_SELECTOR,
-  formatProfileSelector,
   formatSemVer,
   satisfies,
   type ProfileSelector,
@@ -95,7 +94,6 @@ export const runValidation = async (
             rule: rule.name,
             reason: "profile-version",
             range,
-            version: formatSemVer(version),
           });
           return false;
         });
@@ -121,7 +119,12 @@ export const runValidation = async (
 
   const report: Report = {
     waxlensVersion: opts.waxlensVersion,
-    profile: formatProfileSelector(selector),
+    profile: {
+      name: selector.name,
+      // stats / skipped と同じ条件付き spread。版なしなら key ごと出ない
+      // ので、「版を問わない」が JSON の形として表れる。
+      ...(version !== undefined && { version: formatSemVer(version) }),
+    },
     source: wacz.source,
     valid: summary.failed === 0,
     summary,

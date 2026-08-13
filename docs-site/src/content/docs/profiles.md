@@ -52,8 +52,7 @@ at" is being misled.
   {
     "rule": "warc/recording-complete",
     "reason": "profile-version",
-    "range": ">=1.11.0",
-    "version": "1.10.0"
+    "range": ">=1.11.0"
   }
 ]
 ```

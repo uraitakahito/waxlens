@@ -31,7 +31,7 @@ describe("expectedLabel", () => {
 describe("entryIssues", () => {
   const report = {
     waxlensVersion: "0.0.0",
-    profile: "spec",
+    profile: { name: "spec" },
     source: { kind: "file", path: "/tmp/x.wacz" as AbsolutePath },
     valid: false,
     summary: { passed: 0, failed: 2, warnings: 0, info: 0, durationMs: 1 },
