@@ -49,14 +49,6 @@ severity 欄には出しうる値がすべて並びます。
 
 該当するのは 22 rule のうち 5 つです。
 
-**profile 上書き**は、指定した `--profile` の下で severity を組み替えます。空欄の rule は
-どの profile でも rule が出したままです。**その rule の指摘が全部変わるとは限らない**ので、
-複数が対象なら件数を添えています。`browserhive: >=1.11.0` のように
-**バージョンの範囲**が出る rule は、その範囲外を
-[`--profile browserhive@1.10.0`](/waxlens/ja/profiles/) のように名乗った実行では走らず、落としたことが JSON の `skipped` に残ります。適合レベルは profile では動きません —— spec がそう
-書いている、という事実だからです。
-[プロファイル](/waxlens/ja/profiles/)を参照。
-
 :::note[出典側の事情]
 明示的に RFC 2119 を宣言しているのは
 [Data Package](https://uraitakahito.github.io/datapackage/ja/) だけです
@@ -67,6 +59,18 @@ RFC 2119 への言及がありません**（本文中に一度も現れないこ
 そこで waxlens は、**どの仕様に由来する適合レベルでも RFC 2119 の意味で扱います**。
 慣例に従った解釈であり、出典側が明示していない部分については waxlens の側の取り決めです。
 :::
+
+### severity 欄には profile 別の値がぶら下がります
+
+severity 欄の 1 行目が**既定 (`--profile spec`) の値**で、その下に字下げして並ぶのが
+**profile 別の上書き**です。下に何も無い rule は、どの profile でも 1 行目のまま報告されます。
+
+**その rule の指摘が全部変わるとは限らない**ので、複数が対象なら件数を添えています。
+`browserhive: >=1.11.0` のように**バージョンの範囲**が出る rule は、その範囲外を
+[`--profile browserhive@1.10.0`](/waxlens/ja/profiles/) のように名乗った実行では走らず、
+落としたことが JSON の `skipped` に残ります。適合レベルは profile では動きません ——
+spec がそう書いている、という事実だからです。
+[プロファイル](/waxlens/ja/profiles/)を参照。
 
 ## 全 rule
 
