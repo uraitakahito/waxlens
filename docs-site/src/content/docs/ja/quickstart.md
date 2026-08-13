@@ -86,7 +86,7 @@ profile が組み替えるのは producer 固有 / 様式的な rule の severit
 `waxlens-validate` は常に JSON を標準出力に書きます。切り替えるフラグはありません。
 
 ```sh
-waxlens-validate samples/wikipedia.wacz | jq '{valid, summary}'
+waxlens-validate samples/wikipedia.wacz | jq '.summary'
 ```
 
 形式は安定しており、[JSON レポート](/waxlens/ja/json-report/)に文書化しています。

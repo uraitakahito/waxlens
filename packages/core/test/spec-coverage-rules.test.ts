@@ -82,13 +82,13 @@ describe("spec-coverage rules", () => {
   it("datapackage/digest: digest が無いと warning で発火(valid のまま)", async () => {
     const report = await reportFor(tmpDir, { digest: "absent" });
     expect(rules(report)).toContain("datapackage/digest");
-    expect(report.valid).toBe(true);
+    expect(report.summary.failed).toBe(0);
   });
 
   it("datapackage/digest: hash 不一致は error で発火(valid=false)", async () => {
     const report = await reportFor(tmpDir, { digest: "bad-hash" });
     expect(rules(report)).toContain("datapackage/digest");
-    expect(report.valid).toBe(false);
+    expect(report.summary.failed).toBeGreaterThan(0);
   });
 
   it("wacz/reserved-dirs-clean: 予約 dir の異物で発火", async () => {

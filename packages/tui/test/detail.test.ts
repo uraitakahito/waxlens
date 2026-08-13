@@ -33,7 +33,6 @@ describe("entryIssues", () => {
     waxlensVersion: "0.0.0",
     profile: { name: "spec" },
     source: { kind: "file", path: "/tmp/x.wacz" as AbsolutePath },
-    valid: false,
     summary: { passed: 0, failed: 2, warnings: 0, info: 0, durationMs: 1 },
     issues: [
       { rule: "a/one", severity: "error", messageKey: "a/one.x", message: "one", location: { entry: "pages/pages.jsonl" } },

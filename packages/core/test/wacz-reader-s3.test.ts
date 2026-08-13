@@ -77,7 +77,7 @@ describe("WaczReader.open (s3Transport)", () => {
       if (!result.ok) return;
 
       expect(result.value.source).toEqual({ kind: "s3", uri });
-      expect(result.value.valid).toBe(true);
+      expect(result.value.summary.failed).toBe(0);
       expect(result.value.summary.failed).toBe(0);
     } finally {
       await reader.close();

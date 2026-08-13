@@ -63,7 +63,7 @@ describe("validation engine — happy path", () => {
 
   it("a default-generated WACZ passes all rules", async () => {
     const report = await runAgainstFixture(tmpDir, "good.wacz");
-    expect(report.valid).toBe(true);
+    expect(report.summary.failed).toBe(0);
     expect(report.summary.failed).toBe(0);
     expect(report.summary.warnings).toBe(0);
     // spec profile で除外される rule(warc/recording-complete 等)は実行されず
@@ -87,7 +87,7 @@ describe("validation engine — corrupted variants", () => {
 
   it("omitted datapackage profile → profile-required fires", async () => {
     const report = await runAgainstFixture(tmpDir, "no-profile.wacz", { profile: null });
-    expect(report.valid).toBe(false);
+    expect(report.summary.failed).toBeGreaterThan(0);
     expect(ruleNames(report)).toContain("datapackage/profile-required");
   });
 
@@ -95,7 +95,7 @@ describe("validation engine — corrupted variants", () => {
     const report = await runAgainstFixture(tmpDir, "wrong-profile.wacz", {
       profile: "not-a-data-package",
     });
-    expect(report.valid).toBe(false);
+    expect(report.summary.failed).toBeGreaterThan(0);
     expect(ruleNames(report)).toContain("datapackage/profile-required");
   });
 
@@ -127,7 +127,7 @@ describe("validation engine — corrupted variants", () => {
             : r,
         ),
     });
-    expect(report.valid).toBe(false);
+    expect(report.summary.failed).toBeGreaterThan(0);
     expect(ruleNames(report)).toContain("datapackage/resource-hashes");
   });
 
@@ -135,7 +135,7 @@ describe("validation engine — corrupted variants", () => {
     const report = await runAgainstFixture(tmpDir, "bad-cdxj-filename.wacz", {
       cdxjFilenameOverride: "archive/data.warc.gz",
     });
-    expect(report.valid).toBe(false);
+    expect(report.summary.failed).toBeGreaterThan(0);
     expect(ruleNames(report)).toContain("cdxj/filename-archive-relative");
   });
 
@@ -146,7 +146,7 @@ describe("validation engine — corrupted variants", () => {
       { cdxjGzipped: true },
       "browserhive",
     );
-    expect(report.valid).toBe(false);
+    expect(report.summary.failed).toBeGreaterThan(0);
     const issues = report.issues.filter((i) => i.rule === "cdxj/index-not-gzipped");
     expect(issues.length).toBeGreaterThan(0);
     expect(issues.every((i) => i.severity === "error")).toBe(true);
@@ -170,7 +170,7 @@ describe("validation engine — corrupted variants", () => {
     const issues = report.issues.filter((i) => i.rule === "cdxj/index-recognised-by-wabac");
     expect(issues).toHaveLength(1);
     expect(issues[0]?.severity).toBe("error");
-    expect(report.valid).toBe(false);
+    expect(report.summary.failed).toBeGreaterThan(0);
   });
 
   it("producer=webrecorder fixture validates cleanly under spec profile", async () => {
@@ -183,7 +183,7 @@ describe("validation engine — corrupted variants", () => {
     // error 無し — BrowserHive のレイアウトとは違っても WACZ は
     // spec profile では valid。
     expect(report.summary.failed).toBe(0);
-    expect(report.valid).toBe(true);
+    expect(report.summary.failed).toBe(0);
   });
 
   it("producer=webrecorder fixture → cdxj/index-not-gzipped errors under browserhive profile", async () => {
@@ -197,7 +197,7 @@ describe("validation engine — corrupted variants", () => {
     const issues = report.issues.filter((i) => i.rule === "cdxj/index-not-gzipped");
     expect(issues.length).toBeGreaterThan(0);
     expect(issues.every((i) => i.severity === "error")).toBe(true);
-    expect(report.valid).toBe(false);
+    expect(report.summary.failed).toBeGreaterThan(0);
   });
 
   it("producer=webrecorder fixture under lenient profile → exit 0", async () => {
@@ -209,14 +209,14 @@ describe("validation engine — corrupted variants", () => {
     );
     expect(report.profile).toEqual({ name: "lenient" });
     expect(report.summary.failed).toBe(0);
-    expect(report.valid).toBe(true);
+    expect(report.summary.failed).toBe(0);
   });
 
   it("missing datapackage.json → wacz/required-files reports it (§5.2.4)", async () => {
     const report = await runAgainstFixture(tmpDir, "no-datapackage.wacz", {
       omitDatapackage: true,
     });
-    expect(report.valid).toBe(false);
+    expect(report.summary.failed).toBeGreaterThan(0);
     // 不在は wacz/required-files が担当(profile-required は de-dup で不在を報告しない)。
     expect(ruleNames(report)).toContain("wacz/required-files");
     expect(ruleNames(report)).not.toContain("datapackage/profile-required");
@@ -232,7 +232,7 @@ describe("validation engine — corrupted variants", () => {
     expect(issues).toHaveLength(1);
     expect(issues[0]?.severity).toBe("warning");
     // validation 全体としては valid のまま (warning であって error ではない)。
-    expect(report.valid).toBe(true);
+    expect(report.summary.failed).toBe(0);
   });
 
   it("corrupted gzip member → warc/members-independent errors", async () => {
@@ -241,7 +241,7 @@ describe("validation engine — corrupted variants", () => {
     const report = await runAgainstFixture(tmpDir, "corrupt-warc.wacz", {
       warcCorruptAt: 30,
     });
-    expect(report.valid).toBe(false);
+    expect(report.summary.failed).toBeGreaterThan(0);
     expect(ruleNames(report)).toContain("warc/members-independent");
   });
 
@@ -249,7 +249,7 @@ describe("validation engine — corrupted variants", () => {
     const report = await runAgainstFixture(tmpDir, "bad-cdxj-offset.wacz", {
       cdxjOffsetOverride: "999999",
     });
-    expect(report.valid).toBe(false);
+    expect(report.summary.failed).toBeGreaterThan(0);
     expect(ruleNames(report)).toContain("cdxj/warc-offsets");
   });
 
@@ -257,7 +257,7 @@ describe("validation engine — corrupted variants", () => {
     const report = await runAgainstFixture(tmpDir, "bad-cdxj-length.wacz", {
       cdxjLengthMismatch: true,
     });
-    expect(report.valid).toBe(false);
+    expect(report.summary.failed).toBeGreaterThan(0);
     const offset = report.issues.filter((i) => i.rule === "cdxj/warc-offsets");
     expect(offset).toHaveLength(1);
     expect(offset[0]?.messageKey).toBe("cdxj/warc-offsets.length-mismatch");
@@ -280,7 +280,7 @@ describe("validation engine — corrupted variants", () => {
     const issues = report.issues.filter((i) => i.rule === "fuzzy/valid-json");
     expect(issues).toHaveLength(1);
     expect(issues[0]?.severity).toBe("info");
-    expect(report.valid).toBe(true); // info は valid を反転させない
+    expect(report.summary.failed).toBe(0); // info は valid を反転させない
   });
 
   it("bad WARC-Payload-Digest → warc/payload-digest warns", async () => {

@@ -83,7 +83,6 @@ const makeReport = (overrides: Partial<WireReport> = {}): WireReport => ({
   waxlensVersion: "0.0.0",
   profile: { name: "spec" },
   source: { kind: "file", path: "/tmp/fixture.wacz" as AbsolutePath },
-  valid: false,
   summary: { passed: 3, failed: 2, warnings: 0, info: 0, durationMs: 12 },
   issues: [
     {
@@ -132,7 +131,6 @@ describe("tui rendering", () => {
   it("shows 'All rules passed.' when there are no issues", () => {
     const report = makeReport({
       issues: [],
-      valid: true,
       summary: { passed: 5, failed: 0, warnings: 0, info: 0, durationMs: 8 },
     });
     const { lastFrame } = render(<App report={report} build={buildStub} />);

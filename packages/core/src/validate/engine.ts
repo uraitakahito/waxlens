@@ -126,7 +126,6 @@ export const runValidation = async (
       ...(version !== undefined && { version: formatSemVer(version) }),
     },
     source: wacz.source,
-    valid: summary.failed === 0,
     summary,
     issues,
     entries,

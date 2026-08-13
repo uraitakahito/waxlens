@@ -10,7 +10,7 @@ CI scripts and for anything downstream of waxlens, so its shape is deliberate
 rather than incidental.
 
 ```sh
-waxlens-validate samples/wikipedia.wacz | jq '{valid, summary}'
+waxlens-validate samples/wikipedia.wacz | jq '.summary'
 ```
 
 ## Top level
@@ -18,9 +18,16 @@ waxlens-validate samples/wikipedia.wacz | jq '{valid, summary}'
 ```ts file="packages/core/src/validate/domain.ts#report"
 ```
 
-`valid` is a cached `summary.failed === 0` — consumers do not have to recompute
-it. `issues` are in rule registration order, which means the structural checks
-come first and the most likely producer bug tends to be near the top.
+**"Is this archive usable?" is `summary.failed === 0`.** That answer used to be
+cached in a separate field; it only created room to disagree with `summary`, so
+it is gone.
+
+```sh
+waxlens-validate a.wacz | jq '.summary.failed == 0'
+```
+
+`issues` are in rule registration order, which means the structural checks come
+first and the most likely producer bug tends to be near the top.
 
 ## Summary
 
@@ -72,9 +79,9 @@ replay. `datapackage/digest` runs the other way: the spec only says `SHOULD`,
 but a hash that does not match may mean the archive was altered, so waxlens
 calls it an `error`.
 
-Note that **`valid` is derived from `severity` alone** — it counts `error` and
-nothing else. An archive can be `valid` and still violate a `MUST`. If you need
-the conformance view, read it off the issues:
+Note that **`summary.failed` counts `severity` alone** — it never looks at
+conformance. An archive can have `failed: 0` and still violate a `MUST`. If you
+need the conformance view, read it off the issues:
 
 ```sh
 # What waxlens judges to be broken
@@ -157,5 +164,5 @@ the first is being misled.
 
 The exit code is derived from the report by `exitCodeFor` in
 `@waxlens/protocol`, shared by the CLI and the TUI so the two cannot disagree.
-Deciding from `valid` in your own script is equivalent for the common case; use
-the shared helper when the distinction between failure kinds matters.
+Deciding from `summary.failed` in your own script is equivalent for the common
+case; use the shared helper when the distinction between failure kinds matters.

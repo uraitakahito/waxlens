@@ -100,7 +100,9 @@ const validate = async (absPath: string, profile: RuleProfile): Promise<ProfileR
     });
     if (!result.ok) throw new Error("runValidation returned err — unreachable");
     return {
-      valid: result.value.valid,
+      // corpus の期待値フォーマットは valid を持つ (別 repo の契約)。
+      // report からは外したので、ここで導く。
+      valid: result.value.summary.failed === 0,
       issues: result.value.issues.map((i) => ({ rule: i.rule, severity: i.severity })),
     };
   } finally {

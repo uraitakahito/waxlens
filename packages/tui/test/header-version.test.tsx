@@ -15,7 +15,6 @@ const report: WireReport = {
   waxlensVersion: "0.0.0",
   profile: { name: "spec" },
   source: { kind: "file", path: "/tmp/fixture.wacz" as AbsolutePath },
-  valid: true,
   summary: { passed: 1, failed: 0, warnings: 0, info: 0, durationMs: 1 },
   issues: [],
   entries: [],
