@@ -7,10 +7,14 @@
   white-space: nowrap;
 }
 
-/* 環境変数ページ（案B）: 各行は「CLI フラグ ＋ その直下に環境変数」を縦積みし、
+/* 環境変数ページ: 各行は「CLI フラグ ＋ その直下に環境変数」を縦積みし、
    表を 2 列にして「型 / 形式」列を常に見えるようにする。環境変数は
    <code class="env"> で表し、フラグに従属する控えめな行として小さく淡色で置く。
-   狭い画面では折り返せるよう nowrap を解除する（上の規則より specificity が高い）。 */
+   狭い画面では折り返せるよう nowrap を解除する（上の規則より specificity が高い）。
+
+   このクラスは**環境変数ページ専用**。2 列しかないので値に幅を与えられ、
+   `overflow-wrap: anywhere` が有効に働く。列数の多い表で使い回すと、幅を
+   奪われたセルが単語の途中で割れる（rules 表が実際にそうなっていた）。 */
 .sl-markdown-content code.env {
   display: block;
   margin-top: 3px;
@@ -21,4 +25,34 @@
   padding: 0;
   white-space: normal;
   overflow-wrap: anywhere;
+}
+
+/* rules 表（RuleTable.astro）。列を畳んで 3 列にしてあるので、従属情報は
+   親セルの中に縦積みする。
+
+   - .rule-src      … rule 名の下に置く出典リンク
+   - .rule-override … 既定 severity の下に置く profile 別の上書き
+
+   どちらも `white-space: nowrap`。`lenient: warning (2 件)` のような短い
+   トークンを単語の途中で割らない。収まらないときは表ごと横スクロールする
+   （Starlight の table は display:block; overflow:auto）。 */
+.sl-markdown-content .rule-table :is(th, td) {
+  white-space: nowrap;
+}
+
+.sl-markdown-content .rule-table .rule-src {
+  display: block;
+  margin-top: 3px;
+  font-size: var(--sl-text-xs);
+}
+
+.sl-markdown-content .rule-table code.rule-override {
+  display: block;
+  margin-top: 3px;
+  font-size: var(--sl-text-xs);
+  color: var(--sl-color-gray-3);
+  background: none;
+  border: 0;
+  padding: 0;
+  white-space: nowrap;
 }
