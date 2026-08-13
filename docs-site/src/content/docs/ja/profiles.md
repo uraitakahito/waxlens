@@ -3,7 +3,7 @@ title: プロファイル
 description: --profile が変えるものと、決して変えないもの。
 ---
 
-`--profile <name>` は、producer 固有 / 様式的な findings をどれだけ厳しく扱うかを
+`--profile <name>` は、producer 固有 / 様式的な指摘をどれだけ厳しく扱うかを
 選びます。既定は `spec` です。
 
 profile が組み替えるのは **severity だけです。spec が要求する check を抑止する
@@ -65,7 +65,7 @@ waxlens-validate --profile browserhive@2.1.0 archive.wacz
 
 ### `lenient`
 
-producer 固有 / 様式的な findings をすべて `info` に降格させ、replay を壊す
+producer 固有 / 様式的な指摘をすべて `info` に降格させ、replay を壊す
 hard error だけを残します。
 
 legacy な archive をトリアージするとき、つまり「正しいか?」ではなく

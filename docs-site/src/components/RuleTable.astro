@@ -12,6 +12,16 @@
  * Japanese translation, so the ja table points at uraitakahito.github.io/specs
  * while en points at specs.webrecorder.net. Specs without a translation
  * (Frictionless, WARC) fall back to the English URL in both.
+ *
+ * **3 列しかないのは意図的。** 以前は rule / severity / conformance /
+ * profile 上書き / 出典 の 5 列で、Starlight の本文幅に 5 列は入りきらず
+ * ブラウザがいちばん割れやすい列を潰していた (`lenient: warning (2 件)` が
+ * `lenien / t: / warnin / g (2 / 件)` の 5 行に割れる)。
+ *
+ * 畳み方は「同じ軸のものを同じセルへ」で決めている:
+ *   - severity と profile 上書きは**同じ軸**(その指摘をどう扱うか)。既定値の
+ *     下に上書きを積むと、両者の関係がセルの中で上下に読める。
+ *   - 出典は rule に従属する情報なので rule 名の下へ。
  */
 import { rules } from "../lib/extract";
 
@@ -29,20 +39,27 @@ const anchor = (name: string): string => name.replace("/", "-");
 
 const head =
   lang === "ja"
-    ? { rule: "Rule", severity: "severity", conformance: "適合レベル", profile: "profile 上書き", spec: "出典" }
-    : { rule: "Rule", severity: "Severity", conformance: "Conformance", profile: "Profile overrides", spec: "Spec" };
+    ? { rule: "Rule / 出典", severity: "severity (profile 別)", conformance: "適合レベル" }
+    : { rule: "Rule / spec", severity: "Severity (per profile)", conformance: "Conformance" };
 
 const all = rules();
+
+/** profile 別の上書き。severity の再割り当てと、適用バージョン範囲の両方。 */
+const overridesOf = (rule: (typeof all)[number]): string[] => [
+  ...Object.entries(rule.severityByProfile).map(
+    ([profile, { levels, count }]) =>
+      `${profile}: ${levels.join(" / ")}${count > 1 ? ` (${String(count)} 件)` : ""}`,
+  ),
+  ...Object.entries(rule.profileVersions).map(([profile, range]) => `${profile}: ${range}`),
+];
 ---
 
-<table>
+<table class="rule-table">
   <thead>
     <tr>
       <th>{head.rule}</th>
       <th>{head.severity}</th>
       <th>{head.conformance}</th>
-      <th>{head.profile}</th>
-      <th>{head.spec}</th>
     </tr>
   </thead>
   <tbody>
@@ -51,36 +68,19 @@ const all = rules();
         <tr id={anchor(rule.name)}>
           <td>
             <code>{rule.name}</code>
+            {rule.links.map((link) => (
+              <a class="rule-src" href={link.url[lang] ?? link.url.en}>
+                {link.label}
+              </a>
+            ))}
           </td>
-          <td>{rule.severities.join(" / ")}</td>
+          <td>
+            {rule.severities.join(" / ")}
+            {overridesOf(rule).map((override) => (
+              <code class="rule-override">{override}</code>
+            ))}
+          </td>
           <td>{rule.conformance}</td>
-          <td>
-            {Object.keys(rule.severityByProfile).length === 0 &&
-            Object.keys(rule.profileVersions).length === 0
-              ? "—"
-              : [
-                  ...Object.entries(rule.severityByProfile).map(([profile, { levels, count }]) => (
-                    <code class="env">
-                      {profile}: {levels.join(" / ")}
-                      {count > 1 ? ` (${String(count)} 件)` : ""}
-                    </code>
-                  )),
-                  ...Object.entries(rule.profileVersions).map(([profile, range]) => (
-                    <code class="env">
-                      {profile}: {range}
-                    </code>
-                  )),
-                ]}
-          </td>
-          <td>
-            {rule.links.length === 0
-              ? "—"
-              : rule.links.map((link) => (
-                  <a href={link.url[lang] ?? link.url.en}>
-                    {link.label}
-                  </a>
-                ))}
-          </td>
         </tr>
       ))
     }

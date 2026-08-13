@@ -46,7 +46,7 @@ export const datapackageFrictionlessStructureRule: ValidationRule = {
       },
   ],
   // 構造 MUST は spec / browserhive で error。legacy トリアージ用の lenient では
-  // generic な findings を出したくないので除外する(frictionless-schema と同方針)。
+  // generic な指摘を出したくないので除外する(frictionless-schema と同方針)。
   applicability: { excludeProfiles: ["lenient"] },
 
   run: async (wacz) => {
