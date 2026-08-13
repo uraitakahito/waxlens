@@ -58,21 +58,21 @@ producer バグが上の方に上がります。
 ### `severity` と `conformance` は別の問いに答えます
 
 `severity` は違反に対して waxlens がどうするか、`conformance` は仕様が何を
-要求しているかです。この 2 つは**直交**しており、しかも実際によくずれるので、
-**片方で絞ってももう片方の代わりにはなりません**。
+要求しているかです。**片方で絞っても、もう片方の代わりにはなりません。**
 
-corpus の 29 標本での実測:
+corpus の 30 標本での実測:
 
 | conformance | error | warning | info |
 | --- | ---: | ---: | ---: |
-| `MUST` | 19 | **10** | 0 |
+| `MUST` | 20 | **10** | 0 |
 | `SHOULD` | **1** | 8 | 0 |
 | `MAY` / `MUST NOT` | 0 | 4 | 1 |
 
-11 件が対角から外れています。`datapackage/resources-complete` は `MUST` ですが
-`warning` です —— ZIP に未宣言のファイルがあっても replay は止まりません。
-`datapackage/digest` は逆向きで、仕様は `SHOULD` に留めていますが、hash が
-合わないのはアーカイブが変更された可能性があるため waxlens は `error` にします。
+太字の 2 つが、片方から他方を予想できないことを示しています。
+`datapackage/resources-complete` は `MUST` ですが `warning` —— ZIP に未宣言の
+ファイルがあっても replay は止まりません。`datapackage/digest` は逆向きで、
+仕様は `SHOULD` に留めていますが、hash が合わないのはアーカイブが変更された
+可能性があるため waxlens は `error` にします。
 
 なお **`summary.failed` は `severity` だけを数えます** —— 適合レベルは見ません。
 **`MUST` に違反していても `failed` が 0 になりえます**。仕様準拠の観点が要るなら、

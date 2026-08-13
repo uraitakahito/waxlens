@@ -13,7 +13,7 @@ issue を 1 件報告します。[全 rule の表](#全-rule)は **rule 定義�
 ## 表の読み方
 
 **適合レベル**は spec が要求する強さ(`MUST` / `SHOULD` / `MAY` / `MUST NOT`)、
-**severity** は違反に対して waxlens が取る扱いで、この 2 つは必ずしも一致しません。
+**severity** は違反に対して waxlens が取る扱いです。
 
 severity は `error` / `warning` / `info` の 3 値です。**判定に効くのは `error` だけ**で、
 アーカイブが使えるかどうかは `summary.failed`(= `error` の件数)が 0 かで決まります
@@ -29,12 +29,12 @@ severity は `error` / `warning` / `info` の 3 値です。**判定に効くの
 [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) の意味で用います。
 表に出る適合レベルは **waxlens が付けた重要度ではなく、spec 側の記述を写したもの**です。
 
-[`datapackage/resources-complete`](#datapackage-resources-complete) は `MUST` ですが `warning` です — `resources[]`
-が不完全でも、それだけで replay が壊れるわけではないからです。
+severity を決めるのは「**そのアーカイブが使えるか**」だけです。たとえば
+[`datapackage/resources-complete`](#datapackage-resources-complete) は `MUST` ですが
+`warning` です — `resources[]` が不完全でも、それだけで replay が壊れるわけでは
+ないからです。
 
-ずれは例外ではありません。**22 rule のうち 5 つが対角から外れ**、corpus の 30 標本
-(`spec` profile) では **44 件の issue のうち 15 件**が外れます。
-2 つの軸で絞り分ける方法は
+**仕様準拠の観点で絞りたいときは適合レベルを見ます。** 2 つの軸を別々に扱う方法は
 [JSON レポート](/waxlens/ja/json-report/#severity-と-conformance-は別の問いに答えます)にあります。
 
 ### severity 欄が 2 つ並ぶことがあります
