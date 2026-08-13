@@ -34,6 +34,15 @@ export const warcStorageStoreRule: ValidationRule = {
   name: "warc/storage-store",
   descriptionKey: "warc/storage-store.desc",
   conformance: "SHOULD",
+  docs: [
+      {
+        label: "WACZ §archive",
+        url: {
+          en: "https://specs.webrecorder.net/wacz/1.1.1/#archive",
+          ja: "https://uraitakahito.github.io/specs/wacz/1.1.1/#archive",
+        },
+      },
+  ],
   applicability: {
     severityByProfile: {
       lenient: { "warc/storage-store.zip-compressed": "info" },

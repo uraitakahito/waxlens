@@ -39,6 +39,15 @@ export const cdxjFilenameRule: ValidationRule = {
   name: "cdxj/filename-archive-relative",
   descriptionKey: "cdxj/filename-archive-relative.desc",
   conformance: "MUST",
+  docs: [
+      {
+        label: "WACZ §indexes",
+        url: {
+          en: "https://specs.webrecorder.net/wacz/1.1.1/#indexes",
+          ja: "https://uraitakahito.github.io/specs/wacz/1.1.1/#indexes",
+        },
+      },
+  ],
   applicability: {
     severityByProfile: {
       lenient: {

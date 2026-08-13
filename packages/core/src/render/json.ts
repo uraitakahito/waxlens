@@ -10,8 +10,7 @@
  * バイト単位で再現可能。
  */
 import { t, type Locale } from "../i18n/translate.js";
-import { conformanceForRule } from "../validate/rules/index.js";
-import { docsForRule } from "../validate/rule-docs.js";
+import { conformanceForRule, docsForRule } from "../validate/rules/index.js";
 import { specUrl } from "../validate/spec-sections.js";
 import type { Report } from "../validate/domain.js";
 
@@ -21,7 +20,12 @@ export const renderJson = (report: Report, locale: Locale): string => {
     // rule が宣言する spec 規範レベル(MUST/SHOULD/MAY)。severity とは独立。
     const conformance = conformanceForRule(issue.rule);
     // rule の出典(公式ドキュメント)リンク群。conformance と同じく rule 名で解決。
-    const docs = docsForRule(issue.rule);
+    // URL は locale ごとに持てるので、message と同じタイミングでここで 1 本に
+    // 畳む。翻訳が無い spec は `en` に落ちる(型で `en` を必須にしてある)。
+    const docs = docsForRule(issue.rule)?.map((d) => ({
+      label: d.label,
+      url: d.url[locale] ?? d.url.en,
+    }));
     return {
       ...issue,
       message: t(issue.messageKey, issue.params ?? {}, locale),

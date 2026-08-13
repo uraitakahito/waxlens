@@ -27,6 +27,15 @@ export const datapackageResourcesCompleteRule: ValidationRule = {
   name: "datapackage/resources-complete",
   descriptionKey: "datapackage/resources-complete.desc",
   conformance: "MUST",
+  docs: [
+      {
+        label: "WACZ §datapackage.json",
+        url: {
+          en: "https://specs.webrecorder.net/wacz/1.1.1/#datapackage-json",
+          ja: "https://uraitakahito.github.io/specs/wacz/1.1.1/#datapackage-json",
+        },
+      },
+  ],
   applicability: {
     severityByProfile: {
       lenient: { "datapackage/resources-complete.orphan": "info" },

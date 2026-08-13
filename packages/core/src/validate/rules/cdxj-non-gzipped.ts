@@ -49,6 +49,15 @@ export const cdxjNonGzippedRule: ValidationRule = {
   // `browserhive` profile はより厳しく、plain な `.cdxj` を期待し
   // どんな `.gz` index も error 扱いにする。
   conformance: "MAY",
+  docs: [
+      {
+        label: "WACZ §indexes",
+        url: {
+          en: "https://specs.webrecorder.net/wacz/1.1.1/#indexes",
+          ja: "https://uraitakahito.github.io/specs/wacz/1.1.1/#indexes",
+        },
+      },
+  ],
   applicability: {
     severityByProfile: {
       browserhive: {

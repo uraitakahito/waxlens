@@ -47,6 +47,15 @@ export const cdxjIndexRecognisedRule: ValidationRule = {
   name: "cdxj/index-recognised-by-wabac",
   descriptionKey: "cdxj/index-recognised-by-wabac.desc",
   conformance: "MUST",
+  docs: [
+      {
+        label: "WACZ §indexes",
+        url: {
+          en: "https://specs.webrecorder.net/wacz/1.1.1/#indexes",
+          ja: "https://uraitakahito.github.io/specs/wacz/1.1.1/#indexes",
+        },
+      },
+  ],
 
   run: async (wacz) => {
     const issues: Issue[] = [];

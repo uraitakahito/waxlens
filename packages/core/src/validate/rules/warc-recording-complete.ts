@@ -49,6 +49,14 @@ export const warcRecordingCompleteRule: ValidationRule = {
   name: "warc/recording-complete",
   descriptionKey: "warc/recording-complete.desc",
   conformance: "MAY",
+  docs: [
+      {
+        label: "WARC 1.1 metadata record",
+        url: {
+          en: "https://iipc.github.io/warc-specifications/specifications/warc-format/warc-1.1/",
+        },
+      },
+  ],
   // 規格外の producer 指標。browserhive profile のときだけ走る。
   applicability: {
     excludeProfiles: ["spec", "lenient"],

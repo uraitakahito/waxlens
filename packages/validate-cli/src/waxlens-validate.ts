@@ -35,6 +35,7 @@ import {
   ALL_PROFILES,
   DEFAULT_PROFILE,
   DEFAULT_SELECTOR,
+  describeCause,
   exitCodeFor,
   parseProfileSelector,
   type CliOutcome,
@@ -166,12 +167,11 @@ function dispatch(outcome: CliOutcome<Report>, locale: Locale): void {
     case "invalid":
       process.stdout.write(renderJson(outcome.report, locale));
       return;
-    case "openFailed": {
-      const message =
-        outcome.cause instanceof Error ? outcome.cause.message : String(outcome.cause);
-      process.stderr.write(`waxlens-validate: cannot open "${outcome.filePath}": ${message}\n`);
+    case "openFailed":
+      process.stderr.write(
+        `waxlens-validate: cannot open "${outcome.filePath}": ${describeCause(outcome.cause)}\n`,
+      );
       return;
-    }
     case "engineFailed":
       return;
   }

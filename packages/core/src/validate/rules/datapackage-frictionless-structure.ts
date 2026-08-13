@@ -31,6 +31,20 @@ export const datapackageFrictionlessStructureRule: ValidationRule = {
   name: "datapackage/frictionless-structure",
   descriptionKey: "datapackage/frictionless-structure.desc",
   conformance: "MUST",
+  docs: [
+      {
+        label: "Frictionless Data Package §required",
+        url: {
+          en: "https://specs.frictionlessdata.io/data-package/#required-properties",
+        },
+      },
+      {
+        label: "Frictionless Data Resource",
+        url: {
+          en: "https://specs.frictionlessdata.io/data-resource/",
+        },
+      },
+  ],
   // 構造 MUST は spec / browserhive で error。legacy トリアージ用の lenient では
   // generic な findings を出したくないので除外する(frictionless-schema と同方針)。
   applicability: { excludeProfiles: ["lenient"] },
