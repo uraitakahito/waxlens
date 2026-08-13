@@ -31,7 +31,36 @@ waxlens-validate samples/wikipedia.wacz
 ```
 
 That is the non-interactive path: it prints a report and exits with a code you
-can branch on in CI. For an interactive read of the same report, use the TUI:
+can branch on in CI.
+
+The same command validates an archive on an S3-compatible store, not just a
+local file. For a WACZ in the bundled SeaweedFS, point the AWS SDK's default
+chain at it:
+
+```sh
+export AWS_ENDPOINT_URL_S3=http://seaweedfs.waxlens:8333
+export AWS_REGION=us-east-1
+export AWS_ACCESS_KEY_ID=waxlens AWS_SECRET_ACCESS_KEY=waxlens
+
+waxlens-validate --s3-force-path-style s3://waxlens/wikipedia.wacz
+```
+
+`--s3-force-path-style` is needed for stores that only answer path-style
+addressing, such as SeaweedFS and MinIO (`WAXLENS_S3_FORCE_PATH_STYLE=true`
+does the same). Apart from `source` becoming
+`{ "kind": "s3", "uri": "s3://…" }`, the report is the same as for a local
+file.
+
+:::caution[`AWS_PROFILE` beats the variables above]
+If your shell exports `AWS_PROFILE`, the SDK uses **that profile** and ignores
+the access key above. Either `unset AWS_PROFILE` or prefix the command with
+`env -u AWS_PROFILE`.
+:::
+
+Starting the store and uploading an archive to it is covered in
+[Container](/waxlens/container/).
+
+For an interactive read of the same report, use the TUI:
 
 ```sh
 waxlens samples/wikipedia.wacz
