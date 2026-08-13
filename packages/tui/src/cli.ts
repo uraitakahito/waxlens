@@ -163,7 +163,7 @@ async function validateOnce(
   uri: string,
   filePath: string,
   opts: CliOptions,
-): Promise<CliOutcome> {
+): Promise<CliOutcome<WireReport>> {
   try {
     const report = await client.request<WireReport>("waxlens/validate", {
       source: { kind: "uri", uri },
@@ -189,7 +189,7 @@ async function validateOnce(
 
 /** outcome に従って TUI / stderr を発火する。TUI には readEntry ブリッジとバージョン情報を渡す。 */
 async function dispatch(
-  outcome: CliOutcome,
+  outcome: CliOutcome<WireReport>,
   requestContent: RequestContent,
   build: BuildInfo,
 ): Promise<void> {
