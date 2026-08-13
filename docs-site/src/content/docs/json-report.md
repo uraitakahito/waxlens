@@ -62,22 +62,21 @@ by rule without parsing prose:
 ### `severity` and `conformance` answer different questions
 
 `severity` is what waxlens does about a violation; `conformance` is what the
-specification asks for. They are **orthogonal**, and they diverge often enough
-that filtering on one is not a substitute for the other.
+specification asks for. **Filtering on one is not a substitute for the other.**
 
-Across the 29 corpus specimens:
+Across the 30 corpus specimens:
 
 | conformance | error | warning | info |
 | --- | ---: | ---: | ---: |
-| `MUST` | 19 | **10** | 0 |
+| `MUST` | 20 | **10** | 0 |
 | `SHOULD` | **1** | 8 | 0 |
 | `MAY` / `MUST NOT` | 0 | 4 | 1 |
 
-Eleven findings fall off the diagonal. `datapackage/resources-complete` is a
-`MUST` reported as a `warning` — an undeclared file in the ZIP does not stop
-replay. `datapackage/digest` runs the other way: the spec only says `SHOULD`,
-but a hash that does not match may mean the archive was altered, so waxlens
-calls it an `error`.
+The two bold cells are why neither column predicts the other.
+`datapackage/resources-complete` is a `MUST` reported as a `warning` — an
+undeclared file in the ZIP does not stop replay. `datapackage/digest` runs the
+other way: the spec only says `SHOULD`, but a hash that does not match may mean
+the archive was altered, so waxlens calls it an `error`.
 
 Note that **`summary.failed` counts `severity` alone** — it never looks at
 conformance. An archive can have `failed: 0` and still violate a `MUST`. If you
