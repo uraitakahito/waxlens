@@ -27,6 +27,15 @@ export const datapackageDigestRule: ValidationRule = {
   name: "datapackage/digest",
   descriptionKey: "datapackage/digest.desc",
   conformance: "SHOULD",
+  docs: [
+      {
+        label: "WACZ §datapackage-digest.json",
+        url: {
+          en: "https://specs.webrecorder.net/wacz/1.1.1/#datapackage-digest-json",
+          ja: "https://uraitakahito.github.io/specs/wacz/1.1.1/#datapackage-digest-json",
+        },
+      },
+  ],
   applicability: {
     severityByProfile: {
       // 不在は SHOULD 未達なので lenient では info まで下げる。

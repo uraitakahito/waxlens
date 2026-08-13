@@ -27,6 +27,15 @@ export const warcExtensionRule: ValidationRule = {
   name: "warc/extension-gzip-match",
   descriptionKey: "warc/extension-gzip-match.desc",
   conformance: "MUST",
+  docs: [
+      {
+        label: "WACZ §archive",
+        url: {
+          en: "https://specs.webrecorder.net/wacz/1.1.1/#archive",
+          ja: "https://uraitakahito.github.io/specs/wacz/1.1.1/#archive",
+        },
+      },
+  ],
   applicability: {
     severityByProfile: {
       lenient: {

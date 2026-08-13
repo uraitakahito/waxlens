@@ -18,6 +18,7 @@
  *     としては "serialise 可能なら何でも"。
  */
 import { isAbsolute, resolve as resolvePath } from "node:path";
+import type { Locale } from "@waxlens/contract";
 import type { MsgParams } from "../i18n/translate.js";
 import { err, ok, type Result } from "../result.js";
 import type { WaczReader } from "../wacz/reader.js";
@@ -126,6 +127,31 @@ export interface Issue {
   details?: unknown;
 }
 
+/**
+ * rule が依拠する spec へのリンク。
+ *
+ * `url` は locale ごとに持てる。`en` を型で必須にしているのは、翻訳が
+ * 無い spec (Frictionless / WARC) でも必ず 1 本は解決できるようにするため。
+ * 書かれていない locale は `en` に落ちる。
+ *
+ * WACZ には和訳 (uraitakahito.github.io/specs) があり、**アンカーは本家と
+ * 同じ**。和訳が見出しを英語のまま残しており、ReSpec がそこから id を
+ * 生成するため — つまり base を差し替えるだけで ja の URL が作れる。
+ */
+export interface DocLink {
+  label: string;
+  url: { en: string } & Partial<Record<Locale, string>>;
+}
+
+/**
+ * locale を 1 つ選んだあとの形。report に出るのはこちらで、`renderJson` が
+ * message と同じタイミングで解決する。consumer は 1 本の URL しか見ない。
+ */
+export interface ResolvedDocLink {
+  label: string;
+  url: string;
+}
+
 export interface ValidationRule {
   /** `Issue.rule` に入るのと同じ値。 */
   name: string;
@@ -137,6 +163,12 @@ export interface ValidationRule {
    * 解決して表示する({@link Conformance})。
    */
   conformance: Conformance;
+  /**
+   * この rule が依拠する spec。**必須** — 出典の無い指摘は読者が裏を取れない。
+   * 1 rule が複数 spec を跨ぐことがある (例 `datapackage/frictionless-structure`
+   * は Data Package と Data Resource の両方)。
+   */
+  docs: readonly DocLink[];
   /**
    * profile 別の override。省略時は、rule が全 profile で baseline
    * severity のまま適用される。

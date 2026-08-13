@@ -45,6 +45,14 @@ export const warcPayloadDigestRule: ValidationRule = {
   name: "warc/payload-digest",
   descriptionKey: "warc/payload-digest.desc",
   conformance: "SHOULD",
+  docs: [
+      {
+        label: "WARC 1.1",
+        url: {
+          en: "https://iipc.github.io/warc-specifications/specifications/warc-format/warc-1.1/",
+        },
+      },
+  ],
 
   run: async (wacz) => {
     const issues: Issue[] = [];

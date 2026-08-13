@@ -8,7 +8,10 @@
  * three places to update per rule. Prose about *why* a rule exists stays in the
  * page around this component; that is the part worth writing by hand.
  *
- * `lang` only switches the column headers. The data is identical either way.
+ * `lang` switches the column headers **and the spec links**: WACZ has a
+ * Japanese translation, so the ja table points at uraitakahito.github.io/specs
+ * while en points at specs.webrecorder.net. Specs without a translation
+ * (Frictionless, WARC) fall back to the English URL in both.
  */
 import { rules } from "../lib/extract";
 
@@ -73,7 +76,7 @@ const all = rules();
             {rule.links.length === 0
               ? "—"
               : rule.links.map((link) => (
-                  <a href={link.url}>
+                  <a href={link.url[lang] ?? link.url.en}>
                     {link.label}
                   </a>
                 ))}

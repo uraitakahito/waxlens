@@ -22,7 +22,7 @@ import {
   useWindowSize,
   type DOMElement,
 } from "ink";
-import type { DocLink, ReadEntryResult, ReportEntry, WireIssue, WireReport } from "@waxlens/protocol";
+import type { ReadEntryResult, ReportEntry, ResolvedDocLink, WireIssue, WireReport } from "@waxlens/protocol";
 import { buildEntryTree, entryMarker, flattenTree, type TreeRow } from "./render/tree.js";
 import { codecName, entryIssues, expectedLabel } from "./render/detail.js";
 import { clampOffset, scrollWindow } from "./scroll.js";
@@ -373,7 +373,7 @@ const SpecLink: FC<{ issue: WireIssue; indent: number }> = ({ issue, indent }) =
 };
 
 /** rule の出典(公式ドキュメント)リンク群を、ラベル付きで展開ビューに列挙する。 */
-const IssueDocs: FC<{ docs: readonly DocLink[] }> = ({ docs }) => (
+const IssueDocs: FC<{ docs: readonly ResolvedDocLink[] }> = ({ docs }) => (
   <Box flexDirection="column" marginTop={1}>
     <Text dimColor>docs:</Text>
     {docs.map((d) => (

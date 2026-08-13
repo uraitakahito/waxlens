@@ -31,6 +31,14 @@ export const warcMembersIndependentRule: ValidationRule = {
   name: "warc/members-independent",
   descriptionKey: "warc/members-independent.desc",
   conformance: "MUST",
+  docs: [
+      {
+        label: "WARC 1.1",
+        url: {
+          en: "https://iipc.github.io/warc-specifications/specifications/warc-format/warc-1.1/",
+        },
+      },
+  ],
 
   run: async (wacz) => {
     const issues: Issue[] = [];

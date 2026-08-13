@@ -32,6 +32,21 @@ export const datapackageHashesRule: ValidationRule = {
   name: "datapackage/resource-hashes",
   descriptionKey: "datapackage/resource-hashes.desc",
   conformance: "MUST",
+  docs: [
+      {
+        label: "WACZ §datapackage.json",
+        url: {
+          en: "https://specs.webrecorder.net/wacz/1.1.1/#datapackage-json",
+          ja: "https://uraitakahito.github.io/specs/wacz/1.1.1/#datapackage-json",
+        },
+      },
+      {
+        label: "Frictionless Data Resource",
+        url: {
+          en: "https://specs.frictionlessdata.io/data-resource/",
+        },
+      },
+  ],
 
   run: async (wacz) => {
     const issues: Issue[] = [];

@@ -13,13 +13,13 @@
  * 案1(URI 参照渡し・stateless): 各リクエストが `source.uri` を運び、
  * daemon は open → validate → close するだけで状態を持たない。
  */
-import type { DocLink, Issue, Report } from "@waxlens/core";
+import type { Issue, Report, ResolvedDocLink } from "@waxlens/core";
 
 // クライアント(tui / browser)が core を直接 import せずに済むよう、表示用の
 // 型を protocol から re-export する(すべて型なので runtime には残らない)。
 export type {
   AbsolutePath,
-  DocLink,
+  ResolvedDocLink,
   ExpectedBy,
   IssueLocation,
   Locale,
@@ -67,7 +67,7 @@ export interface WireIssue extends Issue {
   specUrl?: string;
   conformance?: string;
   /** rule の出典(公式ドキュメント)リンク群。renderJson が rule 名で解決。 */
-  docs?: readonly DocLink[];
+  docs?: readonly ResolvedDocLink[];
 }
 
 /** daemon が返す解決済み Report(renderJson 出力に対応)。 */

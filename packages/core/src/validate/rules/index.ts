@@ -9,7 +9,7 @@
  * 順に issue を辿るので、意味的にまとまった rule (datapackage/*、
  * cdxj/*、warc/*) を並べておくと読みやすい。
  */
-import type { Conformance, ValidationRule } from "../domain.js";
+import type { Conformance, DocLink, ValidationRule } from "../domain.js";
 import { cdxjFilenameRule } from "./cdxj-filename.js";
 import { cdxjIndexRecognisedRule } from "./cdxj-index-recognised.js";
 import { cdxjIndexValidDataRule } from "./cdxj-index-valid-data.js";
@@ -95,6 +95,19 @@ const RULE_CONFORMANCE = new Map<string, Conformance>(
 /** rule 名から spec 規範レベルを引く。未知の rule 名は `undefined`(badge を出さない)。 */
 export const conformanceForRule = (rule: string): Conformance | undefined =>
   RULE_CONFORMANCE.get(rule);
+
+/**
+ * rule 名 → 出典リンクの対応。`RULE_CONFORMANCE` と同じく `DEFAULT_RULES` の
+ * 宣言から導出する — 以前は rule-docs.ts という別表に持っていたが、rule を
+ * 書く人が「出典も書く」と気づける場所ではなかった。
+ */
+const RULE_DOCS = new Map<string, readonly DocLink[]>(
+  DEFAULT_RULES.map((rule) => [rule.name, rule.docs]),
+);
+
+/** rule 名から出典リンク群を引く。未知の rule 名は `undefined`(リンクを出さない)。 */
+export const docsForRule = (rule: string): readonly DocLink[] | undefined =>
+  RULE_DOCS.get(rule);
 
 /** Re-export for tests / library consumers that want to compose their own list. */
 export {
