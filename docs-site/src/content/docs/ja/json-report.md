@@ -104,8 +104,8 @@ WARC があったとしても、**それを報告する report 自体を止め�
 
 ## `profile` — どの条件で判定したか
 
-`profile` は名前と版を持つオブジェクトです。版を添えなければ `version` の key は
-出ません（「版を問わない」の意）。
+`profile` は名前とバージョンを持つオブジェクトです。バージョンを添えなければ
+`version` の key は出ません（「バージョンを問わない」の意）。
 
 ```json
 "profile": { "name": "browserhive", "version": "2.1.0" }
@@ -113,12 +113,12 @@ WARC があったとしても、**それを報告する report 自体を止め�
 ```
 
 文字列ではなくオブジェクトにしているのは、**`name` だけで絞り込めるようにする**
-ためです。`"browserhive@2.1.0"` のような 1 本の文字列だと、版を添えた瞬間に
-consumer 側の一致判定が外れます。
+ためです。`"browserhive@2.1.0"` のような 1 本の文字列だと、バージョンを添えた
+瞬間に consumer 側の一致判定が外れます。
 
 ```sh
-jq -r '.profile.name'                    # 版の有無に関わらず "browserhive"
-jq -r '.profile.version // "unpinned"'   # 版だけが要るとき
+jq -r '.profile.name'                    # pin の有無に関わらず "browserhive"
+jq -r '.profile.version // "unpinned"'   # バージョンだけが要るとき
 ```
 
 `version` は **`--profile` で名乗られた値**で、archive と照合したものではありません
@@ -126,8 +126,8 @@ jq -r '.profile.version // "unpinned"'   # 版だけが要るとき
 
 ## `skipped` — 見なかったものを書く
 
-`--profile` に producer の版を添えると（`browserhive@1.10.0`）、その版では正しく
-判定できない rule が走りません。**走らせなかった事実は `skipped` に書きます。**
+`--profile` に producer のバージョンを添えると（`browserhive@1.10.0`）、その
+バージョンでは正しく判定できない rule が走りません。**走らせなかった事実は `skipped` に書きます。**
 
 ```json
 "skipped": [
@@ -139,8 +139,8 @@ jq -r '.profile.version // "unpinned"'   # 版だけが要るとき
 ]
 ```
 
-`stats` と同じく**該当が無ければ key ごと出ません**。だから版を添えない実行の
-JSON は従来と 1 バイトも変わりません。
+`stats` と同じく**該当が無ければ key ごと出ません**。だからバージョンを添えない
+実行の JSON は従来と 1 バイトも変わりません。
 
 省略ではなく明示にしているのは、`issues` が空であることの意味が 2 通りあるから
 です —— 「見て、問題が無かった」と「そもそも見ていない」。consumer が前者だと

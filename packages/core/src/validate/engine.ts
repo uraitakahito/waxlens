@@ -53,10 +53,10 @@ export interface RunOptions {
   waxlensVersion: string;
   rules: readonly ValidationRule[];
   /**
-   * Profile selector。既定は `"spec"`(版なし)。
+   * Profile selector。既定は `"spec"`(バージョンなし)。
    *
-   * 版を持たない selector は、版に条件を持つ rule の条件を**見ない** —
-   * つまり従来どおり全部走る。既定をそちらに置いているので、版を書かない
+   * バージョンを持たない selector は、バージョンに条件を持つ rule の条件を**見ない** —
+   * つまり従来どおり全部走る。既定をそちらに置いているので、バージョンを書かない
    * 呼び出しの挙動は変わらない。
    */
   profile?: ProfileSelector;
@@ -76,7 +76,7 @@ export const runValidation = async (
   const eligible = opts.rules.filter(
     (rule) => !rule.applicability?.excludeProfiles?.includes(profile),
   );
-  // 版で落とす分は「除外」ではなく「見なかった」なので、記録して report
+  // バージョンで落とす分は「除外」ではなく「見なかった」なので、記録して report
   // に出す。excludeProfiles との違いはそこ — あちらは profile の定義上
   // 最初から対象外で、報告すべき欠落ではない。
   const skipped: SkippedRule[] = [];
@@ -121,8 +121,8 @@ export const runValidation = async (
     waxlensVersion: opts.waxlensVersion,
     profile: {
       name: selector.name,
-      // stats / skipped と同じ条件付き spread。版なしなら key ごと出ない
-      // ので、「版を問わない」が JSON の形として表れる。
+      // stats / skipped と同じ条件付き spread。バージョンなしなら key ごと出ない
+      // ので、「バージョンを問わない」が JSON の形として表れる。
       ...(version !== undefined && { version: formatSemVer(version) }),
     },
     source: wacz.source,
@@ -134,7 +134,7 @@ export const runValidation = async (
     // はなく「不在」として表現できる — exactOptionalPropertyTypes が
     // これを要求する。
     ...(stats !== undefined && { stats }),
-    // 同上。版を指定しない実行では 1 件も入らないので key ごと出ず、
+    // 同上。バージョンを指定しない実行では 1 件も入らないので key ごと出ず、
     // 従来の JSON と完全に一致する。
     ...(skipped.length > 0 && { skipped }),
   };

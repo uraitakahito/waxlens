@@ -129,7 +129,7 @@ program
           : await DaemonSession.spawn();
       const client = await connect(session.endpoint);
       try {
-        // 起動直後に daemon の版を問い合わせる。tui 自身の版(BUILD_INFO)と
+        // 起動直後に daemon のバージョンを問い合わせる。tui 自身のバージョン(BUILD_INFO)と
         // 突き合わせ、Header で SHA を出し・不一致(古いプロセス)を警告する。
         const health = await client.request<HealthStatus>("waxlens/ping", {});
         const build: BuildInfo = {
@@ -183,7 +183,7 @@ async function validateOnce(
   }
 }
 
-/** outcome に従って TUI / stderr を発火する。TUI には readEntry ブリッジと版情報を渡す。 */
+/** outcome に従って TUI / stderr を発火する。TUI には readEntry ブリッジとバージョン情報を渡す。 */
 async function dispatch(
   outcome: CliOutcome,
   requestContent: RequestContent,

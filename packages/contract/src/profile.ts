@@ -1,9 +1,9 @@
 /**
  * rule profile と、その選択子。
  *
- * profile 名は 3 値の閉じた enum のまま。**版は enum に混ぜない** —
+ * profile 名は 3 値の閉じた enum のまま。**バージョンは enum に混ぜない** —
  * `browserhive@2.1.0` を enum の値にすると組み合わせが無限に増え、
- * 「宣言されていない profile は型エラー」という性質が失われる。版は
+ * 「宣言されていない profile は型エラー」という性質が失われる。バージョンは
  * {@link ProfileSelector} の別フィールドとして持つ。
  */
 import { formatSemVer, parseSemVer, type SemVer } from "./version.js";
@@ -22,12 +22,13 @@ export const DEFAULT_PROFILE: RuleProfile = "spec";
 /**
  * `--profile` の値。`<name>` または `<name>@<version>`。
  *
- * 版は **producer の版**であって waxlens の版ではない。`browserhive@2.1.0`
- * は「この archive は BrowserHive 2.1.0 が作ったものとして扱え」の意。
+ * ここでいうバージョンは **producer のもの**であって waxlens のではない。
+ * `browserhive@2.1.0` は「この archive は BrowserHive 2.1.0 が作ったものとして
+ * 扱え」の意。
  *
- * `version` が無いとき、版に条件を持つ rule は**条件を見ずに走る**。
- * 既定を「版を問わない」に置いているので、版を書かない従来の呼び出しは
- * 挙動が変わらない。
+ * `version` が無いとき、バージョンに条件を持つ rule は**条件を見ずに走る**。
+ * 既定を「バージョンを問わない」に置いているので、バージョンを書かない従来の
+ * 呼び出しは挙動が変わらない。
  */
 export interface ProfileSelector {
   readonly name: RuleProfile;
@@ -43,7 +44,7 @@ const isProfileName = (raw: string): raw is RuleProfile =>
  * `"browserhive@2.1.0"` → `{ name, version }`。
  *
  * 不正な入力は `null`。呼び出し側 (CLI / daemon) が自前の文言でエラーに
- * するので、ここでは理由を区別しない — profile 名が違うのか版が違うのかは
+ * するので、ここでは理由を区別しない — profile 名が違うのかバージョンが違うのかは
  * 利用者にとって同じ「その profile は無い」であり、両方を並べて見せるのが
  * 分かりやすい。
  */
@@ -58,7 +59,7 @@ export const parseProfileSelector = (raw: string): ProfileSelector | null => {
 };
 
 /**
- * parse の逆。版が無ければ profile 名そのものを返す — だから版を指定
+ * parse の逆。バージョンが無ければ profile 名そのものを返す — だからバージョンを指定
  * しない実行では `Report.profile` の値が従来と 1 文字も変わらない。
  */
 export const formatProfileSelector = (selector: ProfileSelector): string =>

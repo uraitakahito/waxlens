@@ -1,6 +1,6 @@
 // @module-tag tui
 /**
- * Header の版表示テスト。
+ * Header のバージョン表示テスト。
  *
  * Header は TUI 自身のビルド(`build.tui`)の短い git SHA を出し、daemon の
  * SHA(`build.daemon`、起動時の `waxlens/ping` 由来)と食い違うときだけ

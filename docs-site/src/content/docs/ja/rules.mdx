@@ -51,9 +51,9 @@ severity 欄には出しうる値がすべて並びます。
 
 **profile 上書き**は、指定した `--profile` の下で severity を組み替えます。空欄の rule は
 どの profile でも rule が出したままです。**その rule の指摘が全部変わるとは限らない**ので、
-複数が対象なら件数を添えています。`browserhive: >=1.11.0` のように**版の範囲**が出る rule は、
-その範囲外の版を [`--profile browserhive@1.10.0`](/waxlens/ja/profiles/) のように名乗った実行では
-走らず、落としたことが JSON の `skipped` に残ります。適合レベルは profile では動きません —— spec がそう
+複数が対象なら件数を添えています。`browserhive: >=1.11.0` のように
+**バージョンの範囲**が出る rule は、その範囲外を
+[`--profile browserhive@1.10.0`](/waxlens/ja/profiles/) のように名乗った実行では走らず、落としたことが JSON の `skipped` に残ります。適合レベルは profile では動きません —— spec がそう
 書いている、という事実だからです。
 [プロファイル](/waxlens/ja/profiles/)を参照。
 

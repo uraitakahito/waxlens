@@ -1,6 +1,6 @@
 // @module-tag corpus
 /**
- * `CORPUS_DIR` が指す corpus が、この waxlens の固定先と同じ版かを確かめる。
+ * `CORPUS_DIR` が指す corpus が、この waxlens の固定先と同じバージョンかを確かめる。
  *
  * 固定先は repo ルートの `.corpus-version` (1 行、tag 名) で、CI の
  * `corpus.yml` も同じファイルを読んで clone する。CI は必ず一致するので、
@@ -13,7 +13,7 @@
  * tarball を配った意味が無くなる。
  *
  * 呼ぶのは corpus を**読む**側 (corpus-driven / build-docs) だけ。
- * build-corpus は次のリリースを作るために固定先と違う版で走るのが仕事なので、
+ * build-corpus は次のリリースを作るために固定先と違うバージョンで走るのが仕事なので、
  * ここで止めたら新しい corpus を一生作れない。
  */
 import { execFileSync } from "node:child_process";
@@ -48,14 +48,14 @@ const git = (root: string, ...args: string[]): string | undefined => {
 export const isGitRepo = (root: string): boolean => git(root, "rev-parse", "--git-dir") !== undefined;
 
 /**
- * `root` が指している版の人間向け表記。tag の上ならその tag 名、そうでなければ
+ * `root` が指しているバージョンの人間向け表記。tag の上ならその tag 名、そうでなければ
  * 短い SHA。git repo でなければ `undefined`。
  */
 export const corpusRefAt = (root: string): string | undefined =>
   git(root, "describe", "--tags", "--exact-match", "HEAD") ?? git(root, "rev-parse", "--short", "HEAD");
 
 /**
- * 固定先と違う版を渡されていたら throw する。
+ * 固定先と違うバージョンを渡されていたら throw する。
  *
  * skip ではなく throw なのは `corpus-dir.ts` と同じ理由 — `CORPUS_DIR` を
  * 明示的に渡した人は走らせたいのであって、静かに飛ばされたら渡した意味が

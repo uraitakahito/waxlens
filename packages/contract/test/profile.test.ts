@@ -3,7 +3,7 @@
  * profile selector と、最小 semver の固定。
  *
  * ここが守るのは 2 つ。
- *   1. **版を書かない selector は元の文字列に戻る。** これが崩れると
+ *   1. **バージョンを書かない selector は元の文字列に戻る。** これが崩れると
  *      `Report.profile` の値が変わり、既存の出力が動く。
  *   2. **解せない範囲式は throw する。** false に化けると rule が静かに
  *      消えるので、書き間違いはその場で落ちてほしい。
@@ -18,13 +18,13 @@ import {
 } from "../src/index.js";
 
 describe("parseProfileSelector", () => {
-  it("版なしは profile 名そのもの", () => {
+  it("バージョンなしは profile 名そのもの", () => {
     for (const name of ALL_PROFILES) {
       expect(parseProfileSelector(name)).toEqual({ name });
     }
   });
 
-  it("版つきを分解する", () => {
+  it("バージョンつきを分解する", () => {
     expect(parseProfileSelector("browserhive@2.1.0")).toEqual({
       name: "browserhive",
       version: { major: 2, minor: 1, patch: 0 },
@@ -32,7 +32,7 @@ describe("parseProfileSelector", () => {
   });
 
   it("往復して元の文字列に戻る", () => {
-    // 版なしの往復が壊れると Report.profile の値が変わる = 既存の出力が動く。
+    // バージョンなしの往復が壊れると Report.profile の値が変わる = 既存の出力が動く。
     for (const raw of ["spec", "lenient", "browserhive", "browserhive@2.1.0"]) {
       const parsed = parseProfileSelector(raw);
       expect(parsed).not.toBeNull();
@@ -45,8 +45,8 @@ describe("parseProfileSelector", () => {
     expect(parseProfileSelector("strict@1.0.0")).toBeNull();
   });
 
-  it("版として読めないものは null", () => {
-    // 「profile 名は合っているが版が壊れている」を既定に落とさない —
+  it("バージョンとして読めないものは null", () => {
+    // 「profile 名は合っているがバージョンが壊れている」を既定に落とさない —
     // daemon が静かに既定 profile へフォールバックしていた不具合の再発防止。
     expect(parseProfileSelector("browserhive@x")).toBeNull();
     expect(parseProfileSelector("browserhive@2.1")).toBeNull();
