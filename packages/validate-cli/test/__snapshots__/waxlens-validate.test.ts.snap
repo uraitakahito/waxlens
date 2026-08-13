@@ -117,7 +117,9 @@ exports[`cli — JSON output shape (default) > gzipped CDXJ JSON snapshot 1`] = 
       "severity": "warning",
     },
   ],
-  "profile": "spec",
+  "profile": {
+    "name": "spec",
+  },
   "source": {
     "kind": "file",
     "path": "<tmp>/fixture.wacz",
@@ -237,7 +239,9 @@ exports[`cli — JSON output shape (default) > missing-profile JSON snapshot 1`]
       "severity": "error",
     },
   ],
-  "profile": "spec",
+  "profile": {
+    "name": "spec",
+  },
   "source": {
     "kind": "file",
     "path": "<tmp>/fixture.wacz",
@@ -327,7 +331,9 @@ exports[`cli — JSON output shape (default) > valid WACZ JSON snapshot 1`] = `
     },
   ],
   "issues": [],
-  "profile": "spec",
+  "profile": {
+    "name": "spec",
+  },
   "source": {
     "kind": "file",
     "path": "<tmp>/fixture.wacz",

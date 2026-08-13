@@ -154,7 +154,7 @@ describe("validation engine — corrupted variants", () => {
 
   it("gzipped CDXJ index (default = spec) → index-not-gzipped emits warnings", async () => {
     const report = await runAgainstFixture(tmpDir, "gz-cdxj.wacz", { cdxjGzipped: true });
-    expect(report.profile).toBe("spec");
+    expect(report.profile).toEqual({ name: "spec" });
     // rule 自体は spec profile では `warning` に降格された。ここでは
     // `report.valid` を assert しない。fixture には plain な
     // `indexes/index.cdxj` entry も無く、
@@ -179,7 +179,7 @@ describe("validation engine — corrupted variants", () => {
     // (`cdxj/index-not-gzipped`、`cdxj/filename-archive-relative`)
     // は silent か適切に降格される。
     const report = await runAgainstFixture(tmpDir, "webrecorder.wacz", { producer: "webrecorder" });
-    expect(report.profile).toBe("spec");
+    expect(report.profile).toEqual({ name: "spec" });
     // error 無し — BrowserHive のレイアウトとは違っても WACZ は
     // spec profile では valid。
     expect(report.summary.failed).toBe(0);
@@ -193,7 +193,7 @@ describe("validation engine — corrupted variants", () => {
       { producer: "webrecorder" },
       "browserhive",
     );
-    expect(report.profile).toBe("browserhive");
+    expect(report.profile).toEqual({ name: "browserhive" });
     const issues = report.issues.filter((i) => i.rule === "cdxj/index-not-gzipped");
     expect(issues.length).toBeGreaterThan(0);
     expect(issues.every((i) => i.severity === "error")).toBe(true);
@@ -207,7 +207,7 @@ describe("validation engine — corrupted variants", () => {
       { producer: "webrecorder" },
       "lenient",
     );
-    expect(report.profile).toBe("lenient");
+    expect(report.profile).toEqual({ name: "lenient" });
     expect(report.summary.failed).toBe(0);
     expect(report.valid).toBe(true);
   });

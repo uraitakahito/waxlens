@@ -166,9 +166,9 @@ describe("producer 版によるゲート", () => {
       version: { major: 1, minor: 10, patch: 0 },
     });
     expect(report.issues.some((i) => i.rule === RULE)).toBe(false);
-    expect(report.skipped).toEqual([
-      { rule: RULE, reason: "profile-version", range: ">=1.11.0", version: "1.10.0" },
-    ]);
+    expect(report.skipped).toEqual([{ rule: RULE, reason: "profile-version", range: ">=1.11.0" }]);
+    // 版は skipped に複製せず、profile に 1 箇所だけ持つ。
+    expect(report.profile).toEqual({ name: "browserhive", version: "1.10.0" });
   });
 
   it("下限そのものは範囲内", async () => {
