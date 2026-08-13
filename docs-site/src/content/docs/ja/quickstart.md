@@ -31,6 +31,32 @@ waxlens-validate samples/wikipedia.wacz
 ```
 
 これが非対話の経路です。report を出力し、CI で分岐できる exit code を返します。
+
+ローカルのファイルだけでなく、S3 互換ストア上の archive も同じコマンドで
+検証できます。同梱の SeaweedFS に置いた WACZ なら、AWS SDK の default chain を
+そちらへ向けるだけです。
+
+```sh
+export AWS_ENDPOINT_URL_S3=http://seaweedfs.waxlens:8333
+export AWS_REGION=us-east-1
+export AWS_ACCESS_KEY_ID=waxlens AWS_SECRET_ACCESS_KEY=waxlens
+
+waxlens-validate --s3-force-path-style s3://waxlens/wikipedia.wacz
+```
+
+`--s3-force-path-style` は SeaweedFS や MinIO のような path-style でしか
+応答しないストアに要ります（`WAXLENS_S3_FORCE_PATH_STYLE=true` でも同じ）。
+report の `source` が `{ "kind": "s3", "uri": "s3://…" }` になるほかは、
+ローカルファイルのときと変わりません。
+
+:::caution[`AWS_PROFILE` は上の変数より強い]
+shell で `AWS_PROFILE` を export していると SDK は**そちらを使い**、上の
+access key を無視します。`unset AWS_PROFILE` するか、コマンドの前に
+`env -u AWS_PROFILE` を付けてください。
+:::
+
+ストアの起動と archive の upload は[コンテナ](/waxlens/ja/container/)にあります。
+
 同じ report を対話的に読むなら TUI を使います。
 
 ```sh
@@ -73,7 +99,7 @@ waxlens --server ws://127.0.0.1:7333 samples/wikipedia.wacz
 
 ```sh
 waxlens-validate --profile browserhive        samples/wikipedia.wacz   # より厳しく
-waxlens-validate --profile browserhive@2.1.0  samples/wikipedia.wacz   # producer の版まで指定
+waxlens-validate --profile browserhive@2.1.0  samples/wikipedia.wacz   # producer のバージョンまで指定
 waxlens-validate --profile lenient     samples/wikipedia.wacz   # トリアージ用
 ```
 
@@ -86,7 +112,7 @@ profile が組み替えるのは producer 固有 / 様式的な rule の severit
 `waxlens-validate` は常に JSON を標準出力に書きます。切り替えるフラグはありません。
 
 ```sh
-waxlens-validate samples/wikipedia.wacz | jq '{valid, summary}'
+waxlens-validate samples/wikipedia.wacz | jq '.summary'
 ```
 
 形式は安定しており、[JSON レポート](/waxlens/ja/json-report/)に文書化しています。

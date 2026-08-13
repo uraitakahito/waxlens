@@ -129,7 +129,7 @@ program
           : await DaemonSession.spawn();
       const client = await connect(session.endpoint);
       try {
-        // 起動直後に daemon の版を問い合わせる。tui 自身の版(BUILD_INFO)と
+        // 起動直後に daemon のバージョンを問い合わせる。tui 自身のバージョン(BUILD_INFO)と
         // 突き合わせ、Header で SHA を出し・不一致(古いプロセス)を警告する。
         const health = await client.request<HealthStatus>("waxlens/ping", {});
         const build: BuildInfo = {
@@ -163,7 +163,7 @@ async function validateOnce(
   uri: string,
   filePath: string,
   opts: CliOptions,
-): Promise<CliOutcome> {
+): Promise<CliOutcome<WireReport>> {
   try {
     const report = await client.request<WireReport>("waxlens/validate", {
       source: { kind: "uri", uri },
@@ -171,7 +171,11 @@ async function validateOnce(
       locale: opts.lang ?? "",
       ...(opts.s3ForcePathStyle && { s3ForcePathStyle: true }),
     });
-    return report.valid ? { kind: "valid", report } : { kind: "invalid", report };
+    // `error` が 1 件も無ければ valid。派生値を report に持たせると summary と
+    // ずれる余地ができるので、必要な側でその都度導く。
+    return report.summary.failed === 0
+      ? { kind: "valid", report }
+      : { kind: "invalid", report };
   } catch (cause) {
     if (cause instanceof RpcCallError && cause.code === "openFailed") {
       return { kind: "openFailed", filePath, cause };
@@ -183,9 +187,9 @@ async function validateOnce(
   }
 }
 
-/** outcome に従って TUI / stderr を発火する。TUI には readEntry ブリッジと版情報を渡す。 */
+/** outcome に従って TUI / stderr を発火する。TUI には readEntry ブリッジとバージョン情報を渡す。 */
 async function dispatch(
-  outcome: CliOutcome,
+  outcome: CliOutcome<WireReport>,
   requestContent: RequestContent,
   build: BuildInfo,
 ): Promise<void> {

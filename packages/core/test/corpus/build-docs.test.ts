@@ -31,8 +31,8 @@ const corpusRootDir = corpusRoot();
 // WAXLENS_DOCS_CHECK=1 のときは書き換えず、committed な docs と突き合わせる。
 const checkMode = process.env["WAXLENS_DOCS_CHECK"] === "1";
 
-// 版の固定を要求するのは**検査モードだけ**。書き込みモード (`corpus:docs`) は
-// 次のリリースを作るために固定先と違う版へ書くのが仕事なので、ここで止めたら
+// バージョンの固定を要求するのは**検査モードだけ**。書き込みモード (`corpus:docs`) は
+// 次のリリースを作るために固定先と違うバージョンへ書くのが仕事なので、ここで止めたら
 // 新しい catalogue を生成できない。build-corpus を素通しにするのと同じ理由。
 if (checkMode && corpusRootDir !== undefined) assertPinnedCorpus(corpusRootDir);
 

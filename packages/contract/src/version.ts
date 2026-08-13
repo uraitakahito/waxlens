@@ -15,7 +15,7 @@
  *   ">=1.11.0 <2.0.0" 空白区切りは AND
  *
  * caret (`^1.2.3`) / tilde (`~1.2.3`) / OR (`||`) は**解さない**。
- * 必要なのは「この版以降で正しい」を言うことだけで、それ以上の表現力は
+ * 必要なのは「このバージョン以降で正しい」を言うことだけで、それ以上の表現力は
  * 曖昧さを増やすだけだから。
  *
  * 解せない式は throw する。false を返して黙らないのは、書き間違いが
@@ -33,7 +33,7 @@ const SEMVER_RE = /^(\d+)\.(\d+)\.(\d+)$/;
 
 /**
  * `1.11.0` 形式だけを受ける。prerelease / build metadata は受けない —
- * producer の版として比較したいのは 3 つ組だけで、`2.1.0-rc.1` を
+ * producer のバージョンとして比較したいのは 3 つ組だけで、`2.1.0-rc.1` を
  * どう順序づけるかを決める必要が今は無い。
  */
 export const parseSemVer = (raw: string): SemVer | null => {
@@ -72,7 +72,7 @@ export const satisfies = (version: SemVer, range: string): boolean => {
     }
     const bound = parseSemVer(m[2] ?? "");
     // COMPARATOR_RE が \d+\.\d+\.\d+ を要求しているので parse は必ず通る。
-    if (bound === null) throw new Error(`解せない版: ${JSON.stringify(term)}`);
+    if (bound === null) throw new Error(`解せないバージョン: ${JSON.stringify(term)}`);
     const c = compare(version, bound);
     switch (m[1]) {
       case ">=":

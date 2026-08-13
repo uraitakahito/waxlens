@@ -76,16 +76,16 @@ export interface RuleApplicability {
   /** その profile で rule を完全に skip する (issue を 1 件も出さない)。 */
   excludeProfiles?: readonly RuleProfile[];
   /**
-   * profile 別・**producer 版の範囲**。この rule が正しく判定できると
-   * 分かっている版を宣言する。
+   * profile 別・**producer のバージョン範囲**。この rule が正しく判定できると
+   * 分かっているバージョンを宣言する。
    *
-   * selector が版を名乗り (`--profile browserhive@1.10.0`)、それが範囲外
+   * selector がバージョンを名乗り (`--profile browserhive@1.10.0`)、それが範囲外
    * なら rule は走らず、その事実が `Report.skipped` に残る。**黙って
    * 消さない**のが要点 — 落ちた rule が見えないと、報告が「問題なし」
    * なのか「見ていない」なのか読者に区別できない。
    *
-   * selector が版を名乗らなければ範囲は見ない (＝ 従来どおり走る)。
-   * 既定をそちらに置いているので、版を書かない呼び出しの挙動は変わらない。
+   * selector がバージョンを名乗らなければ範囲は見ない (＝ 従来どおり走る)。
+   * 既定をそちらに置いているので、バージョンを書かない呼び出しの挙動は変わらない。
    *
    * 範囲式は `@waxlens/contract` の最小部分集合 (`>=x.y.z` / `<x.y.z` と
    * 空白区切りの AND)。解せない式は engine 実行時に throw する。
@@ -104,9 +104,8 @@ export interface IssueLocation {
 
 export interface Issue {
   /**
-   * `<area>/<short-name>` 形式の安定した rule identifier。 将来の
-   * `--rule` filter や log を grep する人が使う。localise しない;
-   * version 間で書式を変えない。
+   * `<area>/<short-name>` 形式の安定した rule identifier。localise しない;
+   * バージョン間で書式を変えない。
    */
   rule: string;
   severity: Severity;
@@ -158,25 +157,25 @@ export interface ReportSummary {
 /**
  * report を評価した profile。engine の `ProfileSelector` を wire 向けに写す。
  *
- * **版は文字列で出す。** engine 内部の `SemVer` は `{ major, minor, patch }`
+ * **バージョンは文字列で出す。** engine 内部の `SemVer` は `{ major, minor, patch }`
  * の三つ組だが、あれは parse の中間結果であって、報告を読む人が欲しいのは
  * `"2.1.0"` のほう。同じ report にある {@link SkippedRule} の `range`
  * (`">=1.11.0"`) とも並びが揃う。
  *
- * `version` は**操作者が名乗った producer 版**で、archive と照合したもの
- * ではない (`datapackage.json` の `software` は読んでいない)。
+ * `version` は**操作者が名乗った producer のバージョン**で、archive と照合した
+ * ものではない (`datapackage.json` の `software` は読んでいない)。
  */
 export interface ReportProfile {
   name: RuleProfile;
-  /** 未指定なら **key ごと出ない**。「版を問わない」の意。 */
+  /** 未指定なら **key ごと出ない**。「バージョンを問わない」の意。 */
   version?: string;
 }
 
 /**
- * producer 版が合わずに走らせなかった rule。
+ * producer のバージョンが合わずに走らせなかった rule。
  *
  * `Report.skipped` は該当が 1 件も無ければ **key ごと出力されない**
- * (`stats` と同じ条件付き spread)。だから版を指定しない実行の JSON は
+ * (`stats` と同じ条件付き spread)。だからバージョンを指定しない実行の JSON は
  * 従来と 1 バイトも変わらない。
  */
 export interface SkippedRule {
@@ -184,7 +183,7 @@ export interface SkippedRule {
   reason: "profile-version";
   /** rule が要求した範囲 (例 `">=1.11.0"`)。 */
   range: string;
-  // 名乗られた版はここには書かない。全エントリで同じ値になる複製で、
+  // 名乗られたバージョンはここには書かない。全エントリで同じ値になる複製で、
   // `Report.profile.version` から機械的に取れる。
 }
 // #endregion report-summary
@@ -350,8 +349,6 @@ export interface Report {
   profile: ReportProfile;
   /** validate された WACZ の identity。{@link ReportSource} を参照。 */
   source: ReportSource;
-  /** `summary.failed === 0` のときだけ `true`。JSON consumer が再計算しなくていいように cache してある。 */
-  valid: boolean;
   summary: ReportSummary;
   issues: Issue[];
   /** WACZ 内のファイル一覧 + 検証の紐付け。{@link ReportEntry} を参照。 */
@@ -359,7 +356,7 @@ export interface Report {
   /** best-effort な metadata — {@link ReportStats} を参照。 */
   stats?: ReportStats;
   /**
-   * producer 版が合わず走らせなかった rule。**該当が無ければ key ごと
+   * producer のバージョンが合わず走らせなかった rule。**該当が無ければ key ごと
    * 出ない** — {@link SkippedRule} を参照。
    */
   skipped?: readonly SkippedRule[];

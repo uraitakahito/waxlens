@@ -43,7 +43,7 @@ const root = corpusRoot();
 // 重い validation だけ it() の中 (async) で行う。
 const probe = (): { manifest?: Manifest; reason?: string } => {
   if (root === undefined) return { reason: "CORPUS_DIR 未設定" };
-  // 版ずれは skip ではなく throw。以降の「期待値が合わない」より、渡された
+  // バージョンずれは skip ではなく throw。以降の「期待値が合わない」より、渡された
   // corpus が固定先と違うことを先に名指しするほうが早い。
   assertPinnedCorpus(root);
   if (!existsSync(join(root, "manifest.json"))) return { reason: `manifest が無い: ${root}` };
@@ -100,7 +100,9 @@ const validate = async (absPath: string, profile: RuleProfile): Promise<ProfileR
     });
     if (!result.ok) throw new Error("runValidation returned err — unreachable");
     return {
-      valid: result.value.valid,
+      // corpus の期待値フォーマットは valid を持つ (別 repo の契約)。
+      // report からは外したので、ここで導く。
+      valid: result.value.summary.failed === 0,
       issues: result.value.issues.map((i) => ({ rule: i.rule, severity: i.severity })),
     };
   } finally {

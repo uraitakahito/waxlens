@@ -148,7 +148,8 @@ Test Files  20 passed | 2 skipped (22)
 通常の `pnpm check` はこう見えます。この skip があるおかげで、日常のコマンドは
 外部に依存しないままでいられます。
 
-走らせるには、corpus を**固定してある版で**このリポジトリの隣にクローンし、
+走らせるには、corpus を**固定してあるバージョンで**このリポジトリの隣に
+クローンし、
 **絶対パス**で指し示します。
 
 ```sh
@@ -161,7 +162,7 @@ CORPUS_DIR="$(cd ../waxlens-corpus && pwd)" pnpm --filter @waxlens/core test:cor
 
 リポジトリ直下の `.corpus-version` は tag を 1 つだけ持ちます —— このチェック
 アウトが検証対象とする corpus のリリースです。CI も同じファイルを読むので、
-**CI が緑なのと手元が緑なのは同じ意味**になります。違う版を渡すと
+**CI が緑なのと手元が緑なのは同じ意味**になります。違うバージョンを渡すと
 **スイートは走らずに落ちます**。期待値が合わないという分かりにくい失敗になる前に、
 渡されたものを名指しします。
 
@@ -169,7 +170,7 @@ CORPUS_DIR="$(cd ../waxlens-corpus && pwd)" pnpm --filter @waxlens/core test:cor
 CORPUS_DIR は 28bcc70 を指していますが、この waxlens は v0.1.0 に固定されています。
 ```
 
-リリース資産の tarball を展開したものは git のチェックアウトではないので版を
+リリース資産の tarball を展開したものは git のチェックアウトではないのでバージョンを
 読めません。その場合は**止めずに通します** —— 「判定できない」と「判定して違う」は
 別だからです。
 
@@ -198,8 +199,9 @@ corpus に何かをマージしても、ここは何も変わりません ——
 最後の点が固定する理由です。PR は**自分の足元で動かない corpus**に対して測られるので、
 緑か赤かがその PR だけで決まります。
 
-`corpus:build` と `corpus:docs` は版の検査を意図的に素通りします —— あれらは
-*次の* corpus リリースを作る側なので、固定先と違う版に対して走る必要があります。
+`corpus:build` と `corpus:docs` はバージョンの検査を意図的に素通りします —— あれらは
+*次の* corpus リリースを作る側なので、固定先と違うバージョンに対して走る
+必要があります。
 
 :::danger[`corpus:build` は書く前に消します]
 `$CORPUS_DIR/fixtures` を**丸ごと**削除してから作り直します。corpus リポジトリが
@@ -216,7 +218,7 @@ corpus に何かをマージしても、ここは何も変わりません ——
 | workflow | 内容 |
 | --- | --- |
 | `check` | `pnpm check` ― 日常のスイート全部 |
-| `corpus` | waxlens-corpus を **`.corpus-version` の版で**クローンし、`corpus:docs:check` と `test:corpus` |
+| `corpus` | waxlens-corpus を **`.corpus-version` のバージョンで**クローンし、`corpus:docs:check` と `test:corpus` |
 | `pack-smoke` | `@waxlens/contract`・`@waxlens/core`・`@waxlens/validate-cli`・`@waxlens/tui` を `npm pack` し、まっさらなディレクトリに入れてバイナリを実行 |
 | `site` | ドキュメントをビルドし、参照を検証 |
 | `docs` | サイトを公開 |

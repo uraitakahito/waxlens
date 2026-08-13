@@ -10,7 +10,7 @@ CI scripts and for anything downstream of waxlens, so its shape is deliberate
 rather than incidental.
 
 ```sh
-waxlens-validate samples/wikipedia.wacz | jq '{valid, summary}'
+waxlens-validate samples/wikipedia.wacz | jq '.summary'
 ```
 
 ## Top level
@@ -18,9 +18,16 @@ waxlens-validate samples/wikipedia.wacz | jq '{valid, summary}'
 ```ts file="packages/core/src/validate/domain.ts#report"
 ```
 
-`valid` is a cached `summary.failed === 0` — consumers do not have to recompute
-it. `issues` are in rule registration order, which means the structural checks
-come first and the most likely producer bug tends to be near the top.
+**"Is this archive usable?" is `summary.failed === 0`.** That answer used to be
+cached in a separate field; it only created room to disagree with `summary`, so
+it is gone.
+
+```sh
+waxlens-validate a.wacz | jq '.summary.failed == 0'
+```
+
+`issues` are in rule registration order, which means the structural checks come
+first and the most likely producer bug tends to be near the top.
 
 ## Summary
 
@@ -55,26 +62,25 @@ by rule without parsing prose:
 ### `severity` and `conformance` answer different questions
 
 `severity` is what waxlens does about a violation; `conformance` is what the
-specification asks for. They are **orthogonal**, and they diverge often enough
-that filtering on one is not a substitute for the other.
+specification asks for. **Filtering on one is not a substitute for the other.**
 
-Across the 29 corpus specimens:
+Across the 30 corpus specimens:
 
 | conformance | error | warning | info |
 | --- | ---: | ---: | ---: |
-| `MUST` | 19 | **10** | 0 |
+| `MUST` | 20 | **10** | 0 |
 | `SHOULD` | **1** | 8 | 0 |
 | `MAY` / `MUST NOT` | 0 | 4 | 1 |
 
-Eleven findings fall off the diagonal. `datapackage/resources-complete` is a
-`MUST` reported as a `warning` — an undeclared file in the ZIP does not stop
-replay. `datapackage/digest` runs the other way: the spec only says `SHOULD`,
-but a hash that does not match may mean the archive was altered, so waxlens
-calls it an `error`.
+The two bold cells are why neither column predicts the other.
+`datapackage/resources-complete` is a `MUST` reported as a `warning` — an
+undeclared file in the ZIP does not stop replay. `datapackage/digest` runs the
+other way: the spec only says `SHOULD`, but a hash that does not match may mean
+the archive was altered, so waxlens calls it an `error`.
 
-Note that **`valid` is derived from `severity` alone** — it counts `error` and
-nothing else. An archive can be `valid` and still violate a `MUST`. If you need
-the conformance view, read it off the issues:
+Note that **`summary.failed` counts `severity` alone** — it never looks at
+conformance. An archive can have `failed: 0` and still violate a `MUST`. If you
+need the conformance view, read it off the issues:
 
 ```sh
 # What waxlens judges to be broken
@@ -157,5 +163,5 @@ the first is being misled.
 
 The exit code is derived from the report by `exitCodeFor` in
 `@waxlens/protocol`, shared by the CLI and the TUI so the two cannot disagree.
-Deciding from `valid` in your own script is equivalent for the common case; use
-the shared helper when the distinction between failure kinds matters.
+Deciding from `summary.failed` in your own script is equivalent for the common
+case; use the shared helper when the distinction between failure kinds matters.

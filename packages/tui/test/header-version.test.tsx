@@ -1,6 +1,6 @@
 // @module-tag tui
 /**
- * Header の版表示テスト。
+ * Header のバージョン表示テスト。
  *
  * Header は TUI 自身のビルド(`build.tui`)の短い git SHA を出し、daemon の
  * SHA(`build.daemon`、起動時の `waxlens/ping` 由来)と食い違うときだけ
@@ -15,7 +15,6 @@ const report: WireReport = {
   waxlensVersion: "0.0.0",
   profile: { name: "spec" },
   source: { kind: "file", path: "/tmp/fixture.wacz" as AbsolutePath },
-  valid: true,
   summary: { passed: 1, failed: 0, warnings: 0, info: 0, durationMs: 1 },
   issues: [],
   entries: [],

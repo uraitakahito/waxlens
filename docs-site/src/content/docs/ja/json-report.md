@@ -9,7 +9,7 @@ description: waxlens-validate が出力する JSON の形式と、その安定�
 下流にとってのインターフェースなので、形式は偶然ではなく意図的に決めてあります。
 
 ```sh
-waxlens-validate samples/wikipedia.wacz | jq '{valid, summary}'
+waxlens-validate samples/wikipedia.wacz | jq '.summary'
 ```
 
 ## トップレベル
@@ -17,9 +17,16 @@ waxlens-validate samples/wikipedia.wacz | jq '{valid, summary}'
 ```ts file="packages/core/src/validate/domain.ts#report"
 ```
 
-`valid` は `summary.failed === 0` を cache したもので、consumer が再計算しなくて
-済みます。`issues` は rule の登録順で、構造的な check が先に来るため、
-最も可能性の高い producer バグが上の方に上がります。
+**「この archive は使えるか」は `summary.failed === 0`** です。派生値を別フィールド
+として持たせていた時期がありますが、`summary` とずれる余地を作るだけなので
+やめました。
+
+```sh
+waxlens-validate a.wacz | jq '.summary.failed == 0'
+```
+
+`issues` は rule の登録順で、構造的な check が先に来るため、最も可能性の高い
+producer バグが上の方に上がります。
 
 ## Summary
 
@@ -51,24 +58,24 @@ waxlens-validate samples/wikipedia.wacz | jq '{valid, summary}'
 ### `severity` と `conformance` は別の問いに答えます
 
 `severity` は違反に対して waxlens がどうするか、`conformance` は仕様が何を
-要求しているかです。この 2 つは**直交**しており、しかも実際によくずれるので、
-**片方で絞ってももう片方の代わりにはなりません**。
+要求しているかです。**片方で絞っても、もう片方の代わりにはなりません。**
 
-corpus の 29 標本での実測:
+corpus の 30 標本での実測:
 
 | conformance | error | warning | info |
 | --- | ---: | ---: | ---: |
-| `MUST` | 19 | **10** | 0 |
+| `MUST` | 20 | **10** | 0 |
 | `SHOULD` | **1** | 8 | 0 |
 | `MAY` / `MUST NOT` | 0 | 4 | 1 |
 
-11 件が対角から外れています。`datapackage/resources-complete` は `MUST` ですが
-`warning` です —— ZIP に未宣言のファイルがあっても replay は止まりません。
-`datapackage/digest` は逆向きで、仕様は `SHOULD` に留めていますが、hash が
-合わないのはアーカイブが変更された可能性があるため waxlens は `error` にします。
+太字の 2 つが、片方から他方を予想できないことを示しています。
+`datapackage/resources-complete` は `MUST` ですが `warning` —— ZIP に未宣言の
+ファイルがあっても replay は止まりません。`datapackage/digest` は逆向きで、
+仕様は `SHOULD` に留めていますが、hash が合わないのはアーカイブが変更された
+可能性があるため waxlens は `error` にします。
 
-なお **`valid` は `severity` だけから導かれます** —— `error` の数しか見ません。
-**`MUST` に違反していても `valid` になりえます**。仕様準拠の観点が要るなら、
+なお **`summary.failed` は `severity` だけを数えます** —— 適合レベルは見ません。
+**`MUST` に違反していても `failed` が 0 になりえます**。仕様準拠の観点が要るなら、
 issue から自分で読み取ってください。
 
 ```sh
@@ -104,8 +111,8 @@ WARC があったとしても、**それを報告する report 自体を止め�
 
 ## `profile` — どの条件で判定したか
 
-`profile` は名前と版を持つオブジェクトです。版を添えなければ `version` の key は
-出ません（「版を問わない」の意）。
+`profile` は名前とバージョンを持つオブジェクトです。バージョンを添えなければ
+`version` の key は出ません（「バージョンを問わない」の意）。
 
 ```json
 "profile": { "name": "browserhive", "version": "2.1.0" }
@@ -113,12 +120,12 @@ WARC があったとしても、**それを報告する report 自体を止め�
 ```
 
 文字列ではなくオブジェクトにしているのは、**`name` だけで絞り込めるようにする**
-ためです。`"browserhive@2.1.0"` のような 1 本の文字列だと、版を添えた瞬間に
-consumer 側の一致判定が外れます。
+ためです。`"browserhive@2.1.0"` のような 1 本の文字列だと、バージョンを添えた
+瞬間に consumer 側の一致判定が外れます。
 
 ```sh
-jq -r '.profile.name'                    # 版の有無に関わらず "browserhive"
-jq -r '.profile.version // "unpinned"'   # 版だけが要るとき
+jq -r '.profile.name'                    # pin の有無に関わらず "browserhive"
+jq -r '.profile.version // "unpinned"'   # バージョンだけが要るとき
 ```
 
 `version` は **`--profile` で名乗られた値**で、archive と照合したものではありません
@@ -126,8 +133,8 @@ jq -r '.profile.version // "unpinned"'   # 版だけが要るとき
 
 ## `skipped` — 見なかったものを書く
 
-`--profile` に producer の版を添えると（`browserhive@1.10.0`）、その版では正しく
-判定できない rule が走りません。**走らせなかった事実は `skipped` に書きます。**
+`--profile` に producer のバージョンを添えると（`browserhive@1.10.0`）、その
+バージョンでは正しく判定できない rule が走りません。**走らせなかった事実は `skipped` に書きます。**
 
 ```json
 "skipped": [
@@ -139,8 +146,8 @@ jq -r '.profile.version // "unpinned"'   # 版だけが要るとき
 ]
 ```
 
-`stats` と同じく**該当が無ければ key ごと出ません**。だから版を添えない実行の
-JSON は従来と 1 バイトも変わりません。
+`stats` と同じく**該当が無ければ key ごと出ません**。だからバージョンを添えない
+実行の JSON は従来と 1 バイトも変わりません。
 
 省略ではなく明示にしているのは、`issues` が空であることの意味が 2 通りあるから
 です —— 「見て、問題が無かった」と「そもそも見ていない」。consumer が前者だと
@@ -151,5 +158,5 @@ JSON は従来と 1 バイトも変わりません。
 
 exit code は `@waxlens/protocol` の `exitCodeFor` が report から導出します。
 CLI と TUI が共有しているので両者がずれることはありません。よくある用途なら
-自分のスクリプトで `valid` を見ても等価です。failure の種類を区別したいときに
-共有ヘルパを使ってください。
+自分のスクリプトで `summary.failed` を見ても等価です。failure の種類を区別したい
+ときに共有ヘルパを使ってください。

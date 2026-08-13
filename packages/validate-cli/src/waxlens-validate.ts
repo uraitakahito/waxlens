@@ -5,10 +5,7 @@
  * machine-readable な出力のみ
  *
  * この package が持つのは引数の解釈と出力の発火だけで、validation は
- * `@waxlens/core` が全部やる。分けてあるのは core を library として
- * 使う consumer に commander を背負わせないため、そして bin 名
- * (`waxlens-validate`) を package 名・ファイル名と一致させて入口を
- * 名前から辿れるようにするため。
+ * `@waxlens/core` が全部やる。
  *
  * Exit codes:
  *   0 — validation 成功 (error 重大度の issue なし)
@@ -40,25 +37,14 @@ import {
   DEFAULT_SELECTOR,
   exitCodeFor,
   parseProfileSelector,
-  type CliOutcome as Outcome,
+  type CliOutcome,
   type ProfileSelector,
 } from "@waxlens/contract";
-
-/**
- * この CLI が運ぶのは engine が返す `Report` そのもの。
- *
- * tui (`waxlens`) は同じ union を daemon が解決済みで返す `WireReport` で
- * 特殊化する — 違いはそこだけなので、契約側は型引数 1 つで両方を賄っている。
- */
-type CliOutcome = Outcome<Report>;
 
 const here = dirname(fileURLToPath(import.meta.url));
 const manifestPath = join(here, "..", "package.json");
 const manifest = JSON.parse(readFileSync(manifestPath, "utf-8")) as { version: string };
 
-// env→boolean を strict に解釈 (空文字 / "false" / その他は全部 false)。
-// CLI flag のデフォルト値として commander に渡す。flag が立てば true で
-// 上書きされる。
 const envS3ForcePathStyle = process.env["WAXLENS_S3_FORCE_PATH_STYLE"] === "true";
 
 interface CliOptions {
@@ -85,7 +71,7 @@ const openWacz = (
       : fileTransport(source.path),
   );
 
-async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome> {
+async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome<Report>> {
   const sourceResult = parseReportSource(filePath);
   if (!sourceResult.ok) {
     return {
@@ -111,7 +97,11 @@ async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome> {
     if (!result.ok) return { kind: "engineFailed" };
     const report = result.value;
 
-    return report.valid ? { kind: "valid", report } : { kind: "invalid", report };
+    // `error` が 1 件も無ければ valid。派生値を report に持たせると summary と
+    // ずれる余地ができるので、必要な側でその都度導く。
+    return report.summary.failed === 0
+      ? { kind: "valid", report }
+      : { kind: "invalid", report };
   } finally {
     await reader.close();
   }
@@ -170,7 +160,7 @@ await program.parseAsync(process.argv);
  * 生まれる variant で、論理的には到達不能。万一来たら silent (stderr
  * 出さない) のまま exit code 2 になる — 現状の挙動と同じ。
  */
-function dispatch(outcome: CliOutcome, locale: Locale): void {
+function dispatch(outcome: CliOutcome<Report>, locale: Locale): void {
   switch (outcome.kind) {
     case "valid":
     case "invalid":

@@ -13,15 +13,15 @@ issue を 1 件報告します。[全 rule の表](#全-rule)は **rule 定義�
 ## 表の読み方
 
 **適合レベル**は spec が要求する強さ(`MUST` / `SHOULD` / `MAY` / `MUST NOT`)、
-**severity** は違反に対して waxlens が取る扱いで、この 2 つは必ずしも一致しません。
+**severity** は違反に対して waxlens が取る扱いです。
 
 severity は `error` / `warning` / `info` の 3 値です。**判定に効くのは `error` だけ**で、
-`valid` は `error` が 0 件かどうかだけで決まります —— `warning` と `info` は何件あっても
-`valid` を覆しません。
+アーカイブが使えるかどうかは `summary.failed`(= `error` の件数)が 0 かで決まります
+—— `warning` と `info` は何件あっても覆しません。
 
-| severity | 意味 | `valid` |
+| severity | 意味 | `summary.failed` |
 | --- | --- | --- |
-| `error` | これがあると使えない(再生が壊れる / 検証が成立しない) | `false` にする |
+| `error` | これがあると使えない(再生が壊れる / 検証が成立しない) | 増やす |
 | `warning` | 直すべきだが、それだけでは壊れない | 変えない |
 | `info` | 観察の記録。良し悪しの判断を含まない | 変えない |
 
@@ -29,12 +29,12 @@ severity は `error` / `warning` / `info` の 3 値です。**判定に効くの
 [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) の意味で用います。
 表に出る適合レベルは **waxlens が付けた重要度ではなく、spec 側の記述を写したもの**です。
 
-[`datapackage/resources-complete`](#datapackage-resources-complete) は `MUST` ですが `warning` です — `resources[]`
-が不完全でも、それだけで replay が壊れるわけではないからです。
+severity を決めるのは「**そのアーカイブが使えるか**」だけです。たとえば
+[`datapackage/resources-complete`](#datapackage-resources-complete) は `MUST` ですが
+`warning` です — `resources[]` が不完全でも、それだけで replay が壊れるわけでは
+ないからです。
 
-ずれは例外ではありません。**22 rule のうち 5 つが対角から外れ**、corpus の 30 標本
-(`spec` profile) では **44 件の issue のうち 15 件**が外れます。
-2 つの軸で絞り分ける方法は
+**仕様準拠の観点で絞りたいときは適合レベルを見ます。** 2 つの軸を別々に扱う方法は
 [JSON レポート](/waxlens/ja/json-report/#severity-と-conformance-は別の問いに答えます)にあります。
 
 ### severity 欄が 2 つ並ぶことがあります
@@ -51,9 +51,9 @@ severity 欄には出しうる値がすべて並びます。
 
 **profile 上書き**は、指定した `--profile` の下で severity を組み替えます。空欄の rule は
 どの profile でも rule が出したままです。**その rule の指摘が全部変わるとは限らない**ので、
-複数が対象なら件数を添えています。`browserhive: >=1.11.0` のように**版の範囲**が出る rule は、
-その範囲外の版を [`--profile browserhive@1.10.0`](/waxlens/ja/profiles/) のように名乗った実行では
-走らず、落としたことが JSON の `skipped` に残ります。適合レベルは profile では動きません —— spec がそう
+複数が対象なら件数を添えています。`browserhive: >=1.11.0` のように
+**バージョンの範囲**が出る rule は、その範囲外を
+[`--profile browserhive@1.10.0`](/waxlens/ja/profiles/) のように名乗った実行では走らず、落としたことが JSON の `skipped` に残ります。適合レベルは profile では動きません —— spec がそう
 書いている、という事実だからです。
 [プロファイル](/waxlens/ja/profiles/)を参照。
 

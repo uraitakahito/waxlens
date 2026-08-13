@@ -44,6 +44,24 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
 
+      - name: build removes stale outputs
+        # この repo の dist は gitignore なので、CI は常に綺麗な状態から
+        # 建てる。つまり「build が古い出力を消さない」という退行は、普通に
+        # 回しているだけでは**絶対に再現しない** — fresh checkout に消すべき
+        # ものが存在しないからである。
+        #
+        # tsc は消えたソースの出力を削除しないので、この掃除が外れると
+        # 手元から publish した tarball に死んだファイルが混ざる (実際
+        # v0.5.0 で削除した cli-outcome.* が入っていた)。わざと残骸を置いて、
+        # build がそれを消すことを確かめる。
+        run: |
+          touch packages/core/dist/__stale__.js
+          pnpm --filter @waxlens/core build
+          if [ -e packages/core/dist/__stale__.js ]; then
+            echo "::error::pnpm build left a stale output in dist/ — the clean step is missing"
+            exit 1
+          fi
+
       - name: Pack @waxlens/contract
         id: pack-contract
         working-directory: packages/contract

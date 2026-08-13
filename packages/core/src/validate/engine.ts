@@ -53,10 +53,10 @@ export interface RunOptions {
   waxlensVersion: string;
   rules: readonly ValidationRule[];
   /**
-   * Profile selector。既定は `"spec"`(版なし)。
+   * Profile selector。既定は `"spec"`(バージョンなし)。
    *
-   * 版を持たない selector は、版に条件を持つ rule の条件を**見ない** —
-   * つまり従来どおり全部走る。既定をそちらに置いているので、版を書かない
+   * バージョンを持たない selector は、バージョンに条件を持つ rule の条件を**見ない** —
+   * つまり従来どおり全部走る。既定をそちらに置いているので、バージョンを書かない
    * 呼び出しの挙動は変わらない。
    */
   profile?: ProfileSelector;
@@ -76,7 +76,7 @@ export const runValidation = async (
   const eligible = opts.rules.filter(
     (rule) => !rule.applicability?.excludeProfiles?.includes(profile),
   );
-  // 版で落とす分は「除外」ではなく「見なかった」なので、記録して report
+  // バージョンで落とす分は「除外」ではなく「見なかった」なので、記録して report
   // に出す。excludeProfiles との違いはそこ — あちらは profile の定義上
   // 最初から対象外で、報告すべき欠落ではない。
   const skipped: SkippedRule[] = [];
@@ -111,6 +111,17 @@ export const runValidation = async (
     computeStats(wacz),
   ]);
 
+  // `Issue[][]`(rule ごとの箱)を 1 本の列に均す。空の箱は消え、1 つの rule が
+  // 複数出したものは並んで入る。
+  //
+  // **並列に走らせているのに、この並びは実行ごとに変わらない。**
+  // `Promise.all` が返すのは「終わった順」ではなく「**渡した配列の順**」で、
+  // ここでは `activeRules` の順 = rule の登録順になる。見落としやすいが、
+  // これに依存しているものが 2 つある:
+  //   - JSON レポートが「構造的な check が先に来る」と約束している
+  //     (rules/index.ts の並びがそのまま出力の並び)
+  //   - CLI の snapshot テストは JSON 全体をバイト単位で比べている
+  // 完了順に push する形へ書き換えると、両方が静かに壊れる。
   const issues = perRule.flat();
   const summary = summarise(issues, activeRules.length, Date.now() - startedAt);
   // ファイル一覧 + issue 紐付け(best-effort)。entryNames/getEntryMeta は
@@ -121,12 +132,11 @@ export const runValidation = async (
     waxlensVersion: opts.waxlensVersion,
     profile: {
       name: selector.name,
-      // stats / skipped と同じ条件付き spread。版なしなら key ごと出ない
-      // ので、「版を問わない」が JSON の形として表れる。
+      // stats / skipped と同じ条件付き spread。バージョンなしなら key ごと出ない
+      // ので、「バージョンを問わない」が JSON の形として表れる。
       ...(version !== undefined && { version: formatSemVer(version) }),
     },
     source: wacz.source,
-    valid: summary.failed === 0,
     summary,
     issues,
     entries,
@@ -134,7 +144,7 @@ export const runValidation = async (
     // はなく「不在」として表現できる — exactOptionalPropertyTypes が
     // これを要求する。
     ...(stats !== undefined && { stats }),
-    // 同上。版を指定しない実行では 1 件も入らないので key ごと出ず、
+    // 同上。バージョンを指定しない実行では 1 件も入らないので key ごと出ず、
     // 従来の JSON と完全に一致する。
     ...(skipped.length > 0 && { skipped }),
   };
