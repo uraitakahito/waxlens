@@ -53,9 +53,6 @@ const here = dirname(fileURLToPath(import.meta.url));
 const manifestPath = join(here, "..", "package.json");
 const manifest = JSON.parse(readFileSync(manifestPath, "utf-8")) as { version: string };
 
-// env→boolean を strict に解釈 (空文字 / "false" / その他は全部 false)。
-// CLI flag のデフォルト値として commander に渡す。flag が立てば true で
-// 上書きされる。
 const envS3ForcePathStyle = process.env["WAXLENS_S3_FORCE_PATH_STYLE"] === "true";
 
 interface CliOptions {
