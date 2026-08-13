@@ -37,17 +37,9 @@ import {
   DEFAULT_SELECTOR,
   exitCodeFor,
   parseProfileSelector,
-  type CliOutcome as Outcome,
+  type CliOutcome,
   type ProfileSelector,
 } from "@waxlens/contract";
-
-/**
- * この CLI が運ぶのは engine が返す `Report` そのもの。
- *
- * tui (`waxlens`) は同じ union を daemon が解決済みで返す `WireReport` で
- * 特殊化する — 違いはそこだけなので、契約側は型引数 1 つで両方を賄っている。
- */
-type CliOutcome = Outcome<Report>;
 
 const here = dirname(fileURLToPath(import.meta.url));
 const manifestPath = join(here, "..", "package.json");
@@ -79,7 +71,7 @@ const openWacz = (
       : fileTransport(source.path),
   );
 
-async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome> {
+async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome<Report>> {
   const sourceResult = parseReportSource(filePath);
   if (!sourceResult.ok) {
     return {
@@ -168,7 +160,7 @@ await program.parseAsync(process.argv);
  * 生まれる variant で、論理的には到達不能。万一来たら silent (stderr
  * 出さない) のまま exit code 2 になる — 現状の挙動と同じ。
  */
-function dispatch(outcome: CliOutcome, locale: Locale): void {
+function dispatch(outcome: CliOutcome<Report>, locale: Locale): void {
   switch (outcome.kind) {
     case "valid":
     case "invalid":

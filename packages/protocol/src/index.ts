@@ -127,14 +127,4 @@ export {
   formatProfileSelector,
   parseProfileSelector,
 } from "@waxlens/contract";
-export type { ProfileSelector, SemVer } from "@waxlens/contract";
-
-import type { CliOutcome as Outcome } from "@waxlens/contract";
-
-/**
- * クライアントが運ぶのは daemon が解決済みで返す {@link WireReport}。
- *
- * `waxlens-validate` は同じ union を engine の `Report` で特殊化する —
- * 違いはそこだけなので、契約側は型引数 1 つで両方を賄っている。
- */
-export type CliOutcome = Outcome<WireReport>;
+export type { CliOutcome, ProfileSelector, SemVer } from "@waxlens/contract";
