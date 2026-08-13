@@ -11,16 +11,15 @@ export { WaczReader } from "./wacz/reader.js";
 export { fileTransport, s3Transport } from "./wacz/transport.js";
 export type { ResolvedS3Source, WaczTransport } from "./wacz/transport.js";
 export { DEFAULT_PROFILE, runValidation } from "./validate/engine.js";
-export { DEFAULT_RULES, conformanceForRule } from "./validate/rules/index.js";
+export { DEFAULT_RULES, conformanceForRule, docsForRule } from "./validate/rules/index.js";
 export { renderJson } from "./render/json.js";
 export { SUPPORTED_LOCALES, resolveLocale, t } from "./i18n/translate.js";
 export type { Locale, MsgParams } from "./i18n/translate.js";
 export { SPEC_SECTIONS, specUrl } from "./validate/spec-sections.js";
-export { RULE_DOCS, docsForRule } from "./validate/rule-docs.js";
-export type { DocLink } from "./validate/rule-docs.js";
 export type {
   AbsolutePath,
   Conformance,
+  DocLink,
   ExpectedBy,
   FileSource,
   Issue,
@@ -28,6 +27,7 @@ export type {
   ParseSourceError,
   Report,
   ReportEntry,
+  ResolvedDocLink,
   ReportSource,
   ReportStats,
   ReportSummary,

@@ -17,7 +17,6 @@ import { resolve } from "node:path";
 // ※ import.meta.url は astro ビルド後の dist パスになるため使えない。
 const ROOT = resolve(process.cwd(), "..");
 const RULES_DIR = resolve(ROOT, "packages/core/src/validate/rules");
-const RULE_DOCS = resolve(ROOT, "packages/core/src/validate/rule-docs.ts");
 
 const read = (abs: string): string => readFileSync(abs, "utf8");
 
@@ -25,10 +24,15 @@ const read = (abs: string): string => readFileSync(abs, "utf8");
 const literal = (source: string, key: string): string | undefined =>
   new RegExp(String.raw`\b${key}:\s*"([^"]+)"`).exec(source)?.[1];
 
-/** rule が依拠する spec へのリンク。`rule-docs.ts` の RULE_DOCS 由来。 */
+/**
+ * rule が依拠する spec へのリンク。rule 定義の `docs` 由来。
+ *
+ * `url` は locale ごとに持つ。WACZ には和訳があり ja では別 URL を指すので、
+ * どちらを出すかは表示側 (RuleTable) が `lang` で選ぶ。
+ */
 export interface RuleLink {
   label: string;
-  url: string;
+  url: { en: string } & Partial<Record<"ja", string>>;
 }
 
 /** 1 つの rule について、コードから機械的に言えること。 */
@@ -74,7 +78,6 @@ export interface RuleFact {
  * 誰も気付かないので、docs のビルドで落とす。
  */
 export function rules(): RuleFact[] {
-  const docLinks = parseRuleDocs();
 
   const files = readdirSync(RULES_DIR).filter((f) => f.endsWith(".ts") && f !== "index.ts");
   const facts = files.map((file): RuleFact => {
@@ -119,7 +122,7 @@ export function rules(): RuleFact[] {
       conformance,
       severityByProfile: byProfile,
       profileVersions,
-      links: docLinks[name] ?? [],
+      links: parseDocs(source),
     };
   });
 
@@ -138,22 +141,23 @@ export function rules(): RuleFact[] {
   return facts.sort((a, b) => a.name.localeCompare(b.name));
 }
 
-/** `rule-docs.ts` の RULE_DOCS を rule 名 → リンク群として読む。 */
-function parseRuleDocs(): Record<string, RuleLink[]> {
-  const source = read(RULE_DOCS);
-
-  // 先頭の `const WACZ = "…"` 等を解決してからテンプレートリテラルを展開する。
-  const bases: Record<string, string> = {};
-  for (const [, id, url] of source.matchAll(/^const (\w+) = "([^"]+)";$/gm)) bases[id] = url;
-  const expand = (raw: string): string =>
-    raw.replace(/\$\{(\w+)\}/g, (whole, id: string) => bases[id] ?? whole);
-
-  const body = /export const RULE_DOCS[^=]*=\s*\{([\s\S]*?)\n\};/.exec(source)?.[1] ?? "";
-  const out: Record<string, RuleLink[]> = {};
-  for (const [, name, entries] of body.matchAll(/"([^"]+)":\s*\[([\s\S]*?)\],?\n/g)) {
-    out[name] = [...entries.matchAll(/label:\s*"([^"]+)",\s*url:\s*`?([^`",]+)`?/g)].map(
-      ([, label, url]) => ({ label, url: expand(url) }),
-    );
+/**
+ * rule ソースから `docs: [...]` を読む。
+ *
+ * 別表 (旧 rule-docs.ts) が無くなり、出典は rule 定義が持つようになった。
+ * ここは 1 ファイルぶんの source を受け取って、その rule のリンクを返す。
+ */
+function parseDocs(source: string): RuleLink[] {
+  const block = /docs:\s*\[([\s\S]*?)\n {2}\],/.exec(source)?.[1];
+  if (block === undefined) return [];
+  const out: RuleLink[] = [];
+  for (const [, label, urls] of block.matchAll(
+    /label:\s*"([^"]+)",\s*url:\s*\{([\s\S]*?)\}/g,
+  )) {
+    const en = /\ben:\s*"([^"]+)"/.exec(urls)?.[1];
+    if (en === undefined) continue; // 型で必須なので通常あり得ない
+    const ja = /\bja:\s*"([^"]+)"/.exec(urls)?.[1];
+    out.push({ label, url: { en, ...(ja !== undefined && { ja }) } });
   }
   return out;
 }

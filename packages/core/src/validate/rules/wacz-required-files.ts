@@ -32,6 +32,15 @@ export const waczRequiredFilesRule: ValidationRule = {
   // 構造的な MUST 欠落は replay-breaking なので全 profile で error
   // (resource-hashes / index-recognised と同じ扱い)。
   conformance: "MUST",
+  docs: [
+      {
+        label: "WACZ §directories-and-files",
+        url: {
+          en: "https://specs.webrecorder.net/wacz/1.1.1/#directories-and-files",
+          ja: "https://uraitakahito.github.io/specs/wacz/1.1.1/#directories-and-files",
+        },
+      },
+  ],
 
   // entryNames/hasEntry は同期(central directory 由来)。run は Promise を
   // 返す契約だが await すべき I/O は無いので Promise.resolve で包む。

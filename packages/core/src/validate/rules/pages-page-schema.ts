@@ -25,6 +25,15 @@ export const pagesPageSchemaRule: ValidationRule = {
   name: "pages/page-schema",
   descriptionKey: "pages/page-schema.desc",
   conformance: "MUST",
+  docs: [
+      {
+        label: "WACZ §pages",
+        url: {
+          en: "https://specs.webrecorder.net/wacz/1.1.1/#pages",
+          ja: "https://uraitakahito.github.io/specs/wacz/1.1.1/#pages",
+        },
+      },
+  ],
   applicability: {
     severityByProfile: {
       lenient: {

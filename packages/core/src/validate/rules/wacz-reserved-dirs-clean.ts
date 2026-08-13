@@ -30,6 +30,15 @@ export const waczReservedDirsCleanRule: ValidationRule = {
   name: "wacz/reserved-dirs-clean",
   descriptionKey: "wacz/reserved-dirs-clean.desc",
   conformance: "MUST NOT",
+  docs: [
+      {
+        label: "WACZ §directories-and-files",
+        url: {
+          en: "https://specs.webrecorder.net/wacz/1.1.1/#directories-and-files",
+          ja: "https://uraitakahito.github.io/specs/wacz/1.1.1/#directories-and-files",
+        },
+      },
+  ],
   applicability: {
     severityByProfile: {
       lenient: { "wacz/reserved-dirs-clean.unexpected": "info" },

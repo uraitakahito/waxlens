@@ -22,6 +22,15 @@ export const fuzzyValidJsonRule: ValidationRule = {
   name: "fuzzy/valid-json",
   descriptionKey: "fuzzy/valid-json.desc",
   conformance: "MAY",
+  docs: [
+      {
+        label: "WACZ §fuzzy.json",
+        url: {
+          en: "https://specs.webrecorder.net/wacz/1.1.1/#fuzzy-json",
+          ja: "https://uraitakahito.github.io/specs/wacz/1.1.1/#fuzzy-json",
+        },
+      },
+  ],
 
   run: async (wacz) => {
     const issues: Issue[] = [];

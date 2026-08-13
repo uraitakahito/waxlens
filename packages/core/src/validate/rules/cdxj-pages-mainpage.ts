@@ -31,6 +31,15 @@ export const cdxjPagesMainpageRule: ValidationRule = {
   name: "cdxj/pages-mainpage",
   descriptionKey: "cdxj/pages-mainpage.desc",
   conformance: "SHOULD",
+  docs: [
+      {
+        label: "WACZ §pages",
+        url: {
+          en: "https://specs.webrecorder.net/wacz/1.1.1/#pages",
+          ja: "https://uraitakahito.github.io/specs/wacz/1.1.1/#pages",
+        },
+      },
+  ],
   applicability: {
     severityByProfile: {
       lenient: {

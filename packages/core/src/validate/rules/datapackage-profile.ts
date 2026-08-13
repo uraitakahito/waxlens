@@ -26,6 +26,21 @@ export const datapackageProfileRule: ValidationRule = {
   name: "datapackage/profile-required",
   descriptionKey: "datapackage/profile-required.desc",
   conformance: "MUST",
+  docs: [
+      {
+        label: "WACZ §datapackage.json",
+        url: {
+          en: "https://specs.webrecorder.net/wacz/1.1.1/#datapackage-json",
+          ja: "https://uraitakahito.github.io/specs/wacz/1.1.1/#datapackage-json",
+        },
+      },
+      {
+        label: "Frictionless Data Package",
+        url: {
+          en: "https://specs.frictionlessdata.io/data-package/",
+        },
+      },
+  ],
 
   run: async (wacz) => {
     const issues: Issue[] = [];
