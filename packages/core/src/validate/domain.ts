@@ -350,8 +350,6 @@ export interface Report {
   profile: ReportProfile;
   /** validate された WACZ の identity。{@link ReportSource} を参照。 */
   source: ReportSource;
-  /** `summary.failed === 0` のときだけ `true`。JSON consumer が再計算しなくていいように cache してある。 */
-  valid: boolean;
   summary: ReportSummary;
   issues: Issue[];
   /** WACZ 内のファイル一覧 + 検証の紐付け。{@link ReportEntry} を参照。 */

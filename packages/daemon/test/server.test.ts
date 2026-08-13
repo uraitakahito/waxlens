@@ -125,7 +125,7 @@ describe("daemon server (WS)", () => {
         params: { source: { kind: "uri", uri: fixtureUri("fixtures/good.wacz") }, locale: "en" },
       });
       expect(res.error).toBeUndefined();
-      expect(res.result && "valid" in res.result ? res.result.valid : null).toBe(true);
+      expect(res.result && "summary" in res.result ? res.result.summary.failed : null).toBe(0);
     });
 
     it("readEntry: datapackage.json の内容を返す", async () => {

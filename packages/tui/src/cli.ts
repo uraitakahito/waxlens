@@ -171,7 +171,11 @@ async function validateOnce(
       locale: opts.lang ?? "",
       ...(opts.s3ForcePathStyle && { s3ForcePathStyle: true }),
     });
-    return report.valid ? { kind: "valid", report } : { kind: "invalid", report };
+    // `error` が 1 件も無ければ valid。派生値を report に持たせると summary と
+    // ずれる余地ができるので、必要な側でその都度導く。
+    return report.summary.failed === 0
+      ? { kind: "valid", report }
+      : { kind: "invalid", report };
   } catch (cause) {
     if (cause instanceof RpcCallError && cause.code === "openFailed") {
       return { kind: "openFailed", filePath, cause };

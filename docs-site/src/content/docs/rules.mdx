@@ -16,13 +16,13 @@ level, per-profile overrides and spec links all come out of
 **Conformance** is what the spec demands — `MUST`, `SHOULD`, `MAY`, `MUST NOT`.
 **Severity** is what waxlens does about a violation.
 
-Severity takes one of three values. **Only `error` decides the verdict** —
-`valid` is true exactly when no `error` was reported, and no number of
-`warning`s or `info`s overturns it.
+Severity takes one of three values. **Only `error` decides the verdict** — an
+archive is usable exactly when `summary.failed` (the `error` count) is zero, and
+no number of `warning`s or `info`s overturns that.
 
-| Severity | Meaning | `valid` |
+| Severity | Meaning | `summary.failed` |
 | --- | --- | --- |
-| `error` | the archive cannot be used — replay breaks, or the check cannot be made | set to `false` |
+| `error` | the archive cannot be used — replay breaks, or the check cannot be made | incremented |
 | `warning` | worth fixing, but not broken on its own | unaffected |
 | `info` | an observation, carrying no judgement | unaffected |
 

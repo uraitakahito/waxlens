@@ -108,7 +108,11 @@ async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome> {
     if (!result.ok) return { kind: "engineFailed" };
     const report = result.value;
 
-    return report.valid ? { kind: "valid", report } : { kind: "invalid", report };
+    // `error` が 1 件も無ければ valid。派生値を report に持たせると summary と
+    // ずれる余地ができるので、必要な側でその都度導く。
+    return report.summary.failed === 0
+      ? { kind: "valid", report }
+      : { kind: "invalid", report };
   } finally {
     await reader.close();
   }

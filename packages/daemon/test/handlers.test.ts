@@ -28,7 +28,7 @@ describe("daemon handlers", () => {
         locale: "en",
         profile: "spec",
       });
-      expect(report.valid).toBe(true);
+      expect(report.summary.failed).toBe(0);
       expect(report.summary.failed).toBe(0);
     });
 
@@ -37,7 +37,7 @@ describe("daemon handlers", () => {
         source: { kind: "uri", uri: fixtureUri("fixtures/wacz-missing-archive.wacz") },
         locale: "ja",
       });
-      expect(report.valid).toBe(false);
+      expect(report.summary.failed).toBeGreaterThan(0);
       expect(report.issues.some((i) => i.message.includes("ありません"))).toBe(true);
     });
 

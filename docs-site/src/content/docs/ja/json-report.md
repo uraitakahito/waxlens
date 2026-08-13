@@ -9,7 +9,7 @@ description: waxlens-validate が出力する JSON の形式と、その安定�
 下流にとってのインターフェースなので、形式は偶然ではなく意図的に決めてあります。
 
 ```sh
-waxlens-validate samples/wikipedia.wacz | jq '{valid, summary}'
+waxlens-validate samples/wikipedia.wacz | jq '.summary'
 ```
 
 ## トップレベル
@@ -17,9 +17,16 @@ waxlens-validate samples/wikipedia.wacz | jq '{valid, summary}'
 ```ts file="packages/core/src/validate/domain.ts#report"
 ```
 
-`valid` は `summary.failed === 0` を cache したもので、consumer が再計算しなくて
-済みます。`issues` は rule の登録順で、構造的な check が先に来るため、
-最も可能性の高い producer バグが上の方に上がります。
+**「この archive は使えるか」は `summary.failed === 0`** です。派生値を別フィールド
+として持たせていた時期がありますが、`summary` とずれる余地を作るだけなので
+やめました。
+
+```sh
+waxlens-validate a.wacz | jq '.summary.failed == 0'
+```
+
+`issues` は rule の登録順で、構造的な check が先に来るため、最も可能性の高い
+producer バグが上の方に上がります。
 
 ## Summary
 
@@ -67,8 +74,8 @@ corpus の 29 標本での実測:
 `datapackage/digest` は逆向きで、仕様は `SHOULD` に留めていますが、hash が
 合わないのはアーカイブが変更された可能性があるため waxlens は `error` にします。
 
-なお **`valid` は `severity` だけから導かれます** —— `error` の数しか見ません。
-**`MUST` に違反していても `valid` になりえます**。仕様準拠の観点が要るなら、
+なお **`summary.failed` は `severity` だけを数えます** —— 適合レベルは見ません。
+**`MUST` に違反していても `failed` が 0 になりえます**。仕様準拠の観点が要るなら、
 issue から自分で読み取ってください。
 
 ```sh
@@ -151,5 +158,5 @@ jq -r '.profile.version // "unpinned"'   # バージョンだけが要るとき
 
 exit code は `@waxlens/protocol` の `exitCodeFor` が report から導出します。
 CLI と TUI が共有しているので両者がずれることはありません。よくある用途なら
-自分のスクリプトで `valid` を見ても等価です。failure の種類を区別したいときに
-共有ヘルパを使ってください。
+自分のスクリプトで `summary.failed` を見ても等価です。failure の種類を区別したい
+ときに共有ヘルパを使ってください。

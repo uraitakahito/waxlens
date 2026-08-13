@@ -16,12 +16,12 @@ issue を 1 件報告します。[全 rule の表](#全-rule)は **rule 定義�
 **severity** は違反に対して waxlens が取る扱いで、この 2 つは必ずしも一致しません。
 
 severity は `error` / `warning` / `info` の 3 値です。**判定に効くのは `error` だけ**で、
-`valid` は `error` が 0 件かどうかだけで決まります —— `warning` と `info` は何件あっても
-`valid` を覆しません。
+アーカイブが使えるかどうかは `summary.failed`(= `error` の件数)が 0 かで決まります
+—— `warning` と `info` は何件あっても覆しません。
 
-| severity | 意味 | `valid` |
+| severity | 意味 | `summary.failed` |
 | --- | --- | --- |
-| `error` | これがあると使えない(再生が壊れる / 検証が成立しない) | `false` にする |
+| `error` | これがあると使えない(再生が壊れる / 検証が成立しない) | 増やす |
 | `warning` | 直すべきだが、それだけでは壊れない | 変えない |
 | `info` | 観察の記録。良し悪しの判断を含まない | 変えない |
 
