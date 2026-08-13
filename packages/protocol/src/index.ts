@@ -123,6 +123,7 @@ export {
   DEFAULT_PROFILE,
   DEFAULT_SELECTOR,
   SUPPORTED_LOCALES,
+  describeCause,
   exitCodeFor,
   formatProfileSelector,
   parseProfileSelector,

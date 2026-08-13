@@ -18,6 +18,7 @@ import type {
   WireReport,
 } from "@waxlens/protocol";
 import { BUILD_INFO } from "./generated/build-info.js";
+import { describeCause } from "@waxlens/contract";
 import { DaemonError, readEntry, validate } from "./handlers.js";
 
 const healthStatus = (): HealthStatus => ({
@@ -41,7 +42,7 @@ const dispatch = async (
 const toError = (cause: unknown): RpcError =>
   cause instanceof DaemonError
     ? { code: cause.code, message: cause.message }
-    : { code: "engineFailed", message: cause instanceof Error ? cause.message : String(cause) };
+    : { code: "engineFailed", message: describeCause(cause) };
 
 const rawToString = (raw: RawData): string =>
   Array.isArray(raw)

@@ -8,6 +8,7 @@
 import { fileURLToPath } from "node:url";
 import {
   DEFAULT_SELECTOR,
+  describeCause,
   parseProfileSelector,
   type ProfileSelector,
 } from "@waxlens/contract";
@@ -63,7 +64,9 @@ const openFromSource = async (
       ? await WaczReader.open(s3Transport({ ...source, forcePathStyle: s3ForcePathStyle }))
       : await WaczReader.open(fileTransport(source.path));
   } catch (cause) {
-    throw new DaemonError("openFailed", cause instanceof Error ? cause.message : String(cause));
+    // ここが wire に載る文字列を決める最上流。ここで捨てた情報は、受け手
+    // (tui) では二度と復元できない — 向こうに届くのは string だけ。
+    throw new DaemonError("openFailed", describeCause(cause));
   }
 };
 

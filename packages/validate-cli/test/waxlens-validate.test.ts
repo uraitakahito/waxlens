@@ -119,6 +119,10 @@ describe("cli — exit codes", () => {
     const result = await runCli([join(tmpDir, "does-not-exist.wacz")]);
     expect(result.code).toBe(2);
     expect(result.stderr).toContain("cannot open");
+    // `describeCause` は fs のエラーを素通しする(message にすべて書いてあり、
+    // 触ると悪化する)。ここが `Error:` などで飾られ始めたら退行。
+    expect(result.stderr).toContain("ENOENT");
+    expect(result.stderr).not.toContain("HTTP");
   });
 });
 

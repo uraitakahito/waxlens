@@ -31,6 +31,7 @@ import {
   formatProfileSelector,
   parseProfileSelector,
   SUPPORTED_LOCALES,
+  describeCause,
   type CliOutcome,
   type HealthStatus,
   type ReadEntryResult,
@@ -148,7 +149,7 @@ program
       }
     } catch (cause) {
       // spawn / 接続 / 想定外の失敗 → operational failure。
-      process.stderr.write(`waxlens: ${cause instanceof Error ? cause.message : String(cause)}\n`);
+      process.stderr.write(`waxlens: ${describeCause(cause)}\n`);
       process.exitCode = 2;
     } finally {
       await session?.release();
@@ -199,8 +200,15 @@ async function dispatch(
       await runTui(outcome.report, requestContent, build);
       return;
     case "openFailed": {
+      // **ここでは `describeCause` を通さない。** ここに来る cause は
+      // `RpcCallError` で、その `message` は daemon が `describeCause` で作った
+      // 説明そのもの。もう一度通すと `RpcCallError` という name が前に付いて
+      // `RpcCallError: NotFound (HTTP 404)` になる。整形は wire に載せる側の
+      // 責務で、こちらは運ばれてきた文をそのまま出す。
       const message =
-        outcome.cause instanceof Error ? outcome.cause.message : String(outcome.cause);
+        outcome.cause instanceof RpcCallError
+          ? outcome.cause.message
+          : describeCause(outcome.cause);
       process.stderr.write(`waxlens: cannot open "${outcome.filePath}": ${message}\n`);
       return;
     }
