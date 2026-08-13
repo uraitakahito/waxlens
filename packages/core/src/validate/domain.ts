@@ -156,6 +156,23 @@ export interface ReportSummary {
 }
 
 /**
+ * report を評価した profile。engine の `ProfileSelector` を wire 向けに写す。
+ *
+ * **版は文字列で出す。** engine 内部の `SemVer` は `{ major, minor, patch }`
+ * の三つ組だが、あれは parse の中間結果であって、報告を読む人が欲しいのは
+ * `"2.1.0"` のほう。同じ report にある {@link SkippedRule} の `range`
+ * (`">=1.11.0"`) とも並びが揃う。
+ *
+ * `version` は**操作者が名乗った producer 版**で、archive と照合したもの
+ * ではない (`datapackage.json` の `software` は読んでいない)。
+ */
+export interface ReportProfile {
+  name: RuleProfile;
+  /** 未指定なら **key ごと出ない**。「版を問わない」の意。 */
+  version?: string;
+}
+
+/**
  * producer 版が合わずに走らせなかった rule。
  *
  * `Report.skipped` は該当が 1 件も無ければ **key ごと出力されない**
@@ -167,8 +184,8 @@ export interface SkippedRule {
   reason: "profile-version";
   /** rule が要求した範囲 (例 `">=1.11.0"`)。 */
   range: string;
-  /** selector が名乗った版 (例 `"1.10.0"`)。 */
-  version: string;
+  // 名乗られた版はここには書かない。全エントリで同じ値になる複製で、
+  // `Report.profile.version` から機械的に取れる。
 }
 // #endregion report-summary
 
@@ -329,13 +346,8 @@ export interface ReportEntry {
 // #region report
 export interface Report {
   waxlensVersion: string;
-  /**
-   * report を評価する際に使った profile selector の文字列形。
-   *
-   * 版を指定しなければ profile 名そのもの (`"spec"`)、指定すれば
-   * `"browserhive@2.1.0"`。{@link RuleProfile} と `ProfileSelector` を参照。
-   */
-  profile: string;
+  /** report を評価した profile。{@link ReportProfile} を参照。 */
+  profile: ReportProfile;
   /** validate された WACZ の identity。{@link ReportSource} を参照。 */
   source: ReportSource;
   /** `summary.failed === 0` のときだけ `true`。JSON consumer が再計算しなくていいように cache してある。 */

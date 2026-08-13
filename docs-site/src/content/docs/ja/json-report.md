@@ -102,6 +102,28 @@ drift を推測ではなく検出できるようにするために存在しま�
 `stats` が best-effort かつ optional なのは設計です。統計を取れないほど壊れた
 WARC があったとしても、**それを報告する report 自体を止めてはいけない**からです。
 
+## `profile` — どの条件で判定したか
+
+`profile` は名前と版を持つオブジェクトです。版を添えなければ `version` の key は
+出ません（「版を問わない」の意）。
+
+```json
+"profile": { "name": "browserhive", "version": "2.1.0" }
+"profile": { "name": "spec" }
+```
+
+文字列ではなくオブジェクトにしているのは、**`name` だけで絞り込めるようにする**
+ためです。`"browserhive@2.1.0"` のような 1 本の文字列だと、版を添えた瞬間に
+consumer 側の一致判定が外れます。
+
+```sh
+jq -r '.profile.name'                    # 版の有無に関わらず "browserhive"
+jq -r '.profile.version // "unpinned"'   # 版だけが要るとき
+```
+
+`version` は **`--profile` で名乗られた値**で、archive と照合したものではありません
+（[プロファイル](/waxlens/ja/profiles/)を参照）。
+
 ## `skipped` — 見なかったものを書く
 
 `--profile` に producer の版を添えると（`browserhive@1.10.0`）、その版では正しく
@@ -112,8 +134,7 @@ WARC があったとしても、**それを報告する report 自体を止め�
   {
     "rule": "warc/recording-complete",
     "reason": "profile-version",
-    "range": ">=1.11.0",
-    "version": "1.10.0"
+    "range": ">=1.11.0"
   }
 ]
 ```

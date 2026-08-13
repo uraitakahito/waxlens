@@ -107,6 +107,28 @@ Within a major version:
 `stats` is best-effort and optional by design: a WARC broken enough to defeat
 statistics must not block the report that says so.
 
+## `profile` — the conditions the report was produced under
+
+`profile` is an object with a name and an optional version. Without a pinned
+version the `version` key is absent, which is what "any version" looks like.
+
+```json
+"profile": { "name": "browserhive", "version": "2.1.0" }
+"profile": { "name": "spec" }
+```
+
+It is an object rather than a string so that **`name` alone is enough to match
+on**. A single string like `"browserhive@2.1.0"` breaks every equality check the
+moment someone pins a version.
+
+```sh
+jq -r '.profile.name'                    # "browserhive", pinned or not
+jq -r '.profile.version // "unpinned"'   # when only the version matters
+```
+
+`version` is **what `--profile` claimed**, not something checked against the
+archive — see [Profiles](/waxlens/profiles/).
+
 ## `skipped` — recording what was not looked at
 
 Append a producer version to `--profile` (`browserhive@1.10.0`) and any rule
@@ -118,8 +140,7 @@ written down**, in `skipped`:
   {
     "rule": "warc/recording-complete",
     "reason": "profile-version",
-    "range": ">=1.11.0",
-    "version": "1.10.0"
+    "range": ">=1.11.0"
   }
 ]
 ```
