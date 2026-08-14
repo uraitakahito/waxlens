@@ -1,10 +1,10 @@
 // @module-tag tui
 /**
- * scrollWindow / clampOffset の純ロジックのテスト(実測高は呼び出し側が渡す前提)。
+ * scrollWindow の純ロジックのテスト(実測高は呼び出し側が渡す前提)。
  * React も I/O も関わらないので常時走る。
  */
 import { describe, expect, it } from "vitest";
-import { clampOffset, scrollWindow } from "../src/scroll.js";
+import { scrollWindow } from "../src/scroll.js";
 
 describe("scrollWindow", () => {
   it("height<=0 や total<=0 は空窓", () => {
@@ -51,13 +51,5 @@ describe("scrollWindow", () => {
     expect(scrollWindow(0, 12, 5).atBottom).toBe(false);
     expect(scrollWindow(7, 12, 5).atBottom).toBe(true); // max = 7
     expect(scrollWindow(7, 12, 5).atTop).toBe(false);
-  });
-});
-
-describe("clampOffset", () => {
-  it("delta を足して [0, total-height] にクランプ", () => {
-    expect(clampOffset(0, 1, 10, 4)).toBe(1);
-    expect(clampOffset(5, 10, 10, 4)).toBe(6); // max = 6
-    expect(clampOffset(3, -10, 10, 4)).toBe(0);
   });
 });

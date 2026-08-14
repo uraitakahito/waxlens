@@ -546,6 +546,119 @@ describe("tui — content view (実測スクロール)", () => {
       expect(contentH).toBeLessThanOrEqual(rows);
     });
   }
+
+  // ── content の行を選んで enter → 1 行だけを縦に開く ────────────────────
+  //
+  // `index.cdx.gz` の行は中央値 563 文字あり、80 桁の端末では切られて読めない。
+  // 端末幅を **明示的に狭く固定** して、切られていた値が詳細ビューで見えることを
+  // 見る。ink-testing-library の既定幅では実端末に引きずられ、たまたま全部
+  // 収まってしまって検出力が消えるので renderAt を使う。
+  //
+  // 標本は samples/wikipedia.wacz の実データ(476 文字)。
+  const REAL_CDXJ =
+    'org,wikimedia,upload)/wikipedia/commons/4/4d/icon_pdf_file.png 20220831121514 {"url": "https://upload.wikimedia.org/wikipedia/commons/4/4d/Icon_pdf_file.png", "mime": "image/png", "status": "200", "digest": "sha1:UKKPFYIP53NFMQTHRDY2CQERNZXKXWY3", "length": "1320", "offset": "5504", "filename": "rec-20220831121514140372-203de340fdad.warc.gz", "recordDigest": "sha256:9a5ad858a5a8730074545095192ad070224dcb489d0d6b4e48926a0f7ea89fb7", "referrer": "https://en.wikipedia.org/"}';
+
+  const openCdxjLine = async (): Promise<{
+    lastFrame: () => string;
+    stdin: FakeIn;
+    unmount: () => void;
+  }> => {
+    const reqCdxj = (): Promise<ReadEntryResult> =>
+      Promise.resolve({
+        kind: "text",
+        content: `${REAL_CDXJ}\nsecond line\nthird line`,
+        truncated: false,
+        gunzipped: true,
+      });
+    const h = renderAt(
+      80,
+      40,
+      <App report={reportWithFile()} requestContent={reqCdxj} build={buildStub} />,
+    );
+    h.stdin.write("\t"); // → Layout
+    await tick();
+    h.stdin.write("\r"); // → content
+    await tick();
+    return h;
+  };
+
+  it("content では長い行が端末幅で切られている(前提の確認)", async () => {
+    const { lastFrame, unmount } = await openCdxjLine();
+    const frame = lastFrame();
+    unmount();
+    // 行頭は見えるが、末尾側の値は 80 桁に入らない。
+    expect(frame).toContain("org,wikimedia,upload)");
+    expect(frame).not.toContain("rec-20220831121514140372");
+  });
+
+  it("content で enter: その 1 行がラベル付きで開き、切れていた値が見える", async () => {
+    const { lastFrame, stdin, unmount } = await openCdxjLine();
+    stdin.write("\r"); // → line ビュー
+    await tick();
+    const frame = lastFrame();
+    unmount();
+
+    // ── ① 実際に割れていること。
+    // `filename` や `rec-…` は **生の JSON 文字列にも現れる** ので、それを
+    // 見ても整形の有無を区別できない。JSON の記法そのものが消えたかを見る。
+    expect(frame).not.toContain('{"url"');
+    expect(frame).not.toContain('", "mime": "');
+
+    // ── ② 切らずに折り返していること。
+    // recordDigest は `sha256:` + 64 桁 = 71 文字。ラベル欄が 14 桁なので値の幅は
+    // 66 桁しかなく、67 文字目以降は次の行へ回る。**折り返しは改行を挟む**ので
+    // 全長を 1 つの文字列としては assert できない。先頭側と、回り込んだ末尾の
+    // 両方が居ることを見る(truncate だと末尾が消える)。
+    expect(frame).toContain("sha256:9a5ad858a5a87300745450951"); // 1 行目に載る側
+    expect(frame).toContain("89fb7"); // 66 桁を超えて 2 行目へ回った側
+
+    // ── ③ content では切られていた値。
+    expect(frame).toContain("rec-20220831121514140372");
+    expect(frame).toContain("5504");
+
+    // ── ④ 見出しに位置と長さ。
+    expect(frame).toContain("line 1 / 3");
+    expect(frame).toContain("476 chars");
+  });
+
+  it("line ビューで esc: content に戻り、カーソル位置が保たれる", async () => {
+    const { lastFrame, stdin, unmount } = await openCdxjLine();
+    stdin.write("\u001B[B"); // ↓ → 2 行目へ
+    await tick();
+    stdin.write("\r"); // → line
+    await tick();
+    expect(lastFrame()).toContain("line 2 / 3");
+    stdin.write("\u001B"); // esc → content
+    await tick();
+    const frame = lastFrame();
+    unmount();
+    expect(frame).toContain("second line");
+    expect(frame).toContain("line 2/3"); // カーソルは 2 行目のまま
+  });
+
+  it("line ビューのまま ↑↓ で前後の行に移れる", async () => {
+    const { lastFrame, stdin, unmount } = await openCdxjLine();
+    stdin.write("\r"); // → line (1 行目)
+    await tick();
+    stdin.write("j"); // 次の行へ(開いたまま)
+    await tick();
+    const frame = lastFrame();
+    unmount();
+    expect(frame).toContain("line 2 / 3");
+    expect(frame).toContain("second line");
+  });
+
+  it("CDXJ でない行は割らずにそのまま見せる", async () => {
+    const { lastFrame, stdin, unmount } = await openCdxjLine();
+    stdin.write("G"); // 末尾行(third line)へ
+    await tick();
+    stdin.write("\r");
+    await tick();
+    const frame = lastFrame();
+    unmount();
+    expect(frame).toContain("third line");
+    expect(frame).not.toContain("filename");
+  });
 });
 
 describe("tui — layout view: 右枠の幅はコンテンツに依存しない", () => {

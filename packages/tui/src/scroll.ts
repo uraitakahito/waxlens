@@ -42,9 +42,3 @@ export const scrollWindow = (
     atBottom: off >= max,
   };
 };
-
-/** offset を delta だけ動かして [0, max(0, total - height)] にクランプ。 */
-export const clampOffset = (offset: number, delta: number, total: number, height: number): number => {
-  const max = Math.max(0, total - height);
-  return Math.min(Math.max(0, offset + delta), max);
-};
