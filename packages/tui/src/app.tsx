@@ -25,7 +25,8 @@ import {
 import type { ReadEntryResult, ReportEntry, ResolvedDocLink, WireIssue, WireReport } from "@waxlens/protocol";
 import { buildEntryTree, entryMarker, flattenTree, type TreeRow } from "./render/tree.js";
 import { codecName, entryIssues, expectedLabel } from "./render/detail.js";
-import { clampOffset, scrollWindow } from "./scroll.js";
+import { explodeLine } from "./line-fields.js";
+import { scrollWindow } from "./scroll.js";
 
 /** version + 短い git SHA の組。TUI 自身と daemon の双方を持つ。 */
 export interface BuildPair {
@@ -44,7 +45,7 @@ interface AppProps {
   build: { tui: BuildPair; daemon: BuildPair };
 }
 
-type View = "issues" | "layout" | "content";
+type View = "issues" | "layout" | "content" | "line";
 
 /** Layout の右ペイン(詳細)に最低限残す桁数(枠 + 余白 + 内容)。 */
 const MIN_DETAIL_WIDTH = 30;
@@ -93,6 +94,9 @@ export const App: FC<AppProps> = ({ report, requestContent, build }) => {
   const [content, setContent] = useState<ReadEntryResult | null>(null);
   const [contentOffset, setContentOffset] = useState(0);
   const [contentH, setContentH] = useState(0);
+  // content ビューの行カーソル。scrollWindow が focused 追従で offset を補正するので、
+  // カーソルを動かすだけでスクロールも付いてくる(issues / layout と同じ形)。
+  const [contentFocused, setContentFocused] = useState(0);
 
   const issues = report.issues;
   // §5.1 風ツリーの行(report が変わらない限り再計算しない)。
@@ -101,7 +105,24 @@ export const App: FC<AppProps> = ({ report, requestContent, build }) => {
   const contentLines = content?.kind === "text" ? content.content.split("\n").length : 0;
 
   useInput((input, key) => {
-    // content ビュー: キーでスクロール、esc で Layout に戻る。
+    // line ビュー: 1 行を開いたまま前後に移れる。esc で content の一覧へ戻る。
+    if (view === "line") {
+      if (key.escape) {
+        setView("content");
+        return;
+      }
+      if (input === "q") {
+        exit();
+        return;
+      }
+      const step = (d: number): void => {
+        setContentFocused((f) => Math.min(Math.max(0, contentLines - 1), Math.max(0, f + d)));
+      };
+      if (key.downArrow || input === "j") step(1);
+      else if (key.upArrow || input === "k") step(-1);
+      return;
+    }
+    // content ビュー: 行カーソルを動かし、enter でその 1 行を開く。
     if (view === "content") {
       if (key.escape) {
         setView("layout");
@@ -113,14 +134,18 @@ export const App: FC<AppProps> = ({ report, requestContent, build }) => {
       }
       const page = Math.max(1, contentH - 1);
       const move = (d: number): void => {
-        setContentOffset((o) => clampOffset(o, d, contentLines, contentH));
+        setContentFocused((f) => Math.min(Math.max(0, contentLines - 1), Math.max(0, f + d)));
       };
+      if (key.return) {
+        if (contentLines > 0) setView("line");
+        return;
+      }
       if (key.downArrow || input === "j") move(1);
       else if (key.upArrow || input === "k") move(-1);
       else if (key.pageDown || input === " ") move(page);
       else if (key.pageUp) move(-page);
-      else if (input === "g") setContentOffset(0);
-      else if (input === "G") setContentOffset(Math.max(0, contentLines - contentH));
+      else if (input === "g") setContentFocused(0);
+      else if (input === "G") setContentFocused(Math.max(0, contentLines - 1));
       return;
     }
     if (input === "q" || key.escape) {
@@ -158,6 +183,7 @@ export const App: FC<AppProps> = ({ report, requestContent, build }) => {
       const show = (r: ReadEntryResult): void => {
         setContent(r);
         setContentOffset(0);
+        setContentFocused(0);
         setView("content");
       };
       void requestContent(entry.path).then(show, () => {
@@ -170,8 +196,19 @@ export const App: FC<AppProps> = ({ report, requestContent, build }) => {
     <Box flexDirection="column" width={columns} height={rows}>
       <Header report={report} view={view} build={build} />
       <Box flexGrow={1} minHeight={0} marginTop={1}>
-        {view === "content" && content !== null ? (
-          <ContentView result={content} offset={contentOffset} onHeight={setContentH} />
+        {view === "line" && content?.kind === "text" ? (
+          <LineView
+            line={content.content.split("\n")[contentFocused] ?? ""}
+            index={contentFocused}
+            total={contentLines}
+          />
+        ) : view === "content" && content !== null ? (
+          <ContentView
+            result={content}
+            offset={contentOffset}
+            focused={contentFocused}
+            onHeight={setContentH}
+          />
         ) : view === "issues" ? (
           <IssuesView issues={issues} focused={focused} expanded={expanded} />
         ) : (
@@ -317,8 +354,9 @@ const DetailPane: FC<{
 const ContentView: FC<{
   result: ReadEntryResult;
   offset: number;
+  focused: number;
   onHeight: (h: number) => void;
-}> = ({ result, offset, onHeight }) => {
+}> = ({ result, offset, focused, onHeight }) => {
   if (result.kind === "binary") {
     return (
       <Box>
@@ -328,21 +366,60 @@ const ContentView: FC<{
   }
   const lines = result.content.split("\n");
   const head = result.gunzipped ? "content (gzip 展開)" : "content";
+  // 行は端末幅で切る。全部を見る手段は enter (LineView) 側に持たせてある。
   return (
     <Box flexDirection="column" flexGrow={1} minHeight={0} width="100%">
-      <Text dimColor>{`${head}  ↑↓/jk PgUp/PgDn g/G scroll · esc back`}</Text>
+      <Text dimColor>
+        {`${head}  line ${String(focused + 1)}/${String(lines.length)}  ↑↓/jk PgUp/PgDn g/G · enter 詳細 · esc back`}
+      </Text>
       <ScrollList
         count={lines.length}
         offset={offset}
+        focused={focused}
         onHeight={onHeight}
         renderRange={(start, end) =>
           lines.slice(start, end).map((line, k) => (
-            <Text key={`content-${String(start + k)}`} wrap="truncate-end">
+            <Text
+              key={`content-${String(start + k)}`}
+              inverse={start + k === focused}
+              wrap="truncate-end"
+            >
               {line === "" ? " " : line}
             </Text>
           ))
         }
       />
+    </Box>
+  );
+};
+
+/**
+ * 1 行だけを縦に開くビュー。
+ *
+ * content の行は端末幅で切られる。`index.cdx.gz` は中央値 563 文字あるので、
+ * 切られた側に `offset` / `filename` のような**実際に確かめたい値**が入って
+ * いる。ここは切らず、`wrap="wrap"` で折り返して全部見せる。
+ */
+const LineView: FC<{ line: string; index: number; total: number }> = ({ line, index, total }) => {
+  const fields = explodeLine(line);
+  const width = Math.max(...fields.map((f) => f.label.length));
+  return (
+    <Box flexDirection="column" flexGrow={1} minHeight={0} width="100%">
+      <Text dimColor>
+        {`line ${String(index + 1)} / ${String(total)} · ${String(line.length)} chars  ↑↓/jk 前後の行 · esc 一覧へ`}
+      </Text>
+      <Box flexDirection="column" marginTop={1}>
+        {fields.map((field, k) => (
+          <Box key={`field-${String(k)}-${field.label}`}>
+            <Box width={width + 2} flexShrink={0}>
+              <Text color={field.fromJson ? "blue" : "cyan"}>{field.label}</Text>
+            </Box>
+            <Box flexGrow={1}>
+              <Text wrap="wrap">{field.value === "" ? " " : field.value}</Text>
+            </Box>
+          </Box>
+        ))}
+      </Box>
     </Box>
   );
 };
@@ -682,8 +759,10 @@ const Summary: FC<{ report: WireReport }> = ({ report }) => {
 const Help: FC<{ view: View }> = ({ view }) => (
   <Box marginTop={1}>
     <Text dimColor>
-      {view === "content"
-        ? "↑↓/jk PgUp/PgDn g/G scroll · esc back · q quit"
+      {view === "line"
+        ? "↑↓/jk 前後の行 · esc 一覧へ · q quit"
+        : view === "content"
+        ? "↑↓/jk 行 · PgUp/PgDn g/G · enter 詳細 · esc back · q quit"
         : view === "issues"
           ? "↑↓ navigate · enter expand · tab issues/layout · q quit"
           : "↑↓ navigate · enter open · tab issues/layout · q quit"}
