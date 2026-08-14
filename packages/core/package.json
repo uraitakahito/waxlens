@@ -39,13 +39,13 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/archiver": "^7.0.0",
-    "@types/node": "^25.6.2",
+    "@types/archiver": "^8.0.0",
+    "@types/node": "^26.1.2",
     "@types/yauzl-promise": "^4.0.1",
     "archiver": "^8.0.0",
     "aws-sdk-client-mock": "^4.1.0",
-    "eslint": "^10.3.0",
-    "typescript": "^6.0.3",
+    "eslint": "^10.8.1",
+    "typescript": "^7.0.2",
     "vitest": "^4.1.5"
   }
 }
