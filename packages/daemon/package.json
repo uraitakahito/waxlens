@@ -29,14 +29,14 @@
     "@waxlens/contract": "workspace:*",
     "@waxlens/core": "workspace:*",
     "@waxlens/protocol": "workspace:*",
-    "commander": "^14.0.3",
-    "ws": "^8.18.0"
+    "commander": "^15.0.0",
+    "ws": "^8.21.3"
   },
   "devDependencies": {
-    "@types/node": "^25.6.2",
+    "@types/node": "^26.1.2",
     "@types/ws": "^8.5.12",
-    "eslint": "^10.3.0",
-    "typescript": "^6.0.3",
+    "eslint": "^10.8.1",
+    "typescript": "^7.0.2",
     "vitest": "^4.1.5"
   }
 }
