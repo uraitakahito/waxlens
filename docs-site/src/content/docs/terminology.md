@@ -20,6 +20,27 @@ these docs, so that a word means one thing here and the same thing in the spec.
 | `Package` | The Frictionless Data Package that `datapackage.json` describes. Unrelated to an npm package. |
 | `Context` | As used by the spec. |
 
+## Terms the spec uses but does not define
+
+Everything above is defined in WACZ §Terminology. The spec also leans on words it
+never defines there, and this is the one that carries real weight.
+
+| Term | What it means here |
+| ---- | ------------------ |
+| `CDXJ` | The index format inside `indexes/`. One line per captured response: a sort-friendly key ([SURT](#surt)), a 14-digit capture timestamp, and a JSON object carrying `filename`, `offset` and `length` — the byte range of the matching record in `archive/`. §5.2.2 requires index files to contain CDXJ data and cites [pywb's CDXJ format](https://pywb.readthedocs.io/en/latest/manual/indexing.html#cdxj-index) rather than defining it. |
+
+<a id="surt"></a>
+**SURT** (Sort-friendly URI Reordering Transform) is the key form: the host is
+reversed and comma-separated, so `https://upload.wikimedia.org/…/icon.png`
+becomes `org,wikimedia,upload)/…/icon.png`. Reversing the host puts everything
+under one domain next to each other in sort order, which is what makes a binary
+search over the index possible.
+
+The index is why a replay tool does not have to download a whole WACZ: it reads
+the index, then fetches only the byte ranges it needs. If the index is wrong the
+archive is intact but unplayable, which is why six of the
+[rules](/waxlens/rules/) check it.
+
 ## Scope
 
 The vocabulary applies to **prose** — this site and source comments. Code
