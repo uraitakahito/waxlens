@@ -28,7 +28,7 @@
 # ---------------------------------------------------------------------------
 # Stage 1: builder
 # ---------------------------------------------------------------------------
-FROM node:24-bookworm-slim AS builder
+FROM node:26-bookworm-slim AS builder
 
 RUN corepack enable && corepack prepare pnpm@11.1.2 --activate
 
@@ -60,7 +60,7 @@ RUN pnpm --filter @waxlens/core deploy --prod --legacy /deploy/core
 # ---------------------------------------------------------------------------
 # Stage 2: runtime
 # ---------------------------------------------------------------------------
-FROM node:24-bookworm-slim AS runtime
+FROM node:26-bookworm-slim AS runtime
 
 WORKDIR /app
 
