@@ -7,7 +7,7 @@ stack file は `docker-compose.yml` 1 本で、[Apple Container](https://github.
 の上で [container-compose](https://github.com/Mcrich23/Container-Compose) が動かす。
 中身は service 1 つ — S3 API を話す [SeaweedFS](https://github.com/seaweedfs/seaweedfs) だけ。
 archive を生成する側、つまり
-[BrowserHive](https://uraitakahito.github.io/browserhive/ja/) や browser は含まれない。
+BrowserHive や browser は含まれない。
 これが、waxlens が「誰が書いた WACZ か」に依存しないための土台になっている。
 
 waxlens 自身はこの file の service ではない。Apple Container の compose は

@@ -8,7 +8,7 @@ The repository ships one stack file, `docker-compose.yml`, driven by
 [Apple Container](https://github.com/apple/container). It holds a single
 service: a [SeaweedFS](https://github.com/seaweedfs/seaweedfs) that speaks the
 S3 API. Nothing in it produces archives — no
-[BrowserHive](https://uraitakahito.github.io/browserhive/), no browser — which
+BrowserHive, no browser — which
 is what keeps waxlens loosely coupled to whatever wrote the WACZ.
 
 waxlens itself is not a service in that file. Apple Container's compose has
