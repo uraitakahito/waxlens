@@ -23,7 +23,6 @@ import { datapackageHashesRule } from "./datapackage-hashes.js";
 import { datapackageProfileRule } from "./datapackage-profile.js";
 import { datapackageResourcesCompleteRule } from "./datapackage-resources-complete.js";
 import { datapackageWaczVersionRule } from "./datapackage-wacz-version.js";
-import { fuzzyValidJsonRule } from "./fuzzy-valid-json.js";
 import { pagesPageSchemaRule } from "./pages-page-schema.js";
 import { waczRequiredFilesRule } from "./wacz-required-files.js";
 import { waczReservedDirsCleanRule } from "./wacz-reserved-dirs-clean.js";
@@ -80,7 +79,6 @@ export const DEFAULT_RULES: readonly ValidationRule[] = [
   // browserhive profile 限定: WARC の metadata レコード(未完了/失敗)の比率を
   // 可視化する。spec/lenient では excludeProfiles で除外される。
   warcRecordingCompleteRule,
-  fuzzyValidJsonRule,
 ];
 
 /**
@@ -124,7 +122,6 @@ export {
   datapackageProfileRule,
   datapackageResourcesCompleteRule,
   datapackageWaczVersionRule,
-  fuzzyValidJsonRule,
   pagesPageSchemaRule,
   waczRequiredFilesRule,
   waczReservedDirsCleanRule,

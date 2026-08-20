@@ -218,14 +218,6 @@ export const CORPUS: CorpusSpec[] = [
     expectRules: ["warc/payload-digest"],
   },
 
-  // ── fuzzy/* ───────────────────────────────────────────────────────
-  {
-    name: "fuzzy-not-json",
-    description: "fuzzy.json が JSON でない — info",
-    options: { fuzzyOverride: "not json" },
-    expectRules: ["fuzzy/valid-json"],
-  },
-
   // ── spec カバレッジ拡充 rule ──────────────────────────────────────
   {
     name: "warc-extension-mismatch",

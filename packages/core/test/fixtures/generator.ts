@@ -148,12 +148,6 @@ export interface FixtureOptions {
    */
   mainPageUrlOverride?: string;
   /**
-   * When set, replace the body of `fuzzy.json` with the given string
-   * verbatim — useful for "not JSON" / "missing rules" variants
-   * (rule #11).
-   */
-  fuzzyOverride?: string;
-  /**
    * When true, inject a deliberately-wrong `WARC-Payload-Digest` header
    * into the warcinfo record. Triggers rule #10.
    */
@@ -468,7 +462,7 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
   }
   const pagesBytes = Buffer.from(pagesBody, "utf-8");
 
-  const fuzzyBody = options.fuzzyOverride ?? buildFuzzyJson();
+  const fuzzyBody = buildFuzzyJson();
   const fuzzyBytes = Buffer.from(fuzzyBody, "utf-8");
 
   const defaultResources: DatapackageResource[] = [
