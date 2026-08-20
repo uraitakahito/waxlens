@@ -1,17 +1,14 @@
 {
   "i18n.smoke": "{n} 個のファイルが不足",
-
   "wacz/required-files.desc": "WACZ §5.2 が MUST とするファイル/ディレクトリが存在しなければならない",
   "wacz/required-files.missing-datapackage": "datapackage.json がありません(WACZ §5.2.4: ルートに存在する必要があります)",
   "wacz/required-files.missing-pages": "pages/pages.jsonl がありません(WACZ §5.2.3: 存在する必要があります)",
   "wacz/required-files.missing-archive": "archive/ に WARC ファイルがありません(WACZ §5.2.1: .warc/.warc.gz を 1 つ以上含む必要があります)",
   "wacz/required-files.missing-indexes": "indexes/ に index ファイルがありません(WACZ §5.2.2: .cdx/.cdxj/.idx を 1 つ以上含む必要があります)",
-
   "datapackage/profile-required.desc": "datapackage.json は profile === \"data-package\" を設定する必要がある",
   "datapackage/profile-required.invalid-json": "{entry} は有効な JSON でないか、オブジェクトではありません",
   "datapackage/profile-required.missing-field": "{entry} に \"profile\" フィールドがありません",
   "datapackage/profile-required.mismatch": "{entry} の profile は {actual} ですが、\"{expected}\" であるべきです",
-
   "datapackage/resource-hashes.desc": "datapackage.json のリソースハッシュは WACZ の内容と一致する必要がある",
   "datapackage/resource-hashes.no-resources": "{entry} に \"resources\" 配列がありません(または空です)",
   "datapackage/resource-hashes.invalid-path": "{entry} のリソースに \"path\" が無いか不正です",
@@ -19,83 +16,61 @@
   "datapackage/resource-hashes.no-hash": "リソース \"{path}\" に {entry} 内の \"hash\" がありません",
   "datapackage/resource-hashes.hash-mismatch": "リソース \"{path}\" のハッシュが一致しません",
   "datapackage/resource-hashes.byte-mismatch": "リソース \"{path}\" のバイト長が一致しません",
-
   "datapackage/wacz-version-required.desc": "datapackage.json は空でない wacz_version を宣言する必要がある",
   "datapackage/wacz-version-required.missing-field": "{entry} に \"wacz_version\" フィールドがありません",
   "datapackage/wacz-version-required.not-string": "{entry} の \"wacz_version\" は空でない文字列である必要があります",
   "datapackage/wacz-version-required.unknown-version": "{entry} の \"wacz_version\" = \"{version}\" は既知の有効な値の範囲外です",
-
   "datapackage/frictionless-schema.desc": "datapackage.json は Frictionless v1 スキーマに準拠すべき(補助検証)",
   "datapackage/frictionless-schema.violation": "Frictionless スキーマ: {at} {detail}",
   "datapackage/frictionless-structure.desc": "datapackage.json は空でない resources 配列を持ち、各 resource は name と path(または data)を持つ必要がある",
   "datapackage/frictionless-structure.no-resources": "datapackage.json に resources が無い(空でない resources 配列が必須)",
   "datapackage/frictionless-structure.resource-missing-name": "resources[{index}] に name が無い",
   "datapackage/frictionless-structure.resource-missing-path-or-data": "resources[{index}] に path(または data)が無い",
-
   "cdxj/index-recognised-by-wabac.desc": "WACZ は wabac が認識できる index(.cdx / .cdxj / .idx)を含む必要がある",
   "cdxj/index-recognised-by-wabac.no-index": "indexes/ 配下に wabac が認識できる index ファイルがありません — URL を提供するには .cdx / .cdxj / .idx エントリが少なくとも 1 つ必要です",
   "cdxj/index-recognised-by-wabac.missing-pair": "{name} は \"{pair}\" を参照していますが、そのエントリが WACZ に存在しません",
-
   "cdxj/index-valid-data.desc": "index の CDXJ(平文/gzip)は正しい CDXJ データを含む必要がある(WACZ §5.2.2)",
   "cdxj/index-valid-data.invalid": "{entry} の {line} 行目が CDXJ として不正です({reason})(WACZ §5.2.2: index は CDXJ データを含む必要があります)",
   "cdxj/index-valid-data.gzip-error": "{entry} は gzip と名乗っていますが展開できません(WACZ §5.2.2: index は CDXJ データを含む必要があります)",
-
   "cdxj/index-not-gzipped.desc": "indexes/index.cdxj は gzip 圧縮してはならない(wabac.js は .cdxj.gz を黙って無視する)",
   "cdxj/index-not-gzipped.gzipped-entry": "エントリ \"{name}\" は gzip 圧縮された CDXJ です — wabac.js は .cdxj.gz / .cdx.gz を認識しません",
   "cdxj/index-not-gzipped.gzip-magic": "{entry} は gzip のマジックバイトで始まっています — ファイル名は正しいが内容が圧縮されています",
-
   "cdxj/filename-archive-relative.desc": "indexes/index.cdxj のエントリは archive 相対のファイル名を使う必要がある(\"archive/...\" ではなく)",
   "cdxj/filename-archive-relative.no-filename": "{entry} のエントリに \"filename\" フィールドがありません",
   "cdxj/filename-archive-relative.starts-with-archive": "{entry} のエントリの \"filename\" が \"archive/\" で始まっています — wabac.js は archive/ を自動付与するため、二重プレフィックスは再生を壊します",
-
   "cdxj/warc-offsets.desc": "indexes/index.cdxj の offset/length は WARC の gzip メンバー境界に一致する必要がある",
   "cdxj/warc-offsets.missing-or-nonnumeric": "indexes/index.cdxj の {line} 行目: offset / length が無いか数値ではありません",
   "cdxj/warc-offsets.offset-no-match": "indexes/index.cdxj の {line} 行目: offset {offset} がどの WARC gzip メンバー開始位置にも一致しません",
   "cdxj/warc-offsets.length-mismatch": "indexes/index.cdxj の {line} 行目: length {length} が offset {offset} の WARC メンバーと一致しません(実際は {actual})",
-
   "cdxj/pages-mainpage.desc": "datapackage.mainPageURL は pages/pages.jsonl と indexes/index.cdxj の両方に現れる必要がある",
   "cdxj/pages-mainpage.not-in-pages": "datapackage.json の mainPageURL \"{url}\" が pages/pages.jsonl に列挙されていません",
   "cdxj/pages-mainpage.no-cdxj-record": "datapackage.json の mainPageURL \"{url}\" に indexes/index.cdxj 内のレコードがありません",
-
   "warc/storage-store.desc": "archive/data.warc.gz は DEFLATE ではなく STORE(0)で格納する必要がある",
   "warc/storage-store.zip-compressed": "{entry} は zip 圧縮されています(method {method}) — CDXJ の offset で正しく seek できるよう STORE(0)にすべきです",
-
   "warc/members-independent.desc": "archive/data.warc.gz は独立した gzip メンバーを連結する必要がある",
   "warc/members-independent.no-members": "{entry} に gzip メンバーがありません(空または認識不能)",
   "warc/members-independent.decode-failed": "offset {offset}(length {length})の gzip メンバーをデコードできませんでした",
   "warc/members-independent.unexpected-error": "{entry} の走査中に予期しないエラー: {detail}",
-
   "warc/payload-digest.desc": "WARC レコードの WARC-Payload-Digest はペイロードの sha256 を取り直した値と一致する必要がある",
   "warc/payload-digest.non-sha256": "WARC レコード #{memberIdx} は sha256 以外のダイジェスト \"{algo}\" を使用 — 検証していません",
   "warc/payload-digest.no-http-body": "WARC レコード #{memberIdx}({recordType})は WARC-Payload-Digest を持つが、解析可能な HTTP ボディがありません",
   "warc/payload-digest.mismatch": "WARC レコード #{memberIdx} のペイロードダイジェストが一致しません",
-
   "warc/recording-complete.desc": "browserhive: 未完了/失敗として記録された取得(WARC metadata レコード)の多さを可視化する",
   "warc/recording-complete.incomplete": "記録された取得 {total} 件のうち {incomplete} 件が未完了または失敗({percent}%)",
-
-  "fuzzy/valid-json.desc": "fuzzy.json は(存在する場合)'{' rules: [...] '}' としてパースできる必要がある",
-  "fuzzy/valid-json.invalid-json": "{entry} は有効な JSON ではありません",
-  "fuzzy/valid-json.not-object": "{entry} のトップレベルはオブジェクトである必要があります",
-  "fuzzy/valid-json.missing-rules": "{entry} に \"rules\" 配列がありません",
-
   "warc/extension-gzip-match.desc": "archive の WARC は GZIP の場合 .warc.gz、そうでなければ .warc を使う必要がある(WACZ §5.2.1)",
   "warc/extension-gzip-match.gz-needs-gz-ext": "{entry} は GZIP 圧縮されていますが .warc.gz 拡張子を使っていません(WACZ §5.2.1: GZIP の WARC は .warc.gz を使う必要があります)",
   "warc/extension-gzip-match.plain-has-gz-ext": "{entry} は .warc.gz 拡張子ですが、中身は GZIP 圧縮されていません",
-
   "pages/page-schema.desc": "pages/pages.jsonl の各 page 行は url と ts を持つ valid JSON である必要がある(WACZ §5.2.3)",
   "pages/page-schema.not-json": "pages/pages.jsonl の {line} 行目は有効な JSON ではありません",
   "pages/page-schema.missing-prop": "pages/pages.jsonl の {line} 行目に必須プロパティがありません: {props}",
-
   "datapackage/digest.desc": "datapackage-digest.json は存在すべきで、その hash は datapackage.json と一致する必要がある(WACZ §5.2.5)",
   "datapackage/digest.absent": "datapackage-digest.json がありません(WACZ §5.2.5: datapackage.json を検証するため含めるべきです)",
   "datapackage/digest.invalid-json": "{entry} は有効な JSON ではありません",
   "datapackage/digest.bad-path": "{entry} は \"path\" を \"datapackage.json\" に設定する必要があります",
   "datapackage/digest.no-hash": "{entry} に datapackage.json の \"hash\" がありません",
   "datapackage/digest.hash-mismatch": "{entry} の hash が実際の datapackage.json の sha256 と一致しません",
-
   "wacz/reserved-dirs-clean.desc": "予約ディレクトリ archive/ indexes/ pages/ にカスタムファイルを追加してはならない(WACZ MUST NOT)",
   "wacz/reserved-dirs-clean.unexpected": "{entry} は予約ディレクトリ \"{dir}\" 内の想定外ファイルです(WACZ はそこにカスタムファイルを追加してはならない)",
-
   "datapackage/resources-complete.desc": "WACZ 内のすべてのファイルは datapackage.json の resources に列挙される必要がある(WACZ MUST)",
   "datapackage/resources-complete.orphan": "{entry} は datapackage.json の resources に列挙されていません(WACZ は追加ファイルをすべて列挙する必要があります)"
 }

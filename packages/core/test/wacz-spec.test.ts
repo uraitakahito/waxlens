@@ -18,7 +18,6 @@ describe("sectionForSpecPath", () => {
   });
 
   it("§5.2 の対象外 path は undefined", () => {
-    expect(sectionForSpecPath("fuzzy.json")).toBeUndefined();
     expect(sectionForSpecPath("datapackage-digest.json")).toBeUndefined();
   });
 });

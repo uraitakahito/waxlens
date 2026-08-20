@@ -3,7 +3,7 @@
  *
  * `datapackage.json#resources[]` の各 entry は、他の WACZ ファイル
  * (archive/data.warc.gz、indexes/index.cdxj、pages/pages.jsonl、
- * fuzzy.json …) のいずれかに対する `path` + `hash` + `bytes` を
+ * …) のいずれかに対する `path` + `hash` + `bytes` を
  * 宣言する。hash は entry の *非圧縮* payload に対する
  * `sha256:<hex>`、bytes はそれに対応する length。我々は ZIP の実際
  * の中身からどちらも再計算し、不一致を flag する。

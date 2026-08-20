@@ -29,7 +29,6 @@ describe("conformance", () => {
   it("conformanceForRule が rule 名から解決する", () => {
     expect(conformanceForRule("wacz/required-files")).toBe("MUST");
     expect(conformanceForRule("warc/storage-store")).toBe("SHOULD");
-    expect(conformanceForRule("fuzzy/valid-json")).toBe("MAY");
   });
 
   it("未知の rule 名は undefined(badge を出さない)", () => {

@@ -273,16 +273,6 @@ describe("validation engine — corrupted variants", () => {
     expect(issues.every((i) => i.severity === "warning")).toBe(true);
   });
 
-  it("invalid fuzzy.json → fuzzy/valid-json reports info", async () => {
-    const report = await runAgainstFixture(tmpDir, "broken-fuzzy.wacz", {
-      fuzzyOverride: "not json",
-    });
-    const issues = report.issues.filter((i) => i.rule === "fuzzy/valid-json");
-    expect(issues).toHaveLength(1);
-    expect(issues[0]?.severity).toBe("info");
-    expect(report.summary.failed).toBe(0); // info は valid を反転させない
-  });
-
   it("bad WARC-Payload-Digest → warc/payload-digest warns", async () => {
     const report = await runAgainstFixture(tmpDir, "bad-payload-digest.wacz", {
       payloadDigestBad: true,
