@@ -1,9 +1,9 @@
 ---
 title: Architecture
-description: Why waxlens is six packages and a stateless daemon.
+description: Why waxlens is seven packages and a stateless daemon.
 ---
 
-## The six packages
+## The seven packages
 
 | Package | bin | Role |
 | ------- | --- | ---- |

@@ -20,7 +20,7 @@ suite that does is skipped unless you ask for it — see below.
 
 | Command | Scope |
 | --- | --- |
-| `pnpm check` | audit + all six packages. **What CI runs.** |
+| `pnpm check` | audit + all seven packages. **What CI runs.** |
 | `pnpm test` | tests only, all packages |
 | `pnpm --filter @waxlens/core test` | one package |
 | `pnpm --filter @waxlens/core test:watch` | one package, watching |

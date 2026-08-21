@@ -10,7 +10,7 @@ pnpm check
 ```
 
 `pnpm audit` を走らせたあと、パッケージごとに `typecheck → lint → build → test`
-を回します。6 パッケージを依存順に処理するので、壊れたときは**原因のパッケージ**で
+を回します。7 パッケージを依存順に処理するので、壊れたときは**原因のパッケージ**で
 止まります ― 3 つ下流で気づくことにはなりません。
 
 **ここまでにネットワークもコンテナも、ディスク上の WACZ も必要ありません。**
@@ -20,7 +20,7 @@ pnpm check
 
 | コマンド | 範囲 |
 | --- | --- |
-| `pnpm check` | audit + 6 パッケージ全部。**CI が回すもの。** |
+| `pnpm check` | audit + 7 パッケージ全部。**CI が回すもの。** |
 | `pnpm test` | テストのみ、全パッケージ |
 | `pnpm --filter @waxlens/core test` | 1 パッケージだけ |
 | `pnpm --filter @waxlens/core test:watch` | 1 パッケージを watch |

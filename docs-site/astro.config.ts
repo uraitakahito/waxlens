@@ -69,6 +69,11 @@ export default defineConfig({
               translations: { ja: "テストの実行" },
               slug: "running-tests",
             },
+            {
+              label: "Break it on purpose",
+              translations: { ja: "壊して確かめる" },
+              slug: "breaking",
+            },
           ],
         },
         // 絶対 URL は意図的。root-relative にすると Starlight が日本語ページ上で
