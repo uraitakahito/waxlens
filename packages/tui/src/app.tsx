@@ -595,6 +595,10 @@ export const ExpandedDetails: FC<{ details: unknown }> = ({ details }) => {
     typeof d["recording"] === "object" && d["recording"] !== null
       ? (d["recording"] as Record<string, unknown>)
       : null;
+  const chain =
+    typeof d["chain"] === "object" && d["chain"] !== null
+      ? (d["chain"] as Record<string, unknown>)
+      : null;
 
   const consumed = new Set<string>();
   if (hasDiff) {
@@ -605,6 +609,7 @@ export const ExpandedDetails: FC<{ details: unknown }> = ({ details }) => {
   if (hexPreview) consumed.add("hexPreview");
   if (candidates) consumed.add("candidates");
   if (recording) consumed.add("recording");
+  if (chain) consumed.add("chain");
 
   const rest: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(d)) {
@@ -615,10 +620,56 @@ export const ExpandedDetails: FC<{ details: unknown }> = ({ details }) => {
     <Box flexDirection="column">
       {hasDiff ? <DiffView expected={d["expected"]} actual={d["actual"]} /> : null}
       {recording ? <RecordingHealthView recording={recording} /> : null}
+      {chain ? <ChainView chain={chain} /> : null}
       {candidates ? <CandidatesView candidates={candidates} /> : null}
       {warcHeader ? <WarcHeaderView lines={warcHeader} /> : null}
       {hexPreview ? <HexView lines={hexPreview} /> : null}
       {Object.keys(rest).length > 0 ? <Text dimColor>{JSON.stringify(rest, null, 2)}</Text> : null}
+    </Box>
+  );
+};
+
+/**
+ * 証明書チェーンを host ごとの梯子として描く。
+ *
+ * 1 行 1 通で、次と繋がっていれば下向きの罫線を引く。判定を 3 段(繋がり・署名・
+ * それ以外)に散らさず 1 行にまとめているのは、読み手が知りたいのが「どこで切れたか」
+ * だから —— 通っている段は目立たなくてよい。
+ */
+const ChainView: FC<{ chain: Record<string, unknown> }> = ({ chain }) => {
+  const hosts =
+    typeof chain["hosts"] === "object" && chain["hosts"] !== null
+      ? (chain["hosts"] as Record<string, unknown>)
+      : {};
+  return (
+    <Box flexDirection="column" marginTop={1}>
+      {Object.entries(hosts).map(([host, certs]) => (
+        <Box key={host} flexDirection="column">
+          <Text bold>{host}</Text>
+          {(Array.isArray(certs) ? certs : []).map((raw, i) => {
+            const c = (typeof raw === "object" && raw !== null ? raw : {}) as Record<
+              string,
+              unknown
+            >;
+            const linked = c["linkedToNext"];
+            // 末尾 (null) は「相手がパッケージの外に居る」であって、失敗ではない。
+            const mark =
+              linked === null || linked === undefined
+                ? "  "
+                : linked === true && c["signatureOk"] === true
+                  ? "─┐"
+                  : "─✗";
+            const tone = linked === false || c["signatureOk"] === false ? "red" : "green";
+            return (
+              <Box key={`${host}-${String(i)}`} marginLeft={2}>
+                <Text dimColor>{`[${String(i)}] `}</Text>
+                <Text>{typeof c["subject"] === "string" ? c["subject"] : ""}</Text>
+                <Text color={tone}>{` ${mark}`}</Text>
+              </Box>
+            );
+          })}
+        </Box>
+      ))}
     </Box>
   );
 };

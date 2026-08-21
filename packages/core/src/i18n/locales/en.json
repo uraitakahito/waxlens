@@ -72,5 +72,16 @@
   "wacz/reserved-dirs-clean.desc": "no custom files may be added to the reserved archive/ indexes/ pages/ directories (WACZ MUST NOT)",
   "wacz/reserved-dirs-clean.unexpected": "{entry} is an unexpected file in the reserved \"{dir}\" directory (WACZ MUST NOT add custom files there)",
   "datapackage/resources-complete.desc": "every file in the WACZ must be listed in datapackage.json resources (WACZ MUST)",
-  "datapackage/resources-complete.orphan": "{entry} is not listed in datapackage.json resources (WACZ MUST list all additional files)"
+  "datapackage/resources-complete.orphan": "{entry} is not listed in datapackage.json resources (WACZ MUST list all additional files)",
+  "browserhive/tls-chain.desc": "browserhive: verifies the certificate chains in tls, using only what the package itself holds",
+  "browserhive/tls-chain.verified": "verified the certificate chain of {hosts} host(s)",
+  "browserhive/tls-chain.dangling-ref": "{host}: chainRef {chainRef} points at no entry in tls.chains",
+  "browserhive/tls-chain.unparseable": "{host}: the chain behind {chainRef} could not be parsed as certificates",
+  "browserhive/tls-chain.leaf-not-first": "{host}: the first certificate does not cover this host (subject {subject}) — the leaf is not first",
+  "browserhive/tls-chain.broken-link": "{host}: certificate {index} does not link to the next one (issuer {issuer} vs subject {nextSubject})",
+  "browserhive/tls-chain.bad-signature": "{host}: certificate {index} is linked to the next one but its signature does not verify",
+  "browserhive/tls-san.desc": "browserhive: checks the recorded san against the certificate the package carries",
+  "browserhive/tls-san.missing": "{host}: san is missing or is not an array of names",
+  "browserhive/tls-san.host-not-covered": "{host}: none of the recorded san names covers this host ({san})",
+  "browserhive/tls-san.drift": "{host}: san records {recorded} name(s) but the certificate carries {certificate}"
 }
