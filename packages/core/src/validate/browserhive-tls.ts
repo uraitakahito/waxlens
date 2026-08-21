@@ -83,6 +83,13 @@ export const dnsNamesOf = (cert: X509Certificate): string[] =>
     .filter((part) => part.startsWith("DNS:"))
     .map((part) => part.slice("DNS:".length));
 
-/** `subject` から common name だけを取り出す (`CN=x` の x)。無ければ null。 */
-export const commonNameOf = (dn: string): string | null =>
-  /(?:^|\n)CN=(.+)$/m.exec(dn)?.[1]?.trim() ?? null;
+/**
+ * DN を 1 行の表示用文字列にする。
+ *
+ * `X509Certificate` の `subject` / `issuer` は **改行区切り** で返ってくる
+ * (`C=US\nO=…\nCN=WE1`)。そのまま message に差し込むと端末で行が割れるので、
+ * common name があればそれを、無ければ全体を 1 行へ畳む —— アーカイブ側の
+ * `subject` / `issuer` も common name なので、表示が揃う。
+ */
+export const displayDn = (dn: string): string =>
+  /(?:^|\n)CN=(.+)$/m.exec(dn)?.[1]?.trim() ?? dn.split("\n").join(", ");

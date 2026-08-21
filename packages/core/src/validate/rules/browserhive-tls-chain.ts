@@ -20,7 +20,7 @@
  * Spec: https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.0.0/#tls
  */
 import { ok } from "../../result.js";
-import { parseChain, readTls } from "../browserhive-tls.js";
+import { displayDn, parseChain, readTls } from "../browserhive-tls.js";
 import type { Issue, ValidationRule } from "../domain.js";
 
 interface CertReport {
@@ -93,7 +93,7 @@ export const browserhiveTlsChainRule: ValidationRule = {
           rule: "browserhive/tls-chain",
           severity: "error",
           messageKey: "browserhive/tls-chain.leaf-not-first",
-          params: { host, subject: certs[0]?.subject ?? "" },
+          params: { host, subject: displayDn(certs[0]?.subject ?? "") },
         });
       }
 
@@ -103,8 +103,8 @@ export const browserhiveTlsChainRule: ValidationRule = {
         if (next === undefined) {
           // 末尾。発行者はパッケージの外に居るので、ここでは何も言えない。
           reports.push({
-            subject: cert.subject,
-            issuer: cert.issuer,
+            subject: displayDn(cert.subject),
+            issuer: displayDn(cert.issuer),
             linkedToNext: null,
             signatureOk: null,
           });
@@ -114,8 +114,8 @@ export const browserhiveTlsChainRule: ValidationRule = {
         // 繋がっていない相手の鍵で署名を検証しても意味が無いので、順に見る。
         const signed = linked ? cert.verify(next.publicKey) : false;
         reports.push({
-          subject: cert.subject,
-          issuer: cert.issuer,
+          subject: displayDn(cert.subject),
+          issuer: displayDn(cert.issuer),
           linkedToNext: linked,
           signatureOk: signed,
         });
@@ -124,7 +124,7 @@ export const browserhiveTlsChainRule: ValidationRule = {
             rule: "browserhive/tls-chain",
             severity: "error",
             messageKey: "browserhive/tls-chain.broken-link",
-            params: { host, index: i, issuer: cert.issuer, nextSubject: next.subject },
+            params: { host, index: i, issuer: displayDn(cert.issuer), nextSubject: displayDn(next.subject) },
           });
         } else if (!signed) {
           issues.push({
