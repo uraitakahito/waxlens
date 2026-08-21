@@ -13,6 +13,7 @@ description: なぜ 6 つの package と stateless な daemon なのか。
 | `@waxlens/daemon` | `waxlens-daemon` | stateless な HTTP/WS daemon。core を所有し、解決済み(message / specUrl / conformance を inline した)report を返す。 |
 | `@waxlens/tui` | `waxlens` | 対話的な terminal UI。daemon の薄いクライアント。 |
 | `@waxlens/protocol` | — | クライアントと daemon が共有する wire 型と CLI 契約。runtime では core に依存しないので browser-safe。 |
+| `@waxlens/devtools` | `waxlens-break` | 開発用。publish しない(`private`)。WACZ をわざと壊し、rule が赤くなるところを見るための道具 —— validator の緑は、赤くなるところを見るまで意味を持たない。 |
 
 `waxlens` は既定で `waxlens-daemon` を子プロセスとして起動します。常駐 daemon に
 繋ぐ場合は、その daemon が起動時に出力した port を使って

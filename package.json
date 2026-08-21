@@ -6,7 +6,7 @@
   "name": "waxlens-monorepo",
   "version": "0.0.0",
   "private": true,
-  "description": "Monorepo for waxlens \u2014 @waxlens/core (validator) and @waxlens/tui (Ink TUI).",
+  "description": "Monorepo for waxlens — @waxlens/core (validator) and @waxlens/tui (Ink TUI).",
   "license": "Unlicense",
   "type": "module",
   "engines": {
@@ -20,7 +20,7 @@
     "test:ui": "vitest --ui",
     "test:report": "vitest run --reporter=html",
     "lint": "pnpm -r lint",
-    "check": "pnpm audit --audit-level=moderate && pnpm --filter @waxlens/contract check && pnpm --filter @waxlens/core check && pnpm --filter @waxlens/validate-cli check && pnpm --filter @waxlens/protocol check && pnpm --filter @waxlens/daemon check && pnpm --filter @waxlens/tui check",
+    "check": "pnpm audit --audit-level=moderate && pnpm --filter @waxlens/contract check && pnpm --filter @waxlens/core check && pnpm --filter @waxlens/validate-cli check && pnpm --filter @waxlens/protocol check && pnpm --filter @waxlens/daemon check && pnpm --filter @waxlens/devtools check && pnpm --filter @waxlens/tui check",
     "site:dev": "npm --prefix docs-site run dev",
     "site:build": "npm --prefix docs-site run build",
     "site:preview": "npm --prefix docs-site run preview",
@@ -28,15 +28,15 @@
   },
   "//scripts": [
     "test:ui / test:report use the root vitest.config.ts, whose `projects` point at",
-    "the per-package configs \u2014 so the UI shows core, daemon and tui in one run rather",
+    "the per-package configs — so the UI shows core, daemon and tui in one run rather",
     "than needing three. `pnpm test` is unchanged and still goes through `pnpm -r test`.",
-    "test:report writes html/ and cannot be opened over file:// \u2014 serve it, e.g.",
+    "test:report writes html/ and cannot be opened over file:// — serve it, e.g.",
     "`npx vite preview --outDir html`."
   ],
   "//@types/node": [
     "Root-level eslint.config.js uses `// @ts-check` plus `import.meta.dirname`",
     "(Node 20.11+). The `dirname` field lives in @types/node's ImportMeta",
-    "interface augmentation \u2014 without it the VSCode TS LSP reports `Property",
+    "interface augmentation — without it the VSCode TS LSP reports `Property",
     "'dirname' does not exist on type 'ImportMeta'`. pnpm's default hoisting is",
     "per-workspace, so @types/node already declared in packages/*/package.json",
     "is NOT visible from the monorepo root; it must be a direct devDependency",

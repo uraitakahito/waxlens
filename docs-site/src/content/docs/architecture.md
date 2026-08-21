@@ -13,6 +13,7 @@ description: Why waxlens is six packages and a stateless daemon.
 | `@waxlens/daemon` | `waxlens-daemon` | A stateless HTTP/WS daemon that owns core and answers with a resolved report (message, spec URL and conformance inlined). |
 | `@waxlens/tui` | `waxlens` | The interactive terminal UI — a thin client of the daemon. |
 | `@waxlens/protocol` | — | The wire types and CLI contract the clients and the daemon share. Runtime-independent of core, so it is browser-safe. |
+| `@waxlens/devtools` | `waxlens-break` | Development only, never published (`private`). Breaks a WACZ on purpose so you can watch a rule turn red — a validator's green means nothing until you have seen it go red. |
 
 `waxlens` starts `waxlens-daemon` as a child process by default. Point it at a
 long-running one with `--server ws://127.0.0.1:7333`, using the port that daemon

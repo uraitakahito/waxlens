@@ -128,6 +128,40 @@ importers:
         specifier: ^4.1.5
         version: 4.1.10(@types/node@26.1.2)(@vitest/ui@4.1.10)(vite@8.2.1(@types/node@26.1.2))
 
+  packages/devtools:
+    dependencies:
+      '@waxlens/core':
+        specifier: workspace:*
+        version: link:../core
+      archiver:
+        specifier: ^8.0.0
+        version: 8.0.0
+      commander:
+        specifier: ^15.0.0
+        version: 15.0.0
+      yauzl-promise:
+        specifier: ^4.0.0
+        version: 4.0.0
+    devDependencies:
+      '@types/archiver':
+        specifier: ^8.0.0
+        version: 8.0.0
+      '@types/node':
+        specifier: ^26.1.2
+        version: 26.1.2
+      '@types/yauzl-promise':
+        specifier: ^4.0.1
+        version: 4.0.1
+      eslint:
+        specifier: ^10.8.1
+        version: 10.8.1(supports-color@7.2.0)
+      typescript:
+        specifier: ^7.0.2
+        version: 7.0.2
+      vitest:
+        specifier: ^4.1.5
+        version: 4.1.10(@types/node@26.1.2)(@vitest/ui@4.1.10)(vite@8.2.1(@types/node@26.1.2))
+
   packages/protocol:
     dependencies:
       '@waxlens/contract':
@@ -2522,7 +2556,7 @@ snapshots:
 
   '@types/readdir-glob@1.1.5':
     dependencies:
-      '@types/node': 26.2.0
+      '@types/node': 26.1.2
 
   '@types/sinon@17.0.4':
     dependencies:
