@@ -171,6 +171,17 @@ export interface FixtureOptions {
    */
   producer?: "browserhive" | "webrecorder";
   /**
+   * `browserhive:capture.tls` をそのまま書き込む。undefined なら member ごと
+   * 書かない —— tls はプロファイルの任意 member なので、不在も正しい形。
+   *
+   * 中身を検査しないのはここの責務ではないため。壊れた chainRef も、証明書に
+   * ならない base64 も、そのまま通す —— それを問題と呼ぶかは rule が決める。
+   */
+  tls?: {
+    hosts: Record<string, Record<string, unknown> | null>;
+    chains: Record<string, readonly string[]>;
+  };
+  /**
    * G1 (warc/extension-gzip-match): GZIP 済みの WARC を `.warc.gz` ではなく
    * `archive/data.warc` という名前で格納し、拡張子と中身の gzip 状態を
    * 不一致にする。
@@ -518,6 +529,9 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
   };
   if (options.profile !== null) {
     datapackage["profile"] = options.profile ?? "data-package";
+  }
+  if (options.tls !== undefined) {
+    datapackage["browserhive:capture"] = { tls: options.tls };
   }
   const datapackageBytes = Buffer.from(`${JSON.stringify(datapackage, null, 2)}\n`, "utf-8");
 

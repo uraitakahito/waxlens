@@ -10,6 +10,8 @@
  * cdxj/*、warc/*) を並べておくと読みやすい。
  */
 import type { Conformance, DocLink, ValidationRule } from "../domain.js";
+import { browserhiveTlsChainRule } from "./browserhive-tls-chain.js";
+import { browserhiveTlsSanRule } from "./browserhive-tls-san.js";
 import { cdxjFilenameRule } from "./cdxj-filename.js";
 import { cdxjIndexRecognisedRule } from "./cdxj-index-recognised.js";
 import { cdxjIndexValidDataRule } from "./cdxj-index-valid-data.js";
@@ -79,6 +81,12 @@ export const DEFAULT_RULES: readonly ValidationRule[] = [
   // browserhive profile 限定: WARC の metadata レコード(未完了/失敗)の比率を
   // 可視化する。spec/lenient では excludeProfiles で除外される。
   warcRecordingCompleteRule,
+  // browserhive profile 限定: tls member の証明書チェーンを、パッケージの中だけで
+  // 検証する。ルートストアは見ない —— 検査する側の環境と時刻で答えが変わるため。
+  browserhiveTlsChainRule,
+  // 同上。記録された san を、同じパッケージに入っている証明書と突き合わせる。
+  // san は browserhive 3.7.0 で入ったので版の条件を持つ。
+  browserhiveTlsSanRule,
 ];
 
 /**

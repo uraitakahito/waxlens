@@ -19,6 +19,7 @@ import {
   parseReportSource,
   type Issue,
   type Report,
+  type SkippedRule,
   type RuleProfile,
 } from "../src/validate/domain.js";
 import { runValidation } from "../src/validate/engine.js";
@@ -141,6 +142,14 @@ describe("producer のバージョンによるゲート", () => {
     }
   };
 
+  /**
+   * この rule が落とされたかだけを見る。`report.skipped` 全体を固定すると、
+   * 版の条件を持つ rule が別に増えるたびにここが壊れる —— 見たいのは
+   * 「`warc/recording-complete` が走ったか」であって、報告全体の形ではない。
+   */
+  const skippedHere = (report: Report): SkippedRule | undefined =>
+    report.skipped?.find((s) => s.rule === RULE);
+
   it("バージョンを名乗らなければ従来どおり走る（skipped は key ごと出ない）", async () => {
     // 既定を「バージョンを問わない」に置いている根拠。ここが崩れると、バージョンを書かない
     // 既存の呼び出しの出力が変わる。
@@ -154,7 +163,7 @@ describe("producer のバージョンによるゲート", () => {
       name: "browserhive",
       version: { major: 2, minor: 1, patch: 0 },
     });
-    expect(report.skipped).toBeUndefined();
+    expect(skippedHere(report)).toBeUndefined();
     expect(report.issues.some((i) => i.rule === RULE)).toBe(true);
   });
 
@@ -166,7 +175,11 @@ describe("producer のバージョンによるゲート", () => {
       version: { major: 1, minor: 10, patch: 0 },
     });
     expect(report.issues.some((i) => i.rule === RULE)).toBe(false);
-    expect(report.skipped).toEqual([{ rule: RULE, reason: "profile-version", range: ">=1.11.0" }]);
+    expect(skippedHere(report)).toEqual({
+      rule: RULE,
+      reason: "profile-version",
+      range: ">=1.11.0",
+    });
     // バージョンは skipped に複製せず、profile に 1 箇所だけ持つ。
     expect(report.profile).toEqual({ name: "browserhive", version: "1.10.0" });
   });
@@ -176,6 +189,6 @@ describe("producer のバージョンによるゲート", () => {
       name: "browserhive",
       version: { major: 1, minor: 11, patch: 0 },
     });
-    expect(report.skipped).toBeUndefined();
+    expect(skippedHere(report)).toBeUndefined();
   });
 });

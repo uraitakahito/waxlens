@@ -72,5 +72,16 @@
   "wacz/reserved-dirs-clean.desc": "予約ディレクトリ archive/ indexes/ pages/ にカスタムファイルを追加してはならない(WACZ MUST NOT)",
   "wacz/reserved-dirs-clean.unexpected": "{entry} は予約ディレクトリ \"{dir}\" 内の想定外ファイルです(WACZ はそこにカスタムファイルを追加してはならない)",
   "datapackage/resources-complete.desc": "WACZ 内のすべてのファイルは datapackage.json の resources に列挙される必要がある(WACZ MUST)",
-  "datapackage/resources-complete.orphan": "{entry} は datapackage.json の resources に列挙されていません(WACZ は追加ファイルをすべて列挙する必要があります)"
+  "datapackage/resources-complete.orphan": "{entry} は datapackage.json の resources に列挙されていません(WACZ は追加ファイルをすべて列挙する必要があります)",
+  "browserhive/tls-chain.desc": "browserhive: tls の証明書チェーンを、パッケージが持っているものだけで検証する",
+  "browserhive/tls-chain.verified": "{hosts} host の証明書チェーンを検証しました",
+  "browserhive/tls-chain.dangling-ref": "{host}: chainRef {chainRef} の指す先が tls.chains にありません",
+  "browserhive/tls-chain.unparseable": "{host}: {chainRef} のチェーンを証明書として解析できません",
+  "browserhive/tls-chain.leaf-not-first": "{host}: 先頭の証明書がこの host を覆っていません(subject {subject}) —— リーフが先頭ではありません",
+  "browserhive/tls-chain.broken-link": "{host}: {index} 番目の証明書が次と繋がっていません(発行者 {issuer} / 次の subject {nextSubject})",
+  "browserhive/tls-chain.bad-signature": "{host}: {index} 番目の証明書は次と繋がっていますが、署名を検証できません",
+  "browserhive/tls-san.desc": "browserhive: 記録された san を、同じパッケージに入っている証明書と突き合わせる",
+  "browserhive/tls-san.missing": "{host}: san がありません(または名前の配列ではありません)",
+  "browserhive/tls-san.host-not-covered": "{host}: 記録された san のどれもこの host を覆っていません({san})",
+  "browserhive/tls-san.drift": "{host}: san は {recorded} 件を記録していますが、証明書は {certificate} 件持っています"
 }
