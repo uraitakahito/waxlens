@@ -28,17 +28,35 @@ interface Datapackage {
   [key: string]: unknown;
 }
 
+/** zip の 1 entry。圧縮の有無まで運ぶ。 */
+interface Entry {
+  readonly data: Buffer;
+  /**
+   * 元が無圧縮で格納されていたか。
+   *
+   * WACZ は WARC を **store** で入れる (中身が既に gzip なので二重に縮めない)。
+   * 読み直して deflate で書くと `warc/storage-store` が warning を出す ——
+   * 壊した覚えのない指摘が増えると、読み手はそれを追いかけることになる。
+   * この道具が変えてよいのは、名乗った 1 箇所だけ。
+   */
+  readonly stored: boolean;
+}
+
 /** zip の全 entry を名前 → 中身で読み出す。 */
-const readEntries = async (path: string): Promise<Map<string, Buffer>> => {
+const readEntries = async (path: string): Promise<Map<string, Entry>> => {
   const zip = await open(path);
-  const out = new Map<string, Buffer>();
+  const out = new Map<string, Entry>();
   try {
     for await (const entry of zip) {
       if (entry.filename.endsWith("/")) continue;
       const stream = await entry.openReadStream();
       const chunks: Buffer[] = [];
       for await (const chunk of stream) chunks.push(chunk as Buffer);
-      out.set(entry.filename, Buffer.concat(chunks));
+      // 0 = store、8 = deflate。
+      out.set(entry.filename, {
+        data: Buffer.concat(chunks),
+        stored: entry.compressionMethod === 0,
+      });
     }
   } finally {
     await zip.close();
@@ -46,11 +64,13 @@ const readEntries = async (path: string): Promise<Map<string, Buffer>> => {
   return out;
 };
 
-const writeZip = async (path: string, entries: Map<string, Buffer>): Promise<void> => {
+const writeZip = async (path: string, entries: Map<string, Entry>): Promise<void> => {
   const archive = new ZipArchive({ zlib: { level: 9 } });
   const sink = createWriteStream(path);
   const done = pipeline(archive, sink);
-  for (const [name, data] of entries) archive.append(data, { name });
+  for (const [name, entry] of entries) {
+    archive.append(entry.data, { name, store: entry.stored });
+  }
   await archive.finalize();
   await done;
 };
@@ -87,14 +107,17 @@ const main = async (): Promise<void> => {
   const raw = entries.get(DATAPACKAGE);
   if (raw === undefined) throw new Error(`${source}: ${DATAPACKAGE} がありません`);
 
-  const dp = JSON.parse(raw.toString("utf8")) as Datapackage;
+  const dp = JSON.parse(raw.data.toString("utf8")) as Datapackage;
   const tls = dp["browserhive:capture"]?.tls;
   if (tls === undefined) {
     throw new Error(`${source}: browserhive:capture.tls がありません (browserhive の WACZ ですか)`);
   }
 
   const what = mutation.apply(tls);
-  entries.set(DATAPACKAGE, Buffer.from(`${JSON.stringify(dp, null, 2)}\n`, "utf8"));
+  entries.set(DATAPACKAGE, {
+    data: Buffer.from(`${JSON.stringify(dp, null, 2)}\n`, "utf8"),
+    stored: raw.stored,
+  });
   await writeZip(dest, entries);
 
   stdout.write(`壊しました: ${what}\n`);
