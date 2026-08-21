@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@waxlens/contract": "workspace:*",
-    "@aws-sdk/client-s3": "^3.1107.0",
+    "@aws-sdk/client-s3": "^3.1110.0",
     "ajv": "^8.20.0",
     "ajv-draft-04": "^1.0.0",
     "intl-messageformat": "^11.2.13",
