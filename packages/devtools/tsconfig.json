@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    // ambient 型を明示する。他の workspace は node_modules/@types の自動探索に
+    // 任せているが、この package ではそれが効かず `node:process` の解決に失敗した
+    // (@types/node は他と同じ形で symlink されており、原因は掴めていない)。
+    // 使う ambient 型を書き出すのは元より明快なので、探索に頼らず並べておく。
+    "types": ["node", "archiver", "yauzl-promise"]
+  },
+  "include": ["src/**/*", "test/**/*", "*.config.ts"],
+  "exclude": ["node_modules", "dist"]
+}

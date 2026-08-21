@@ -1,0 +1,38 @@
+{
+  "name": "@waxlens/devtools",
+  "version": "0.0.0",
+  "description": "開発用の道具。WACZ をわざと壊し、rule が反応することを確かめる。publish しない。",
+  "private": true,
+  "license": "Unlicense",
+  "type": "module",
+  "engines": {
+    "node": ">=24.15.0"
+  },
+  "bin": {
+    "waxlens-break": "dist/break-wacz.js"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "postbuild": "chmod +x dist/break-wacz.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "check": "pnpm typecheck && pnpm lint && pnpm build && pnpm test"
+  },
+  "dependencies": {
+    "@waxlens/core": "workspace:*",
+    "archiver": "^8.0.0",
+    "commander": "^15.0.0",
+    "yauzl-promise": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/archiver": "^8.0.0",
+    "@types/node": "^26.1.2",
+    "@types/yauzl-promise": "^4.0.1",
+    "eslint": "^10.8.1",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.5"
+  }
+}
