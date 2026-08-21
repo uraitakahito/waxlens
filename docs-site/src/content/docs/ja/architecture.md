@@ -1,9 +1,9 @@
 ---
 title: アーキテクチャ
-description: なぜ 6 つの package と stateless な daemon なのか。
+description: なぜ 7 つの package と stateless な daemon なのか。
 ---
 
-## 6 つの package
+## 7 つの package
 
 | Package | bin | 役割 |
 | ------- | --- | ---- |

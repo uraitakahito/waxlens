@@ -5,7 +5,7 @@ description: Install waxlens and validate your first WACZ.
 
 ## Install
 
-waxlens is a pnpm workspace of six packages. Build them, then register the
+waxlens is a pnpm workspace of seven packages. Build them, then register the
 binaries globally:
 
 ```sh
