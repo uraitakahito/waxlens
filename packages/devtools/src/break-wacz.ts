@@ -10,8 +10,8 @@
  * `waxlens-validate` に渡して読む —— 道具が「壊した」と「検出された」の両方を
  * 名乗ると、どちらが嘘をついたのか分からなくなる。
  *
- * publish しない (`private`)。壊し方はまだ browserhive の `tls` に固有で、他の
- * rule に効く形が見えていない —— 製品の bin に上げるのはその後で足りる。
+ * publish しない (`private`)。壊し方はまだ browserhive 固有で、他の producer に
+ * 効く形が見えていない —— 製品の bin に上げるのはその後で足りる。
  */
 import { createWriteStream } from "node:fs";
 import { argv, exit, stdout } from "node:process";
@@ -19,12 +19,18 @@ import { pipeline } from "node:stream/promises";
 import { Command } from "commander";
 import { ZipArchive } from "archiver";
 import { open } from "yauzl-promise";
-import { MUTATIONS, type TlsMember } from "./mutations.js";
+import { createHash } from "node:crypto";
+import { DATAPACKAGE, MUTATIONS } from "./mutations.js";
 
-const DATAPACKAGE = "datapackage.json";
+interface Resource {
+  path: string;
+  hash: string;
+  bytes: number;
+  [key: string]: unknown;
+}
 
 interface Datapackage {
-  "browserhive:capture"?: { tls?: TlsMember };
+  resources?: Resource[];
   [key: string]: unknown;
 }
 
@@ -89,8 +95,10 @@ const main = async (): Promise<void> => {
   const [source, dest] = program.args;
 
   if (opts.list === true || source === undefined || dest === undefined) {
-    stdout.write("壊し方と、それが出させる報告:\n\n");
-    for (const m of MUTATIONS) stdout.write(`  ${m.name.padEnd(20)} → ${m.expects}\n`);
+    stdout.write("壊し方、書き換える対象、そして出させる報告:\n\n");
+    for (const m of MUTATIONS) {
+      stdout.write(`  ${m.name.padEnd(24)} ${m.target.padEnd(28)} → ${m.expects}\n`);
+    }
     stdout.write("\n  例: waxlens-break sample.wacz broken.wacz -m swap-intermediate\n");
     return;
   }
@@ -104,20 +112,35 @@ const main = async (): Promise<void> => {
   }
 
   const entries = await readEntries(source);
-  const raw = entries.get(DATAPACKAGE);
-  if (raw === undefined) throw new Error(`${source}: ${DATAPACKAGE} がありません`);
-
-  const dp = JSON.parse(raw.data.toString("utf8")) as Datapackage;
-  const tls = dp["browserhive:capture"]?.tls;
-  if (tls === undefined) {
-    throw new Error(`${source}: browserhive:capture.tls がありません (browserhive の WACZ ですか)`);
+  const raw = entries.get(mutation.target);
+  if (raw === undefined) {
+    throw new Error(`${source}: ${mutation.target} がありません (この壊し方は使えません)`);
   }
 
-  const what = mutation.apply(tls);
-  entries.set(DATAPACKAGE, {
-    data: Buffer.from(`${JSON.stringify(dp, null, 2)}\n`, "utf8"),
-    stored: raw.stored,
-  });
+  const { data, what } = mutation.apply(raw.data);
+  entries.set(mutation.target, { data, stored: raw.stored });
+
+  // 壊した先が resources に載っているなら、hash と bytes を書き直す。
+  //
+  // 直さないと `datapackage/resource-hashes` が一緒に鳴る —— 壊した覚えのない
+  // 指摘が並ぶと、どちらが目当ての反応なのか読み手に分からなくなる。この道具が
+  // 変えてよいのは、名乗った 1 箇所だけ。
+  if (mutation.target !== DATAPACKAGE) {
+    const dpEntry = entries.get(DATAPACKAGE);
+    if (dpEntry !== undefined) {
+      const dp = JSON.parse(dpEntry.data.toString("utf8")) as Datapackage;
+      const declared = dp.resources?.find((r) => r.path === mutation.target);
+      if (declared !== undefined) {
+        declared.hash = `sha256:${createHash("sha256").update(data).digest("hex")}`;
+        declared.bytes = data.byteLength;
+        entries.set(DATAPACKAGE, {
+          data: Buffer.from(`${JSON.stringify(dp, null, 2)}\n`, "utf8"),
+          stored: dpEntry.stored,
+        });
+      }
+    }
+  }
+
   await writeZip(dest, entries);
 
   stdout.write(`壊しました: ${what}\n`);

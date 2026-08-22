@@ -85,13 +85,17 @@ node packages/devtools/dist/break-wacz.js --list
 ```
 
 ```
-壊し方と、それが出させる報告:
+壊し方、書き換える対象、そして出させる報告:
 
-  swap-intermediate    → browserhive/tls-chain.broken-link
-  reverse-chain        → browserhive/tls-chain.leaf-not-first
-  drop-chains          → browserhive/tls-chain.dangling-ref
-  garbage-der          → browserhive/tls-chain.unparseable
-  san-drift            → browserhive/tls-san.drift
+  swap-intermediate        datapackage.json             → browserhive/tls-chain.broken-link
+  reverse-chain            datapackage.json             → browserhive/tls-chain.leaf-not-first
+  drop-chains              datapackage.json             → browserhive/tls-chain.dangling-ref
+  garbage-der              datapackage.json             → browserhive/tls-chain.unparseable
+  san-drift                datapackage.json             → browserhive/tls-san.drift
+  axtree-drop-level        accessibility/axtree.jsonl   → browserhive/axtree-shape.missing-member
+  axtree-unknown-property  accessibility/axtree.jsonl   → browserhive/axtree-shape.unknown-property
+  axtree-keep-generic      accessibility/axtree.jsonl   → browserhive/axtree-shape.collapsed-role
+  axtree-wrong-profile     accessibility/axtree.jsonl   → browserhive/axtree-shape.unknown-profile
 ```
 
 ```sh

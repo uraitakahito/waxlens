@@ -177,6 +177,14 @@ export interface FixtureOptions {
    * 中身を検査しないのはここの責務ではないため。壊れた chainRef も、証明書に
    * ならない base64 も、そのまま通す —— それを問題と呼ぶかは rule が決める。
    */
+  /**
+   * `accessibility/axtree.jsonl` の中身。
+   *
+   * オブジェクトを渡せば 1 行の JSONL として書き、文字列を渡せばそのまま書く
+   * (JSON として読めない行を作るため)。`undefined` ならエントリごと作らない ——
+   * 撮っていない capture も正しい形なので。
+   */
+  axtree?: Record<string, unknown> | string;
   tls?: {
     hosts: Record<string, Record<string, unknown> | null>;
     chains: Record<string, readonly string[]>;
@@ -476,6 +484,16 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
   const fuzzyBody = buildFuzzyJson();
   const fuzzyBytes = Buffer.from(fuzzyBody, "utf-8");
 
+  const axtreeBytes =
+    options.axtree === undefined
+      ? undefined
+      : Buffer.from(
+          typeof options.axtree === "string"
+            ? options.axtree
+            : `${JSON.stringify(options.axtree)}\n`,
+          "utf-8",
+        );
+
   const defaultResources: DatapackageResource[] = [
     {
       name: "data.warc.gz",
@@ -501,6 +519,16 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
       hash: sha256Hex(fuzzyBytes),
       bytes: fuzzyBytes.byteLength,
     },
+    ...(axtreeBytes === undefined
+      ? []
+      : [
+          {
+            name: "axtree.jsonl",
+            path: "accessibility/axtree.jsonl",
+            hash: sha256Hex(axtreeBytes),
+            bytes: axtreeBytes.byteLength,
+          },
+        ]),
   ];
 
   // omit 指定された MUST ファイルは resources 宣言からも落とす(実体と宣言を一致)。
@@ -580,6 +608,9 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
     zip.append(pagesBytes, { name: "pages/pages.jsonl", date: entryDate });
   }
   zip.append(fuzzyBytes, { name: "fuzzy.json", date: entryDate });
+  if (axtreeBytes !== undefined) {
+    zip.append(axtreeBytes, { name: "accessibility/axtree.jsonl", date: entryDate });
+  }
   if (!options.omitDatapackage) {
     zip.append(datapackageBytes, { name: "datapackage.json", date: entryDate });
   }
