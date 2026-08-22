@@ -83,5 +83,11 @@
   "browserhive/tls-san.desc": "browserhive: checks the recorded san against the certificate the package carries",
   "browserhive/tls-san.missing": "{host}: san is missing or is not an array of names",
   "browserhive/tls-san.host-not-covered": "{host}: none of the recorded san names covers this host ({san})",
-  "browserhive/tls-san.drift": "{host}: san records {recorded} name(s) but the certificate carries {certificate}"
+  "browserhive/tls-san.drift": "{host}: san records {recorded} name(s) but the certificate carries {certificate}",
+  "browserhive/axtree-shape.desc": "browserhive: checks the recorded accessibility tree against the pruning rules the profile declares",
+  "browserhive/axtree-shape.not-json": "{entry} line {line} is not a JSON object",
+  "browserhive/axtree-shape.unknown-profile": "line {line}: profile is {found}, expected {expected}",
+  "browserhive/axtree-shape.missing-member": "line {line}: snapshot is missing {members}",
+  "browserhive/axtree-shape.unknown-property": "line {line}: nodes carry properties this profile does not allow ({keys})",
+  "browserhive/axtree-shape.collapsed-role": "line {line}: roles that should have been collapsed are still in the tree ({roles})"
 }
