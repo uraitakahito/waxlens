@@ -83,5 +83,11 @@
   "browserhive/tls-san.desc": "browserhive: 記録された san を、同じパッケージに入っている証明書と突き合わせる",
   "browserhive/tls-san.missing": "{host}: san がありません(または名前の配列ではありません)",
   "browserhive/tls-san.host-not-covered": "{host}: 記録された san のどれもこの host を覆っていません({san})",
-  "browserhive/tls-san.drift": "{host}: san は {recorded} 件を記録していますが、証明書は {certificate} 件持っています"
+  "browserhive/tls-san.drift": "{host}: san は {recorded} 件を記録していますが、証明書は {certificate} 件持っています",
+  "browserhive/axtree-shape.desc": "browserhive: 記録されたアクセシビリティツリーが、profile の定める刈り込み規則に従っているか",
+  "browserhive/axtree-shape.not-json": "{entry} の {line} 行目が JSON オブジェクトとして読めない",
+  "browserhive/axtree-shape.unknown-profile": "{line} 行目: profile が {found}。{expected} を期待している",
+  "browserhive/axtree-shape.missing-member": "{line} 行目: スナップショットに {members} が無い",
+  "browserhive/axtree-shape.unknown-property": "{line} 行目: この profile が許していない property がノードに付いている ({keys})",
+  "browserhive/axtree-shape.collapsed-role": "{line} 行目: 畳まれているはずの role が木に残っている ({roles})"
 }
