@@ -12,10 +12,11 @@
  * Reference producer: browserhive/src/storage/warc/writer.ts:1-15
  *       がこの不変条件をコードコメントで直接 ドキュメント化している。
  *
- * 検証方法: iterator を `loose: false` で歩いて `gunzipSync` に
- * 自己完結 gzip member でないスライスを reject させる。
- * `iterateWarcMembers` は失敗時に `WarcMemberDecodeError` を throw
- * する; これを catch して、問題の offset / length を報告する。
+ * 検証方法: iterator を `loose: false` で歩く。iterator は先頭から
+ * 順に member を解き、header の長さと deflate が消費した byte 数から
+ * 次の member の位置を求める (境界を推測しない)。member として解け
+ * ない位置に来ると `WarcMemberDecodeError` を throw するので、これを
+ * catch して問題の offset / length を報告する。
  *
  * Severity は `error` — non-independent-member な WARC は CDXJ の
  * offset/length ペアに依存するすべての replay engine を silent に
