@@ -17,6 +17,16 @@ service を駆動する手段が無いため。waxlens は host で動かすか�
 
 ## 一度だけの準備
 
+SeaweedFS の設定は submodule
+([seaweedfs](https://github.com/uraitakahito/seaweedfs)) にある。browserhive と
+waggle と同じものを使う。clone のときに一緒に取るか、後から取る:
+
+```sh
+git clone --recurse-submodules https://github.com/uraitakahito/waxlens.git
+# 既存の checkout なら:
+git submodule update --init --recursive
+```
+
 ```sh
 brew install mcrich23/formulae/container-compose
 sudo container system dns create waxlens
