@@ -18,6 +18,16 @@ service could not be driven from it. waxlens runs either on your host or as a
 
 ## One-time setup
 
+The SeaweedFS configuration lives in a submodule
+([seaweedfs](https://github.com/uraitakahito/seaweedfs)), shared with
+browserhive and waggle. Clone with it, or fetch it afterwards:
+
+```sh
+git clone --recurse-submodules https://github.com/uraitakahito/waxlens.git
+# or, in an existing checkout:
+git submodule update --init --recursive
+```
+
 ```sh
 brew install mcrich23/formulae/container-compose
 sudo container system dns create waxlens
