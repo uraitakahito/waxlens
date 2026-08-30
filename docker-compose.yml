@@ -37,9 +37,12 @@ services:
     # no separate one-shot init container to order around.
     entrypoint: ["/etc/seaweedfs/entrypoint.sh"]
     environment:
-      - WAXLENS_S3_ACCESS_KEY_ID=waxlens
-      - WAXLENS_S3_SECRET_ACCESS_KEY=waxlens
-      - WAXLENS_S3_BUCKET=waxlens
+      - S3_ACCESS_KEY_ID=waxlens
+      - S3_SECRET_ACCESS_KEY=waxlens
+      - S3_BUCKET=waxlens
+      # 匿名 read は要らない。browserhive の replay に相当するものが無いので、
+      # S3_ANONYMOUS_READ は既定の false のまま。
+      - S3_INIT_ATTEMPTS=10
     # Published so host tooling (the aws CLI, and waxlens itself) can reach the
     # store on localhost as well as by name. 8333 is the S3 API, 8888 the filer
     # UI (http://localhost:8888/buckets/waxlens/), 9333 the master.
@@ -48,7 +51,9 @@ services:
       - "127.0.0.1:8888:8888"
       - "127.0.0.1:9333:9333"
     volumes:
-      - ./etc/seaweedfs:/etc/seaweedfs:ro
+      # 設定は seaweedfs submodule から。browserhive / waggle と同じものを使う ——
+      # 以前はここに写しを置いていて、3 ファイルとも上流から分岐していた。
+      - ./seaweedfs/etc:/etc/seaweedfs:ro
       - seaweedfs-data:/data
 
 volumes:
