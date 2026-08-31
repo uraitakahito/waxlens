@@ -12,7 +12,10 @@
 # lets waxlens itself run on the host against this stack, with no development
 # container of its own.
 # Do NOT add container_name: keys — they suppress the DNS naming and drop the
-# stack back to /etc/hosts patching.
+# stack back to appending to the /etc/hosts *inside each container* via
+# `container exec` (the host's own /etc/hosts is never touched). That write
+# fails for non-root images, and container-compose does not check the exit
+# status, so it fails silently.
 #
 # Readiness is deliberately NOT handled here (container-compose has no
 # healthcheck support, and depends_on is start order only): the bucket init
