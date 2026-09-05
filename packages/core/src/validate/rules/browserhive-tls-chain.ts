@@ -17,7 +17,7 @@
  * 検査は `browserhive/tls-san` が別に持つ —— まとめると、`san` の入る前に撮られた
  * アーカイブでチェーン検証まで走らなくなる。
  *
- * Spec: https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.0.0/#tls
+ * Spec: https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.1.0/#tls
  */
 import { ok } from "../../result.js";
 import { displayDn, parseChain, readTls } from "../browserhive-tls.js";
@@ -40,8 +40,8 @@ export const browserhiveTlsChainRule: ValidationRule = {
     {
       label: "BrowserHive WACZ Profile §tls",
       url: {
-        en: "https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.0.0/#tls",
-        ja: "https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.0.0/ja/#tls",
+        en: "https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.1.0/#tls",
+        ja: "https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.1.0/ja/#tls",
       },
     },
   ],

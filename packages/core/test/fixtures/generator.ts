@@ -185,6 +185,17 @@ export interface FixtureOptions {
    * 撮っていない capture も正しい形なので。
    */
   axtree?: Record<string, unknown> | string;
+  /**
+   * `browserhive:capture.storage` (目録) をそのまま書き込む。undefined なら
+   * member ごと書かない —— **目録は profile 1.1.0 の必須**なので、その不在自体が
+   * 検査の対象になる。tls と非対称なのはそのため。
+   */
+  storage?: Record<string, unknown>;
+  /**
+   * `storage/origins.jsonl` の中身。オブジェクトの配列なら 1 行ずつ JSONL に、
+   * 文字列ならそのまま書く (JSON として読めない行を作るため)。
+   */
+  storageValues?: Record<string, unknown>[] | string;
   tls?: {
     hosts: Record<string, Record<string, unknown> | null>;
     chains: Record<string, readonly string[]>;
@@ -494,6 +505,16 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
           "utf-8",
         );
 
+  const storageBytes =
+    options.storageValues === undefined
+      ? undefined
+      : Buffer.from(
+          typeof options.storageValues === "string"
+            ? options.storageValues
+            : options.storageValues.map((o) => JSON.stringify(o)).join("\n") + "\n",
+          "utf-8",
+        );
+
   const defaultResources: DatapackageResource[] = [
     {
       name: "data.warc.gz",
@@ -519,6 +540,16 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
       hash: sha256Hex(fuzzyBytes),
       bytes: fuzzyBytes.byteLength,
     },
+    ...(storageBytes === undefined
+      ? []
+      : [
+          {
+            name: "origins.jsonl",
+            path: "storage/origins.jsonl",
+            hash: sha256Hex(storageBytes),
+            bytes: storageBytes.byteLength,
+          },
+        ]),
     ...(axtreeBytes === undefined
       ? []
       : [
@@ -560,6 +591,11 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
   }
   if (options.tls !== undefined) {
     datapackage["browserhive:capture"] = { tls: options.tls };
+  }
+  if (options.storage !== undefined) {
+    const capture = (datapackage["browserhive:capture"] ?? {}) as Record<string, unknown>;
+    capture["storage"] = options.storage;
+    datapackage["browserhive:capture"] = capture;
   }
   const datapackageBytes = Buffer.from(`${JSON.stringify(datapackage, null, 2)}\n`, "utf-8");
 
@@ -608,6 +644,9 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
     zip.append(pagesBytes, { name: "pages/pages.jsonl", date: entryDate });
   }
   zip.append(fuzzyBytes, { name: "fuzzy.json", date: entryDate });
+  if (storageBytes !== undefined) {
+    zip.append(storageBytes, { name: "storage/origins.jsonl", date: entryDate });
+  }
   if (axtreeBytes !== undefined) {
     zip.append(axtreeBytes, { name: "accessibility/axtree.jsonl", date: entryDate });
   }
