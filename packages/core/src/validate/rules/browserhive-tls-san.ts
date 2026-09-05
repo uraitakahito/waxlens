@@ -14,7 +14,7 @@
  * いて当然なので、走らせると「無い」を毎回報告することになる。走らせなかったことは
  * `Report.skipped` に残るので、読者は「問題なし」と「見ていない」を区別できる。
  *
- * Spec: https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.0.0/#tls
+ * Spec: https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.1.0/#tls
  */
 import { ok } from "../../result.js";
 import { dnsNamesOf, parseChain, readTls } from "../browserhive-tls.js";
@@ -32,8 +32,8 @@ export const browserhiveTlsSanRule: ValidationRule = {
     {
       label: "BrowserHive WACZ Profile §tls",
       url: {
-        en: "https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.0.0/#tls",
-        ja: "https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.0.0/ja/#tls",
+        en: "https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.1.0/#tls",
+        ja: "https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.1.0/ja/#tls",
       },
     },
   ],
