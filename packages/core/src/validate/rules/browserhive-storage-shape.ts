@@ -54,8 +54,10 @@ const unreadableOrigins = (storage: unknown): ReadonlySet<string> => {
 };
 
 export const browserhiveStorageShapeRule: ValidationRule = {
-  name: RULE,
-  descriptionKey: `${RULE}.desc`,
+  // docs-site/src/lib/extract.ts がソースを正規表現で読むので、
+  // ここは定数ではなくリテラルで書く。
+  name: "browserhive/storage-shape",
+  descriptionKey: "browserhive/storage-shape.desc",
   conformance: "MUST",
   docs: [
     {

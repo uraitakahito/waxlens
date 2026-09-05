@@ -69,8 +69,10 @@ const areaIssues = (
 };
 
 export const browserhiveStorageInventoryRule: ValidationRule = {
-  name: RULE,
-  descriptionKey: `${RULE}.desc`,
+  // docs-site/src/lib/extract.ts がソースを正規表現で読むので、
+  // ここは定数ではなくリテラルで書く。
+  name: "browserhive/storage-inventory",
+  descriptionKey: "browserhive/storage-inventory.desc",
   conformance: "MUST",
   docs: [
     {
