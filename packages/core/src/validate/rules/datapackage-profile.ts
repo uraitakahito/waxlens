@@ -16,10 +16,9 @@
  *       https://github.com/uraitakahito/browserhive/blob/343a041bd4e4f4286c0834f90ab1bfb3de0cec15/src/storage/wacz/datapackage.ts#L42-L49
  */
 import { ok } from "../../result.js";
-import { parseDatapackage } from "../../wacz/datapackage.js";
+import { datapackageOf, DATAPACKAGE_ENTRY } from "../datapackage-source.js";
 import type { Issue, ValidationRule } from "../domain.js";
 
-const DATAPACKAGE_ENTRY = "datapackage.json";
 const EXPECTED_PROFILE = "data-package";
 
 export const datapackageProfileRule: ValidationRule = {
@@ -44,13 +43,11 @@ export const datapackageProfileRule: ValidationRule = {
 
   run: async (wacz) => {
     const issues: Issue[] = [];
-    const buf = await wacz.readEntry(DATAPACKAGE_ENTRY);
     // datapackage.json の「不在」は wacz/required-files (§5.2.4) が報告する。
     // この rule は datapackage が在るときの profile *値* の正しさに専念し、
-    // 不在を二重報告しない。
-    if (!buf) return ok(issues);
-
-    const pkg = parseDatapackage(buf.toString("utf-8"));
+    // 不在を二重報告しない。**壊れた JSON はここが報告する** —— 下の invalid-json。
+    const { bytes: buf, parsed: pkg } = await datapackageOf(wacz);
+    if (buf === undefined) return ok(issues);
     if (!pkg) {
       issues.push({
         rule: "datapackage/profile-required",

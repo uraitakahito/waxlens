@@ -53,7 +53,7 @@ export const browserhiveTlsChainRule: ValidationRule = {
   run: async (wacz) => {
     const tls = await readTls(wacz);
     // tls はプロファイルの任意 member。不在は違反ではない。
-    if (tls === null) return ok([]);
+    if (tls === undefined) return ok([]);
 
     const issues: Issue[] = [];
     const verified: Record<string, CertReport[]> = {};

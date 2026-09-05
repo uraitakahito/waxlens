@@ -13,10 +13,9 @@
  * Spec: https://specs.webrecorder.net/wacz/1.1.1/#directories-and-files
  */
 import { ok } from "../../result.js";
-import { parseDatapackage } from "../../wacz/datapackage.js";
+import { datapackageOf } from "../datapackage-source.js";
 import type { Issue, ValidationRule } from "../domain.js";
 
-const DATAPACKAGE_ENTRY = "datapackage.json";
 /** resources に列挙されないマニフェスト系ファイル。 */
 const MANIFEST_FILES: ReadonlySet<string> = new Set([
   "datapackage.json",
@@ -44,10 +43,11 @@ export const datapackageResourcesCompleteRule: ValidationRule = {
 
   run: async (wacz) => {
     const issues: Issue[] = [];
-    const buf = await wacz.readEntry(DATAPACKAGE_ENTRY);
-    if (!buf) return ok(issues); // 不在は required-files / profile が報告する。
-    const pkg = parseDatapackage(buf.toString("utf-8"));
-    if (!pkg || !Array.isArray(pkg.resources)) return ok(issues); // resource-hashes が報告する。
+    // 不在は `wacz/required-files` が、壊れた JSON は `datapackage/profile-required` が
+    // 報告する。ここは二重報告を避け、値の正しさに専念する。
+    const { parsed: pkg } = await datapackageOf(wacz);
+    // resources が配列でない場合は resource-hashes が報告する。
+    if (pkg === null || !Array.isArray(pkg.resources)) return ok(issues);
 
     const declared = new Set<string>();
     for (const res of pkg.resources) {

@@ -20,10 +20,8 @@
  *   (resource は name と path|data を持つ)。
  */
 import { ok } from "../../result.js";
-import { parseDatapackage } from "../../wacz/datapackage.js";
+import { datapackageOf, DATAPACKAGE_ENTRY } from "../datapackage-source.js";
 import type { Issue, ValidationRule } from "../domain.js";
-
-const DATAPACKAGE_ENTRY = "datapackage.json";
 
 const isNonEmptyString = (v: unknown): v is string => typeof v === "string" && v.length > 0;
 
@@ -51,11 +49,10 @@ export const datapackageFrictionlessStructureRule: ValidationRule = {
 
   run: async (wacz) => {
     const issues: Issue[] = [];
-    const buf = await wacz.readEntry(DATAPACKAGE_ENTRY);
-    if (!buf) return ok(issues); // 不在は profile-required が報告する。
-
-    const pkg = parseDatapackage(buf.toString("utf-8"));
-    if (!pkg) return ok(issues); // JSON 不正 / 非 object も profile-required が報告する。
+    // 不在は `wacz/required-files` が、壊れた JSON は `datapackage/profile-required` が
+    // 報告する。ここは二重報告を避け、値の正しさに専念する。
+    const { parsed: pkg } = await datapackageOf(wacz);
+    if (pkg === null) return ok(issues);
 
     const resources = pkg.resources;
     if (!Array.isArray(resources) || resources.length === 0) {

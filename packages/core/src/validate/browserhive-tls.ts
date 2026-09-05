@@ -6,7 +6,7 @@
  * だけを持つ。
  */
 import { X509Certificate } from "node:crypto";
-import { parseDatapackage } from "../wacz/datapackage.js";
+import { datapackageOf } from "./datapackage-source.js";
 import type { WaczReader } from "../wacz/reader.js";
 
 /** アーカイブが host ごとに申告している TLS の観測。 */
@@ -32,23 +32,24 @@ const isRecord = (v: unknown): v is Record<string, unknown> =>
 /**
  * `datapackage.json` から `browserhive:capture.tls` を取り出す。
  *
- * 形が合わなければ `null`。tls はプロファイルの**任意 member** なので、不在は
- * 違反ではない —— 呼び出し側は `null` を「何も言うことがない」として扱う。
+ * 形が合わなければ `undefined`。tls はプロファイルの**任意 member** なので、不在は
+ * 違反ではない —— 呼び出し側は `undefined` を「何も言うことがない」として扱う。
+ *
+ * `null` ではなく `undefined` なのは、隣の `readCapture` と揃えるため。
+ * どちらも「読んだが無かった」で、`readEntry` 自身がそれを `undefined` で表している。
  */
-export const readTls = async (wacz: WaczReader): Promise<TlsMember | null> => {
-  const raw = await wacz.readEntry("datapackage.json");
-  if (raw === undefined) return null;
-  const dp = parseDatapackage(raw.toString("utf8"));
-  if (dp === null) return null;
+export const readTls = async (wacz: WaczReader): Promise<TlsMember | undefined> => {
+  const { parsed: dp } = await datapackageOf(wacz);
+  if (dp === null) return undefined;
 
   const capture = (dp as Record<string, unknown>)["browserhive:capture"];
-  if (!isRecord(capture)) return null;
+  if (!isRecord(capture)) return undefined;
   const tls = capture["tls"];
-  if (!isRecord(tls)) return null;
+  if (!isRecord(tls)) return undefined;
 
   const hosts = tls["hosts"];
   const chains = tls["chains"];
-  if (!isRecord(hosts) || !isRecord(chains)) return null;
+  if (!isRecord(hosts) || !isRecord(chains)) return undefined;
 
   return {
     hosts: hosts as Record<string, ObservedTls | null>,

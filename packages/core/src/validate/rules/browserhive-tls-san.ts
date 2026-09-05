@@ -44,7 +44,7 @@ export const browserhiveTlsSanRule: ValidationRule = {
 
   run: async (wacz) => {
     const tls = await readTls(wacz);
-    if (tls === null) return ok([]);
+    if (tls === undefined) return ok([]);
 
     const issues: Issue[] = [];
 
