@@ -21,7 +21,7 @@
 import { createRequire } from "node:module";
 import schema from "../frictionless/data-package.schema.json" with { type: "json" };
 import { ok } from "../../result.js";
-import { parseDatapackage } from "../../wacz/datapackage.js";
+import { datapackageOf, DATAPACKAGE_ENTRY } from "../datapackage-source.js";
 import type { Issue, ValidationRule } from "../domain.js";
 import type { ValidateFunction } from "ajv";
 
@@ -35,8 +35,6 @@ const Ajv04 = require("ajv-draft-04") as new (opts?: {
   strict?: boolean;
   logger?: false;
 }) => { compile: (schema: object) => ValidateFunction };
-
-const DATAPACKAGE_ENTRY = "datapackage.json";
 
 // strict:false = draft-04 の未知キーワード/format で ajv が throw しない。
 // logger:false = "unknown format ... ignored" の警告を黙らせる(uri/email/date-time
@@ -65,11 +63,10 @@ export const datapackageFrictionlessSchemaRule: ValidationRule = {
 
   run: async (wacz) => {
     const issues: Issue[] = [];
-    const buf = await wacz.readEntry(DATAPACKAGE_ENTRY);
-    if (!buf) return ok(issues); // 不在は profile-required ルールが報告する。
-
-    const pkg = parseDatapackage(buf.toString("utf-8"));
-    if (!pkg) return ok(issues); // JSON 不正 / 非 object も profile-required が報告する。
+    // 不在は `wacz/required-files` が、壊れた JSON は `datapackage/profile-required` が
+    // 報告する。ここは二重報告を避け、値の正しさに専念する。
+    const { parsed: pkg } = await datapackageOf(wacz);
+    if (pkg === null) return ok(issues);
 
     if (!validateSchema(pkg)) {
       for (const err of validateSchema.errors ?? []) {

@@ -12,7 +12,7 @@
  *
  * Spec: https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.1.0/#storage
  */
-import { parseDatapackage } from "../wacz/datapackage.js";
+import { datapackageOf } from "./datapackage-source.js";
 import type { WaczReader } from "../wacz/reader.js";
 
 /** 値のファイル。目録が `valuesRecorded: true` のときだけ在る。 */
@@ -77,9 +77,7 @@ export const DIGEST_PATTERN = /^sha256:[0-9a-f]{64}$/;
 export const readCapture = async (
   wacz: WaczReader,
 ): Promise<Record<string, unknown> | undefined> => {
-  const raw = await wacz.readEntry("datapackage.json");
-  if (raw === undefined) return undefined;
-  const dp = parseDatapackage(raw.toString("utf8"));
+  const { parsed: dp } = await datapackageOf(wacz);
   if (dp === null) return undefined;
   const capture = (dp as Record<string, unknown>)["browserhive:capture"];
   return isRecord(capture) ? capture : undefined;

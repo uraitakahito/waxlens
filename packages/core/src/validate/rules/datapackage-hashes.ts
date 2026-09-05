@@ -23,10 +23,8 @@
  */
 import { ok } from "../../result.js";
 import { sha256Hex } from "../../wacz/digest.js";
-import { parseDatapackage } from "../../wacz/datapackage.js";
+import { datapackageOf, DATAPACKAGE_ENTRY } from "../datapackage-source.js";
 import type { Issue, ValidationRule } from "../domain.js";
-
-const DATAPACKAGE_ENTRY = "datapackage.json";
 
 export const datapackageHashesRule: ValidationRule = {
   name: "datapackage/resource-hashes",
@@ -50,11 +48,10 @@ export const datapackageHashesRule: ValidationRule = {
 
   run: async (wacz) => {
     const issues: Issue[] = [];
-    const buf = await wacz.readEntry(DATAPACKAGE_ENTRY);
-    if (!buf) return ok(issues); // profile rule が不在を既に報告している。
-
-    const pkg = parseDatapackage(buf.toString("utf-8"));
-    if (!pkg) return ok(issues); // profile rule が parse 失敗を既に報告している。
+    // 不在は `wacz/required-files` が、壊れた JSON は `datapackage/profile-required` が
+    // 報告する。ここは二重報告を避け、値の正しさに専念する。
+    const { parsed: pkg } = await datapackageOf(wacz);
+    if (pkg === null) return ok(issues);
 
     const resources = pkg.resources;
     if (!Array.isArray(resources) || resources.length === 0) {

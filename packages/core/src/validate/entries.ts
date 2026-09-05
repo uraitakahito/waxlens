@@ -19,18 +19,16 @@
  * stats.ts と同じく engine から best-effort で呼ばれる。datapackage の
  * parse は緩い `parseDatapackage` を使い、失敗しても一覧は止めない。
  */
-import { parseDatapackage } from "../wacz/datapackage.js";
+import { datapackageOf } from "./datapackage-source.js";
 import type { WaczReader } from "../wacz/reader.js";
 import type { ExpectedBy, Issue, ReportEntry } from "./domain.js";
 import { SPEC_REQUIRED_PATHS, hasIndex, hasWarc, sectionForSpecPath } from "./wacz-spec.js";
 
-const DATAPACKAGE_ENTRY = "datapackage.json";
-
 /** datapackage.json の `resources[].path` の集合(無ければ空)。 */
 const declaredPaths = async (wacz: WaczReader): Promise<Set<string>> => {
-  const buf = await wacz.readEntry(DATAPACKAGE_ENTRY);
-  if (!buf) return new Set();
-  const pkg = parseDatapackage(buf.toString("utf-8"));
+  // 空集合を返すのは不在の言い換えではない —— 「宣言された path は 0 個」という
+  // それ自体が答えなので、ここだけは undefined へ揃えない。
+  const { parsed: pkg } = await datapackageOf(wacz);
   const paths = new Set<string>();
   for (const resource of pkg?.resources ?? []) {
     if (typeof resource.path === "string") paths.add(resource.path);
