@@ -192,6 +192,15 @@ export interface FixtureOptions {
    */
   storage?: Record<string, unknown>;
   /**
+   * `browserhive:capture.settings` をそのまま書き込む。undefined なら member ごと
+   * 書かない —— **settings は profile 1.2.0 の必須**なので、その不在自体が
+   * 検査の対象になる。storage と同じく tls とは非対称。
+   *
+   * 中身は検査しない。member を落とした形も、型を違えた形も、そのまま通す ——
+   * それを問題と呼ぶかは rule が決める。
+   */
+  settings?: Record<string, unknown>;
+  /**
    * `storage/origins.jsonl` の中身。オブジェクトの配列なら 1 行ずつ JSONL に、
    * 文字列ならそのまま書く (JSON として読めない行を作るため)。
    */
@@ -595,6 +604,11 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
   if (options.storage !== undefined) {
     const capture = (datapackage["browserhive:capture"] ?? {}) as Record<string, unknown>;
     capture["storage"] = options.storage;
+    datapackage["browserhive:capture"] = capture;
+  }
+  if (options.settings !== undefined) {
+    const capture = (datapackage["browserhive:capture"] ?? {}) as Record<string, unknown>;
+    capture["settings"] = options.settings;
     datapackage["browserhive:capture"] = capture;
   }
   const datapackageBytes = Buffer.from(`${JSON.stringify(datapackage, null, 2)}\n`, "utf-8");
