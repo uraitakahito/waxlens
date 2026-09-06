@@ -1,13 +1,13 @@
 // @module-tag engine
 /**
- * `browserhive/settings-shape` と `browserhive/blocklist-declared` のテスト。
+ * `browserhive/settings-shape` と `browserhive/url-policies` のテスト。
  *
  * この 2 本が守っているのは 2 つの主張:
  *
- *   1. profile 1.2.0 の必須 member が **揃っている**。この検査が無かったせいで、
+ *   1. profile 1.3.0 の必須 member が **揃っている**。この検査が無かったせいで、
  *      1.1.0 の `cache` は「どの実装も書かない必須 member」として何版か残った ——
  *      適合を名乗るアーカイブが必須 member を欠いていても、誰も気づけなかった。
- *   2. `blockUrlPatterns` は **一致が 0 でも在る**。空の配列が「濾していない」と
+ *   2. `urlPolicies` は **一致が 0 でも在る**。空の配列が「濾していない」と
  *      いう主張の綴りなので、不在と空を混ぜると証憑としての意味が消える。
  *
  * 版の条件があるので古い browserhive のアーカイブでは走らない —— 版を下げた
@@ -25,7 +25,7 @@ import { WaczReader } from "../src/wacz/reader.js";
 import { buildWacz, type FixtureOptions } from "./fixtures/generator.js";
 
 const SHAPE = "browserhive/settings-shape";
-/** profile 1.2.0 §settings の「Required: yes」の行。rule の一覧と一致するべきもの。 */
+/** profile 1.3.0 §settings の「Required: yes」の行。rule の一覧と一致するべきもの。 */
 const REQUIRED_MEMBERS = [
   "signature",
   "viewport",
@@ -33,10 +33,11 @@ const REQUIRED_MEMBERS = [
   "session",
   "behaviors",
   "limits",
-  "blockUrlPatterns",
+  "urlPolicies",
+  "contentTypePolicies",
 ] as const;
-const BLOCKLIST = "browserhive/blocklist-declared";
-const V7 = { major: 7, minor: 0, patch: 0 };
+const POLICIES = "browserhive/url-policies";
+const V8 = { major: 8, minor: 0, patch: 0 };
 
 /** browserhive のアーカイブであることを示すだけの最小の目録。 */
 const minimalInventory: Record<string, unknown> = {
@@ -46,7 +47,7 @@ const minimalInventory: Record<string, unknown> = {
   origins: [],
 };
 
-/** profile 1.2.0 どおりの settings。 */
+/** profile 1.3.0 どおりの settings。 */
 const goodSettings = (over: Record<string, unknown> = {}): Record<string, unknown> => ({
   signature: "none",
   viewport: { width: 1280, height: 800 },
@@ -54,7 +55,8 @@ const goodSettings = (over: Record<string, unknown> = {}): Record<string, unknow
   session: "isolated",
   behaviors: ["autoscroll"],
   limits: { maxResponseBytes: 20_971_520, maxTaskBytes: 209_715_200 },
-  blockUrlPatterns: [],
+  urlPolicies: [],
+  contentTypePolicies: [],
   ...over,
 });
 
@@ -67,7 +69,7 @@ const runFor = async (
   options: FixtureOptions,
   rule: string,
   profile: RuleProfile = "browserhive",
-  version: { major: number; minor: number; patch: number } = V7,
+  version: { major: number; minor: number; patch: number } = V8,
 ): Promise<Issue[]> => {
   const { bytes } = await buildWacz(options);
   const path = join(tmpDir, "fixture.wacz");
@@ -97,7 +99,7 @@ describe("browserhive/settings-shape", () => {
     await rm(tmpDir, { recursive: true, force: true });
   });
 
-  const run = (options: FixtureOptions, version?: typeof V7): Promise<Issue[]> =>
+  const run = (options: FixtureOptions, version?: typeof V8): Promise<Issue[]> =>
     runFor(tmpDir, options, SHAPE, "browserhive", version);
 
   it("profile どおりの settings には何も言わない", async () => {
@@ -137,14 +139,14 @@ describe("browserhive/settings-shape", () => {
     expect(await run({ settings: goodSettings() })).toEqual([]);
   });
 
-  it("7.0.0 未満の browserhive では走らない", async () => {
+  it("8.0.0 未満の browserhive では走らない", async () => {
     expect(
-      await run({ settings: settingsWithout("session") }, { major: 6, minor: 9, patch: 9 }),
+      await run({ settings: settingsWithout("session") }, { major: 7, minor: 9, patch: 9 }),
     ).toEqual([]);
   });
 });
 
-describe("browserhive/blocklist-declared", () => {
+describe("browserhive/url-policies", () => {
   let tmpDir: string;
   beforeEach(async () => {
     tmpDir = await mkdtemp(join(tmpdir(), "waxlens-blocklist-"));
@@ -153,8 +155,8 @@ describe("browserhive/blocklist-declared", () => {
     await rm(tmpDir, { recursive: true, force: true });
   });
 
-  const run = (options: FixtureOptions, version?: typeof V7): Promise<Issue[]> =>
-    runFor(tmpDir, options, BLOCKLIST, "browserhive", version);
+  const run = (options: FixtureOptions, version?: typeof V8): Promise<Issue[]> =>
+    runFor(tmpDir, options, POLICIES, "browserhive", version);
 
   /**
    * **この rule の要。** 空の配列は「効いていたパターンが無い」という積極的な
@@ -162,14 +164,27 @@ describe("browserhive/blocklist-declared", () => {
    * 罰せられる。
    */
   it("空の配列を通す —— それが「濾していない」の綴り", async () => {
-    expect(await run({ settings: goodSettings({ blockUrlPatterns: [] }) })).toEqual([]);
+    expect(await run({ settings: goodSettings({ urlPolicies: [] }) })).toEqual([]);
   });
 
-  it("パターンが並んでいても通す", async () => {
+  it("policy が並んでいても通す", async () => {
     expect(
       await run({
         settings: goodSettings({
-          blockUrlPatterns: ["*://*.google-analytics.com/*", "*://*.doubleclick.net/*"],
+          urlPolicies: [
+            { pattern: "*://*.google-analytics.com/*", action: "no-archive" },
+            { pattern: "*://*.doubleclick.net/*", action: "deny" },
+          ],
+        }),
+      }),
+    ).toEqual([]);
+  });
+
+  it("no-body も通す", async () => {
+    expect(
+      await run({
+        settings: goodSettings({
+          urlPolicies: [{ pattern: "*://cdn.example.com/*", action: "no-body" }],
         }),
       }),
     ).toEqual([]);
@@ -181,25 +196,53 @@ describe("browserhive/blocklist-declared", () => {
    * 区別できないままになる。
    */
   it("member ごと無ければ落とす", async () => {
-    const issues = await run({ settings: settingsWithout("blockUrlPatterns") });
-    expect(issues.map((i) => i.messageKey)).toEqual([`${BLOCKLIST}.absent`]);
+    const issues = await run({ settings: settingsWithout("urlPolicies") });
+    expect(issues.map((i) => i.messageKey)).toEqual([`${POLICIES}.absent`]);
   });
 
   it("配列でなければ落とす", async () => {
-    const issues = await run({ settings: goodSettings({ blockUrlPatterns: "*://*/*" }) });
-    expect(issues.map((i) => i.messageKey)).toEqual([`${BLOCKLIST}.not-array`]);
+    const issues = await run({ settings: goodSettings({ urlPolicies: "*://*/*" }) });
+    expect(issues.map((i) => i.messageKey)).toEqual([`${POLICIES}.not-array`]);
   });
 
-  it("文字列でない要素があれば落とす", async () => {
-    const issues = await run({ settings: goodSettings({ blockUrlPatterns: [1, "*://*/*", null] }) });
+  it("pattern が文字列でない項目があれば落とす", async () => {
+    const issues = await run({
+      settings: goodSettings({
+        urlPolicies: [
+          { pattern: 1, action: "deny" },
+          { pattern: "*://ok/*", action: "deny" },
+          "*://not-an-object/*",
+        ],
+      }),
+    });
     expect(issues).toHaveLength(1);
-    expect(issues[0]?.messageKey).toBe(`${BLOCKLIST}.non-string-entry`);
+    expect(issues[0]?.messageKey).toBe(`${POLICIES}.bad-pattern`);
     expect(issues[0]?.params?.["count"]).toBe("2");
   });
 
-  it("7.0.0 未満の browserhive では走らない", async () => {
+  /**
+   * **action がこの rule のもう 1 つの要。** 送られたかどうかを述べるのはこの欄で、
+   * 読めない値が入っていると archive は「何かを落とした」までしか言えなくなる。
+   */
+  it("この版が定めていない action があれば落とす", async () => {
+    const issues = await run({
+      settings: goodSettings({
+        urlPolicies: [
+          { pattern: "*://a/*", action: "drop" },
+          { pattern: "*://b/*", action: "block" },
+          { pattern: "*://c/*", action: "deny" },
+        ],
+      }),
+    });
+    expect(issues).toHaveLength(1);
+    expect(issues[0]?.messageKey).toBe(`${POLICIES}.unknown-action`);
+    // 種類ごとに 1 件へ畳む。整列してあるので出力が安定する。
+    expect(issues[0]?.params?.["found"]).toBe("block, drop");
+  });
+
+  it("8.0.0 未満の browserhive では走らない", async () => {
     expect(
-      await run({ settings: settingsWithout("blockUrlPatterns") }, { major: 6, minor: 9, patch: 9 }),
+      await run({ settings: settingsWithout("urlPolicies") }, { major: 7, minor: 9, patch: 9 }),
     ).toEqual([]);
   });
 });

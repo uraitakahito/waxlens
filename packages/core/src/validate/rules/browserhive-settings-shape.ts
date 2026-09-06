@@ -1,7 +1,7 @@
 /**
  * Rule: browserhive/settings-shape(browserhive profile 限定 · >=7.0.0)
  *
- * `browserhive:capture.settings` が、profile 1.2.0 が定める必須 member を
+ * `browserhive:capture.settings` が、profile 1.3.0 が定める必須 member を
  * すべて持っているか。
  *
  * **この rule が無かったせいで、仕様と実装が 1 つずれたまま何版か流れた。**
@@ -17,10 +17,10 @@
  *
  * `acceptLanguage` は任意なので見ない —— 不在は「設定しなかった」で、違反ではない。
  *
- * 版の条件があるのは、`blockUrlPatterns` が browserhive 7.0.0 で入ったため。
+ * 版の条件があるのは、`urlPolicies` が browserhive 8.0.0 で入ったため。
  * それ未満のアーカイブに 1.2.0 の MUST を当てて落とすのは、検証器として誤り。
  *
- * Spec: https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.2.0/#settings
+ * Spec: https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.3.0/#settings
  */
 import { ok } from "../../result.js";
 import { isRecord, readCapture } from "../browserhive-storage.js";
@@ -28,7 +28,7 @@ import type { Issue, ValidationRule } from "../domain.js";
 
 const RULE = "browserhive/settings-shape";
 
-/** どの型を期待するか。profile 1.2.0 §settings の表がそのまま並ぶ。 */
+/** どの型を期待するか。profile 1.3.0 §settings の表がそのまま並ぶ。 */
 const REQUIRED: readonly { readonly name: string; readonly check: (v: unknown) => boolean }[] = [
   { name: "signature", check: (v) => typeof v === "string" },
   { name: "viewport", check: isRecord },
@@ -36,7 +36,8 @@ const REQUIRED: readonly { readonly name: string; readonly check: (v: unknown) =
   { name: "session", check: (v) => typeof v === "string" },
   { name: "behaviors", check: Array.isArray },
   { name: "limits", check: isRecord },
-  { name: "blockUrlPatterns", check: Array.isArray },
+  { name: "urlPolicies", check: Array.isArray },
+  { name: "contentTypePolicies", check: Array.isArray },
 ];
 
 export const browserhiveSettingsShapeRule: ValidationRule = {
@@ -47,14 +48,14 @@ export const browserhiveSettingsShapeRule: ValidationRule = {
     {
       label: "BrowserHive WACZ Profile §settings",
       url: {
-        en: "https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.2.0/#settings",
-        ja: "https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.2.0/ja/#settings",
+        en: "https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.3.0/#settings",
+        ja: "https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.3.0/ja/#settings",
       },
     },
   ],
   applicability: {
     excludeProfiles: ["spec", "lenient"],
-    profileVersions: { browserhive: ">=7.0.0" },
+    profileVersions: { browserhive: ">=8.0.0" },
   },
   run: async (wacz) => {
     const capture = await readCapture(wacz);

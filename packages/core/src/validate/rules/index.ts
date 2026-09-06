@@ -12,7 +12,7 @@
 import type { Conformance, DocLink, ValidationRule } from "../domain.js";
 import { browserhiveTlsChainRule } from "./browserhive-tls-chain.js";
 import { browserhiveAxtreeShapeRule } from "./browserhive-axtree-shape.js";
-import { browserhiveBlocklistDeclaredRule } from "./browserhive-blocklist-declared.js";
+import { browserhiveUrlPoliciesRule } from "./browserhive-url-policies.js";
 import { browserhiveSettingsShapeRule } from "./browserhive-settings-shape.js";
 import { browserhiveStorageInventoryRule } from "./browserhive-storage-inventory.js";
 import { browserhiveStorageShapeRule } from "./browserhive-storage-shape.js";
@@ -93,7 +93,7 @@ export const DEFAULT_RULES: readonly ValidationRule[] = [
   // san は browserhive 3.7.0 で入ったので版の条件を持つ。
   browserhiveAxtreeShapeRule,
   browserhiveSettingsShapeRule,
-  browserhiveBlocklistDeclaredRule,
+  browserhiveUrlPoliciesRule,
   browserhiveStorageInventoryRule,
   browserhiveStorageShapeRule,
   browserhiveTlsSanRule,
