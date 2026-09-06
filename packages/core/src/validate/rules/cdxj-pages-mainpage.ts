@@ -19,11 +19,10 @@
  */
 import { ok } from "../../result.js";
 import { parseCdxj } from "../../wacz/cdxj-parser.js";
-import { parseDatapackage } from "../../wacz/datapackage.js";
+import { datapackageOf } from "../datapackage-source.js";
 import { parsePagesJsonl } from "../../wacz/pages.js";
 import type { Issue, ValidationRule } from "../domain.js";
 
-const DATAPACKAGE_ENTRY = "datapackage.json";
 const PAGES_ENTRY = "pages/pages.jsonl";
 const CDXJ_ENTRY = "indexes/index.cdxj";
 
@@ -52,10 +51,10 @@ export const cdxjPagesMainpageRule: ValidationRule = {
   run: async (wacz) => {
     const issues: Issue[] = [];
 
-    const dpBuf = await wacz.readEntry(DATAPACKAGE_ENTRY);
-    if (!dpBuf) return ok(issues); // profile rule が不在を報告する。
-    const pkg = parseDatapackage(dpBuf.toString("utf-8"));
-    if (!pkg) return ok(issues);
+    // 不在は `wacz/required-files` が、壊れた JSON は `datapackage/profile-required` が
+    // 報告する。ここは二重報告を避け、値の正しさに専念する。
+    const { parsed: pkg } = await datapackageOf(wacz);
+    if (pkg === null) return ok(issues);
 
     const mainPageURL = pkg.mainPageURL;
     if (typeof mainPageURL !== "string" || mainPageURL.length === 0) {

@@ -12,10 +12,8 @@
  * Reference producer: browserhive は "1.1.1" を出力する。
  */
 import { ok } from "../../result.js";
-import { parseDatapackage } from "../../wacz/datapackage.js";
+import { datapackageOf, DATAPACKAGE_ENTRY } from "../datapackage-source.js";
 import type { Issue, ValidationRule } from "../domain.js";
-
-const DATAPACKAGE_ENTRY = "datapackage.json";
 
 /**
  * Known-good な WACZ バージョン。browserhive や他のサポート対象
@@ -51,16 +49,11 @@ export const datapackageWaczVersionRule: ValidationRule = {
 
   run: async (wacz) => {
     const issues: Issue[] = [];
-    const buf = await wacz.readEntry(DATAPACKAGE_ENTRY);
-    if (!buf) {
-      // datapackage.json 欠落は profile rule が既に error として
-      // 報告している。同じ状況に対して 2 つの near-duplicate issue を
-      // 出さないよう、ここでは silent に skip する。
-      return ok(issues);
-    }
-
-    const pkg = parseDatapackage(buf.toString("utf-8"));
-    if (!pkg) return ok(issues); // 上と同じ重複防止の理由。
+    // 不在は `wacz/required-files` が、壊れた JSON は `datapackage/profile-required` が
+    // 報告する。同じ状況に対して 2 つの near-duplicate issue を出さないよう、
+    // ここでは silent に skip する。
+    const { parsed: pkg } = await datapackageOf(wacz);
+    if (pkg === null) return ok(issues);
 
     const version = pkg.wacz_version;
 

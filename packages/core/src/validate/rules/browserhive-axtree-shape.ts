@@ -21,7 +21,7 @@
  * 版の条件があるのは、このディレクトリが browserhive 3.8.0 で入ったため。
  * それ未満では無くて当然で、走らせなかったことは `Report.skipped` に残る。
  *
- * Spec: https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.0.0/#accessibility
+ * Spec: https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.1.0/#accessibility
  */
 import { ok } from "../../result.js";
 import {
@@ -43,8 +43,8 @@ export const browserhiveAxtreeShapeRule: ValidationRule = {
     {
       label: "BrowserHive WACZ Profile §accessibility",
       url: {
-        en: "https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.0.0/#accessibility",
-        ja: "https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.0.0/ja/#accessibility",
+        en: "https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.1.0/#accessibility",
+        ja: "https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.1.0/ja/#accessibility",
       },
     },
   ],

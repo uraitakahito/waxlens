@@ -19,9 +19,9 @@
 import { ok } from "../../result.js";
 import { sha256Hex } from "../../wacz/digest.js";
 import type { Issue, ValidationRule } from "../domain.js";
+import { datapackageOf, DATAPACKAGE_ENTRY } from "../datapackage-source.js";
 
 const DIGEST_ENTRY = "datapackage-digest.json";
-const DATAPACKAGE_ENTRY = "datapackage.json";
 
 export const datapackageDigestRule: ValidationRule = {
   name: "datapackage/digest",
@@ -86,7 +86,9 @@ export const datapackageDigestRule: ValidationRule = {
       });
     }
 
-    const dp = await wacz.readEntry(DATAPACKAGE_ENTRY);
+    // ここだけは解析済みのオブジェクトではなく **ファイルそのもの** が要る ——
+    // digest はバイト列のハッシュだから。
+    const { bytes: dp } = await datapackageOf(wacz);
     if (typeof digest.hash !== "string" || digest.hash.length === 0) {
       issues.push({
         rule: "datapackage/digest",
