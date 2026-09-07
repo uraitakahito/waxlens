@@ -21,8 +21,23 @@ const RULES_DIR = resolve(ROOT, "packages/core/src/validate/rules");
 const read = (abs: string): string => readFileSync(abs, "utf8");
 
 /** `key: "value"` を 1 つ取り出す。無ければ undefined。 */
-const literal = (source: string, key: string): string | undefined =>
-  new RegExp(String.raw`\b${key}:\s*"([^"]+)"`).exec(source)?.[1];
+/**
+ * rule オブジェクト直下の文字列リテラルを 1 つ読む。
+ *
+ * **行頭 + 2 スペースに固定してある。** 緩い `\bkey:` にしていたときは、
+ * ファイル内のどこかにある無関係な `name: "..."` —— 必須 member の一覧など ——
+ * が先に当たり、`browserhive/settings-shape` が `signature` として、
+ * `browserhive/dismissal-shape` が `selectors` として表に出ていた。
+ * **一致してしまう誤りは throw しない**ので、表だけが静かに嘘をついていた。
+ */
+const literal = (source: string, key: string): string | undefined => {
+  const hits = [
+    ...source.matchAll(new RegExp(String.raw`^  ${key}: "([^"]+)",$`, "gm")),
+  ];
+  // 2 つ在るなら、どちらが rule のものか決められない。1 つに絞れないことを
+  // 「読めなかった」として扱い、呼び出し側に throw させる。
+  return hits.length === 1 ? hits[0]?.[1] : undefined;
+};
 
 /**
  * rule が依拠する spec へのリンク。rule 定義の `docs` 由来。

@@ -39,7 +39,9 @@ import type { Issue, ValidationRule } from "../domain.js";
 const RULE = "browserhive/behaviors-shape";
 
 export const browserhiveBehaviorsShapeRule: ValidationRule = {
-  name: RULE,
+  // docs の抽出器はソースを文字列として読むので、ここは定数ではなく
+  // リテラルで書く (他の rule も同じ)。
+  name: "browserhive/behaviors-shape",
   descriptionKey: `${RULE}.desc`,
   conformance: "MUST",
   docs: [

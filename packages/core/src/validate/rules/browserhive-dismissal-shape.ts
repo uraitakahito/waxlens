@@ -48,7 +48,9 @@ const OUTCOME = [
 ] as const;
 
 export const browserhiveDismissalShapeRule: ValidationRule = {
-  name: RULE,
+  // docs の抽出器はソースを文字列として読むので、ここは定数ではなく
+  // リテラルで書く (他の rule も同じ)。
+  name: "browserhive/dismissal-shape",
   descriptionKey: `${RULE}.desc`,
   conformance: "MUST",
   docs: [
