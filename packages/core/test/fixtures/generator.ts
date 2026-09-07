@@ -201,6 +201,15 @@ export interface FixtureOptions {
    */
   settings?: Record<string, unknown>;
   /**
+   * `browserhive:capture.dismissal` をそのまま書き込む。undefined なら member ごと
+   * 書かない —— **除去は任意**で、不在は「配信されたままのページを保存した」という
+   * 意味になるので、tls と同じく不在も正しい形。
+   *
+   * 中身は検査しない。member を落とした形も、`unreadable` と結果を並べた形も
+   * そのまま通す —— それを問題と呼ぶかは rule が決める。
+   */
+  dismissal?: Record<string, unknown>;
+  /**
    * `storage/origins.jsonl` の中身。オブジェクトの配列なら 1 行ずつ JSONL に、
    * 文字列ならそのまま書く (JSON として読めない行を作るため)。
    */
@@ -609,6 +618,11 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
   if (options.settings !== undefined) {
     const capture = (datapackage["browserhive:capture"] ?? {}) as Record<string, unknown>;
     capture["settings"] = options.settings;
+    datapackage["browserhive:capture"] = capture;
+  }
+  if (options.dismissal !== undefined) {
+    const capture = (datapackage["browserhive:capture"] ?? {}) as Record<string, unknown>;
+    capture["dismissal"] = options.dismissal;
     datapackage["browserhive:capture"] = capture;
   }
   const datapackageBytes = Buffer.from(`${JSON.stringify(datapackage, null, 2)}\n`, "utf-8");
