@@ -13,6 +13,7 @@ import type { Conformance, DocLink, ValidationRule } from "../domain.js";
 import { browserhiveTlsChainRule } from "./browserhive-tls-chain.js";
 import { browserhiveAxtreeShapeRule } from "./browserhive-axtree-shape.js";
 import { browserhiveUrlPoliciesRule } from "./browserhive-url-policies.js";
+import { browserhiveDismissalShapeRule } from "./browserhive-dismissal-shape.js";
 import { browserhiveSettingsShapeRule } from "./browserhive-settings-shape.js";
 import { browserhiveStorageInventoryRule } from "./browserhive-storage-inventory.js";
 import { browserhiveStorageShapeRule } from "./browserhive-storage-shape.js";
@@ -92,6 +93,7 @@ export const DEFAULT_RULES: readonly ValidationRule[] = [
   // 同上。記録された san を、同じパッケージに入っている証明書と突き合わせる。
   // san は browserhive 3.7.0 で入ったので版の条件を持つ。
   browserhiveAxtreeShapeRule,
+  browserhiveDismissalShapeRule,
   browserhiveSettingsShapeRule,
   browserhiveUrlPoliciesRule,
   browserhiveStorageInventoryRule,
