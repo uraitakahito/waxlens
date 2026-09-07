@@ -210,6 +210,12 @@ export interface FixtureOptions {
    */
   dismissal?: Record<string, unknown>;
   /**
+   * `behaviors/custom.jsonl` の中身。オブジェクトの配列なら 1 行ずつ JSONL に、
+   * 文字列ならそのまま書く (JSON として読めない行を作るため)。undefined なら
+   * エントリごと作らない —— **不在は「持ち込みを置かなかった」で、正しい形**。
+   */
+  behaviorsCustom?: Record<string, unknown>[] | string;
+  /**
    * `storage/origins.jsonl` の中身。オブジェクトの配列なら 1 行ずつ JSONL に、
    * 文字列ならそのまま書く (JSON として読めない行を作るため)。
    */
@@ -523,6 +529,16 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
           "utf-8",
         );
 
+  const behaviorsCustomBytes =
+    options.behaviorsCustom === undefined
+      ? undefined
+      : Buffer.from(
+          typeof options.behaviorsCustom === "string"
+            ? options.behaviorsCustom
+            : options.behaviorsCustom.map((line) => `${JSON.stringify(line)}\n`).join(""),
+          "utf-8",
+        );
+
   const storageBytes =
     options.storageValues === undefined
       ? undefined
@@ -576,6 +592,16 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
             path: "accessibility/axtree.jsonl",
             hash: sha256Hex(axtreeBytes),
             bytes: axtreeBytes.byteLength,
+          },
+        ]),
+    ...(behaviorsCustomBytes === undefined
+      ? []
+      : [
+          {
+            name: "custom.jsonl",
+            path: "behaviors/custom.jsonl",
+            hash: sha256Hex(behaviorsCustomBytes),
+            bytes: behaviorsCustomBytes.byteLength,
           },
         ]),
   ];
@@ -674,6 +700,9 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
   zip.append(fuzzyBytes, { name: "fuzzy.json", date: entryDate });
   if (storageBytes !== undefined) {
     zip.append(storageBytes, { name: "storage/origins.jsonl", date: entryDate });
+  }
+  if (behaviorsCustomBytes !== undefined) {
+    zip.append(behaviorsCustomBytes, { name: "behaviors/custom.jsonl", date: entryDate });
   }
   if (axtreeBytes !== undefined) {
     zip.append(axtreeBytes, { name: "accessibility/axtree.jsonl", date: entryDate });
