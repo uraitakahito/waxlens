@@ -8,6 +8,10 @@
  *   - 同じアンカーを指すリンクは同じ URL の組を持つ
  *   - 複数 spec を跨ぐ rule は複数リンクを持つ
  */
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { describe, expect, it } from "vitest";
 import { DEFAULT_RULES, docsForRule } from "../src/validate/rules/index.js";
 
@@ -57,5 +61,49 @@ describe("rule docs", () => {
 
   it("frictionless-structure は 2 spec を持つ", () => {
     expect(docsForRule("datapackage/frictionless-structure")).toHaveLength(2);
+  });
+});
+
+/**
+ * docs の rule 表は `rules/*.ts` を **ソース文字列として** 読んで作られる
+ * (`docs-site/src/lib/extract.ts`)。コンパイルしないので、抽出器が読むのは
+ * ファイルの見た目であって値ではない。
+ *
+ * **緩い正規表現が黙って別の値を拾っていた。** `\bname:\s*"..."` は
+ * ファイル内のどこかにある無関係な `name: "..."` —— 必須 member の一覧など ——
+ * に先に当たり、`browserhive/settings-shape` は `signature` として、
+ * `browserhive/dismissal-shape` は `selectors` として表に出ていた。
+ * **一致してしまう誤りは throw しない**ので、表だけが静かに嘘をついていた。
+ *
+ * ここが固定するのは抽出器が依拠する **書き方の約束** —— rule の `name` と
+ * `conformance` は、オブジェクト直下に 2 スペース字下げの文字列リテラルで書く。
+ * 定数 (`name: RULE`) にすると抽出器から見えなくなる。
+ */
+const RULES_DIR = fileURLToPath(new URL("../src/validate/rules", import.meta.url));
+
+describe("rule 定義の書き方", () => {
+  const files = readdirSync(RULES_DIR).filter((f) => f.endsWith(".ts") && f !== "index.ts");
+
+  it("ファイル数と登録数が一致する", () => {
+    expect(files.length).toBe(DEFAULT_RULES.length);
+  });
+
+  it.each(files)("%s は name / conformance をリテラルで書いている", (file) => {
+    const source = readFileSync(join(RULES_DIR, file), "utf8");
+    const names = [...source.matchAll(/^ {2}name: "([^"]+)",$/gm)];
+    const conformances = [...source.matchAll(/^ {2}conformance: "([^"]+)",$/gm)];
+
+    // **ちょうど 1 つ。** 0 なら抽出器から見えず、2 つ以上ならどちらが rule の
+    // ものか決められない —— どちらも表が黙って別の値を出す経路になる。
+    expect(names.length, `${file}: name のリテラルは 1 つ`).toBe(1);
+    expect(conformances.length, `${file}: conformance のリテラルは 1 つ`).toBe(1);
+    const name = names[0]?.[1];
+    const conformance = conformances[0]?.[1];
+
+    // **抽出した名前が、実際に登録されている rule と同じであること。**
+    // 別の `name: "..."` を拾っていれば、ここで落ちる。
+    const registered = DEFAULT_RULES.find((r) => r.name === name);
+    expect(registered, `${file}: 抽出した name "${String(name)}" が DEFAULT_RULES に無い`).toBeDefined();
+    expect(registered?.conformance).toBe(conformance);
   });
 });
