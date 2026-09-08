@@ -242,6 +242,13 @@ export interface FixtureOptions {
    */
   digest?: "absent" | "bad-hash";
   /**
+   * `datapackage-digest.json` に `signedData` を同梱する (wacz-auth/signature)。
+   *
+   * 中身は素通しする —— 署名は呼ぶ側が作る。ここで鍵を持つと、fixture が
+   * 「正しい署名」を 1 通りしか作れなくなり、壊した形を試験できない。
+   */
+  signedData?: Record<string, unknown>;
+  /**
    * G4 (wacz/reserved-dirs-clean): 予約ディレクトリ `archive/` に
    * 異物ファイル(`archive/notes.txt`)を追加する。
    */
@@ -718,7 +725,15 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
     const dpHash =
       options.digest === "bad-hash" ? `sha256:${"0".repeat(64)}` : sha256Hex(datapackageBytes);
     const digestBytes = Buffer.from(
-      `${JSON.stringify({ path: "datapackage.json", hash: dpHash }, null, 2)}\n`,
+      `${JSON.stringify(
+        {
+          path: "datapackage.json",
+          hash: dpHash,
+          ...(options.signedData !== undefined && { signedData: options.signedData }),
+        },
+        null,
+        2,
+      )}\n`,
       "utf-8",
     );
     zip.append(digestBytes, { name: "datapackage-digest.json", date: entryDate });
