@@ -201,6 +201,105 @@ describe("browserhive/storage-inventory", () => {
     });
     expect(issues.map((i) => i.messageKey)).toEqual([`${INVENTORY}.area-count`]);
   });
+
+  it("新旧どちらの profile の綴りも受け付ける", async () => {
+    // 検証器が新しい方しか読めなければ、適合していた古いアーカイブを一斉に落とす。
+    for (const profile of ["browserhive:storage/1", "browserhive:storage/2"]) {
+      expect(await run({ storage: goodInventory({ profile }) })).toEqual([]);
+    }
+  });
+
+  /**
+   * **この 1 件が排他検査の回帰よけ。**
+   *
+   * `unreadable === hasAreas` は「両方 true」と「両方 false」で発火する XNOR。
+   * `valuesOversize` を持つ項目が area を落とすと `false === false` になり、
+   * **落とされた origin が軒並み `origin-form` で赤くなる**。profile 1.6.0 が
+   * area を持たせたままにしているのはそのため (読み手が「どれだけ失ったか」を
+   * 知れるのが第一の理由だが、ここも同じ結論を支えている)。
+   */
+  it("valuesOversize は area を持ったまま素通りする", async () => {
+    expect(
+      await run({
+        storage: goodInventory({
+          valuesRecorded: true,
+          origins: [
+            {
+              origin: "https://heavy.example",
+              local: { keys: 1, bytes: 2_129_905, digest: DIGEST },
+              session: { keys: 0, bytes: 0, digest: DIGEST },
+              valuesOversize: true,
+            },
+          ],
+        }),
+      }),
+    ).toEqual([]);
+  });
+
+  /**
+   * `unreadable` と同じ形にしたくなる誘惑への歯止め。profile 1.6.0 は
+   * `valuesOversize` を持つ項目に area を持たせたままにすることを MUST と
+   * しており、落とすと「どれだけ失ったか」を読み手が知れなくなる。
+   *
+   * この 1 件が無いと、排他検査を三値に「直して」も何も赤くならない。
+   */
+  it("area を持たない valuesOversize を報告する", async () => {
+    const issues = await run({
+      storage: goodInventory({
+        valuesRecorded: true,
+        origins: [{ origin: "https://heavy.example", valuesOversize: true }],
+      }),
+    });
+    expect(issues.map((i) => i.messageKey)).toEqual([`${INVENTORY}.origin-form`]);
+  });
+
+  it("valuesOversize が true 以外なら報告する", async () => {
+    // この member の意味は 1 つで、在ること自体がそれを述べる。false を書けるように
+    // すると「落とされていない」を 2 通りで表せてしまう。
+    const issues = await run({
+      storage: goodInventory({
+        valuesRecorded: true,
+        origins: [
+          {
+            origin: "https://heavy.example",
+            local: { keys: 1, bytes: 10, digest: DIGEST },
+            session: { keys: 0, bytes: 0, digest: DIGEST },
+            valuesOversize: false,
+          },
+        ],
+      }),
+    });
+    expect(issues.map((i) => i.messageKey)).toEqual([`${INVENTORY}.oversize-shape`]);
+  });
+
+  it("valuesOversize と unreadable の同居を報告する", async () => {
+    // 読めなかった storage には、超えるべき大きさが無い。
+    const issues = await run({
+      storage: goodInventory({
+        valuesRecorded: true,
+        origins: [{ origin: "https://blocked.test", unreadable: true, valuesOversize: true }],
+      }),
+    });
+    expect(issues.map((i) => i.messageKey)).toEqual([`${INVENTORY}.oversize-with-unreadable`]);
+  });
+
+  it("値を求めていない取り込みの valuesOversize を報告する", async () => {
+    // どの origin の値ももともと運ばれる予定が無い。ここで立てるのは、
+    // **誰も下していない判断**の報告になる。
+    const issues = await run({
+      storage: goodInventory({
+        origins: [
+          {
+            origin: "https://heavy.example",
+            local: { keys: 1, bytes: 2_129_905, digest: DIGEST },
+            session: { keys: 0, bytes: 0, digest: DIGEST },
+            valuesOversize: true,
+          },
+        ],
+      }),
+    });
+    expect(issues.map((i) => i.messageKey)).toEqual([`${INVENTORY}.oversize-without-values`]);
+  });
 });
 
 describe("browserhive/storage-shape", () => {
@@ -274,5 +373,48 @@ describe("browserhive/storage-shape", () => {
       storageValues: [goodLine()],
     });
     expect(issues.map((i) => i.messageKey)).toContain(`${SHAPE}.unreadable-has-values`);
+  });
+
+  /**
+   * `unreadable` とは矛盾の中身が違う —— こちらは「読めたが大きすぎるので運ばないと
+   * 決めた」と「ここに在る」の同居。producer が**上限の判定と行を書く判定を別々に
+   * 書いた**ときに出る形なので、直す先も違う。だから別の messageKey を持つ。
+   */
+  it("目録が valuesOversize と言った origin に値が在れば報告する", async () => {
+    const issues = await run({
+      storage: goodInventory({
+        valuesRecorded: true,
+        origins: [
+          {
+            origin: "https://example.com",
+            local: { keys: 1, bytes: 2_129_905, digest: DIGEST },
+            session: { keys: 0, bytes: 0, digest: DIGEST },
+            valuesOversize: true,
+          },
+        ],
+      }),
+      storageValues: [goodLine()],
+    });
+    expect(issues.map((i) => i.messageKey)).toEqual([`${SHAPE}.oversize-has-values`]);
+  });
+
+  it("目録と行の profile が食い違えば報告する", async () => {
+    // 綴りが 1 つしかなかった頃は、定数と比べることで一致が自動的に取れていた。
+    // 2 つ読めるようになったので、ここを見ないと `/2` の目録に `/1` の行が
+    // 並ぶアーカイブが素通りする。
+    const issues = await run({
+      storage: goodInventory({ profile: "browserhive:storage/2", valuesRecorded: true }),
+      storageValues: [goodLine({ profile: "browserhive:storage/1" })],
+    });
+    expect(issues.map((i) => i.messageKey)).toEqual([`${SHAPE}.unknown-profile`]);
+  });
+
+  it("目録と行がそろって /2 なら何も言わない", async () => {
+    expect(
+      await run({
+        storage: goodInventory({ profile: "browserhive:storage/2", valuesRecorded: true }),
+        storageValues: [goodLine({ profile: "browserhive:storage/2" })],
+      }),
+    ).toEqual([]);
   });
 });

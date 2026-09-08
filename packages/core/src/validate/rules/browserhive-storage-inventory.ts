@@ -9,14 +9,17 @@
  * ならない: あれが報告するのはパッケージが保持していない body で、storage は
  * 一度も body にならない。
  *
- * 確かめるのは 4 つ:
+ * 確かめるのは 5 つ:
  *
  *   1. member が在り、必須の 4 つを持っている
- *   2. profile と stage がこの版の綴りである
+ *   2. profile がこの検証器の読める綴りのいずれかで、stage がこの版の綴りである
  *   3. 各 origin が「両 area を持つ」か「unreadable」のどちらかである
  *      —— 空の area (keys: 0) と読めなかった origin は別物で、混ぜると
  *      この member が取り除こうとしている曖昧さが戻る
- *   4. digest が sha256: + 64 桁である
+ *   4. `valuesOversize` を名乗る origin の値が `true` で、`unreadable` とも
+ *      `valuesRecorded: false` とも同居していない —— 前者は両立しない 2 つの
+ *      主張、後者は**誰も下していない判断**の報告になる
+ *   5. digest が sha256: + 64 桁である
  *
  * **値そのものは見ない。** 目録は値を持たないと profile が言っており、
  * それを確かめるのは形の検査ではなく `storage-shape` の側の仕事。
@@ -25,12 +28,13 @@
  * 無くて当然で、走らせなかったことは `Report.skipped` に残る。1.1.0 を名乗って
  * いないアーカイブに 1.1.0 の MUST を当てて落とすのは、検証器として誤り。
  *
- * Spec: https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.1.0/#storage
+ * Spec: https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.6.0/#storage
  */
 import { ok } from "../../result.js";
 import {
   DIGEST_PATTERN,
-  EXPECTED_STORAGE_PROFILE,
+  isKnownStorageProfile,
+  KNOWN_STORAGE_PROFILES_LABEL,
   EXPECTED_STORAGE_STAGE,
   INVENTORY_MEMBERS,
   isRecord,
@@ -78,8 +82,8 @@ export const browserhiveStorageInventoryRule: ValidationRule = {
     {
       label: "BrowserHive WACZ Profile §storage",
       url: {
-        en: "https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.1.0/#storage",
-        ja: "https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.1.0/ja/#storage",
+        en: "https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.6.0/#storage",
+        ja: "https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.6.0/ja/#storage",
       },
     },
   ],
@@ -107,10 +111,10 @@ export const browserhiveStorageInventoryRule: ValidationRule = {
     const missing = INVENTORY_MEMBERS.filter((m) => !(m in storage));
     if (missing.length > 0) push(`${RULE}.missing-member`, { members: missing.join(", ") });
 
-    if (storage["profile"] !== EXPECTED_STORAGE_PROFILE) {
+    if (!isKnownStorageProfile(storage["profile"])) {
       push(`${RULE}.unknown-profile`, {
         found: JSON.stringify(storage["profile"]),
-        expected: EXPECTED_STORAGE_PROFILE,
+        expected: KNOWN_STORAGE_PROFILES_LABEL,
       });
     }
     if (storage["stage"] !== EXPECTED_STORAGE_STAGE) {
@@ -146,10 +150,32 @@ export const browserhiveStorageInventoryRule: ValidationRule = {
 
       // 「読めなかった」と「両 area を持つ」は排他。どちらでもない形、あるいは
       // 両方を名乗る形は、profile が分けようとした 2 つを混ぜている。
+      //
+      // `valuesOversize` はここに**入らない** —— あれを持つ項目は area を
+      // 持ったままなので (profile 1.6.0 の MUST)、この XNOR を素通りする。
+      // 三値にすると、area を持つ普通の項目まで巻き込む。
       if (unreadable === hasAreas) {
         push(`${RULE}.origin-form`, { where });
         continue;
       }
+
+      // `valuesOversize` は「読めたが運ばないと決めた」。読めていない origin に
+      // 立てると、両立しない 2 つを同時に主張することになる。
+      if ("valuesOversize" in entry) {
+        if (entry["valuesOversize"] !== true) {
+          push(`${RULE}.oversize-shape`, {
+            where,
+            found: JSON.stringify(entry["valuesOversize"]),
+          });
+        }
+        if (unreadable) push(`${RULE}.oversize-with-unreadable`, { where });
+        // 値をそもそも求められていない取り込みでは、落とされたものは無い。
+        // ここで立てると、**誰も下していない判断**を報告することになる。
+        if (storage["valuesRecorded"] !== true) {
+          push(`${RULE}.oversize-without-values`, { where });
+        }
+      }
+
       if (unreadable) continue;
 
       for (const area of ["local", "session"] as const) {

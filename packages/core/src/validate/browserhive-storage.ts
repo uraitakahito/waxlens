@@ -18,8 +18,24 @@ import type { WaczReader } from "../wacz/reader.js";
 /** 値のファイル。目録が `valuesRecorded: true` のときだけ在る。 */
 export const STORAGE_ENTRY = "storage/origins.jsonl";
 
-/** この版が期待する profile の綴り。producer が規則を変えたらここも変わる。 */
-export const EXPECTED_STORAGE_PROFILE = "browserhive:storage/1";
+/**
+ * この版が読める profile の綴り。**古い順**に並べる。
+ *
+ * 2 つ在るのは `/2` が `/1` の上位互換ではないため —— `valuesRecorded` の意味が
+ * 動いており (`/1` は「値を運んでいる」、`/2` は「値を**求められた**」)、
+ * producer は profile 1.6.0 の MUST に従って版を上げる。検証器が新しい方しか
+ * 読めなければ、適合していた古いアーカイブを一斉に落とすことになる。
+ */
+export const KNOWN_STORAGE_PROFILES = [
+  "browserhive:storage/1",
+  "browserhive:storage/2",
+] as const;
+
+/** 表示用。`{expected}` に入る。 */
+export const KNOWN_STORAGE_PROFILES_LABEL = KNOWN_STORAGE_PROFILES.join(" | ");
+
+export const isKnownStorageProfile = (value: unknown): boolean =>
+  typeof value === "string" && KNOWN_STORAGE_PROFILES.includes(value as never);
 
 /** この版が規範として固定している stage。 */
 export const EXPECTED_STORAGE_STAGE = "after-behaviors";
