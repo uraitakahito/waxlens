@@ -12,21 +12,23 @@
  * `datapackage/resources-complete`(ZIP の実体がすべて宣言されているか)と
  * `datapackage/resource-hashes`(宣言と実体の hash 一致)が既に見ている。
  *
- * 確かめるのは 4 つ:
+ * 確かめるのは 5 つ:
  *
  *   1. `valuesRecorded` とファイルの有無が一致している (**両方向**)
  *   2. 各行が JSON オブジェクトで、必須の member を持っている
  *   3. profile と stage が目録と同じ綴りである
  *   4. 目録で `unreadable` と申告された origin が、ここに行を持っていない
+ *   5. 目録で `valuesOversize` と申告された origin が、ここに行を持っていない
  *
  * 4 が要るのは、両方に書くと「読めなかった」と「読んで値が在った」を同時に
- * 主張することになるため。
+ * 主張することになるため。5 は矛盾の中身が違う —— 「読めたが大きすぎるので
+ * 運ばないと決めた」と「ここに在る」の同居で、producer が**上限の判定と行を
+ * 書く判定を別々に書いた**ときに出る。直す先が違うので、報告も分ける。
  *
- * Spec: https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.1.0/#storage-directory
+ * Spec: https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.6.0/#storage-directory
  */
 import { ok } from "../../result.js";
 import {
-  EXPECTED_STORAGE_PROFILE,
   EXPECTED_STORAGE_STAGE,
   isRecord,
   readCapture,
@@ -38,19 +40,30 @@ import type { Issue, ValidationRule } from "../domain.js";
 
 const RULE = "browserhive/storage-shape";
 
-/** 目録が `unreadable` と申告した origin。 */
-const unreadableOrigins = (storage: unknown): ReadonlySet<string> => {
-  const out = new Set<string>();
-  if (!isRecord(storage)) return out;
+/**
+ * 目録が「行を持たない」と申告した origin を、**理由ごとに分けて**返す。
+ *
+ * 1 つの集合にまとめない —— 矛盾の中身が違うので、報告も分かれる。
+ * `unreadable` は「読めなかったのに値が在る」、`oversize` は「読めたが運ばないと
+ * 決めたのに値が在る」。同じ文言で報告すると、読み手はどちらを直せばよいか
+ * 分からない (前者はアーカイブが壊れている、後者は上限の設定の話)。
+ */
+const withheldOrigins = (
+  storage: unknown,
+): { unreadable: ReadonlySet<string>; oversize: ReadonlySet<string> } => {
+  const unreadable = new Set<string>();
+  const oversize = new Set<string>();
+  if (!isRecord(storage)) return { unreadable, oversize };
   const origins = storage["origins"];
-  if (!Array.isArray(origins)) return out;
+  if (!Array.isArray(origins)) return { unreadable, oversize };
   for (const entry of origins) {
     if (!isRecord(entry)) continue;
-    if (entry["unreadable"] === true && typeof entry["origin"] === "string") {
-      out.add(entry["origin"]);
-    }
+    const origin = entry["origin"];
+    if (typeof origin !== "string") continue;
+    if (entry["unreadable"] === true) unreadable.add(origin);
+    if (entry["valuesOversize"] === true) oversize.add(origin);
   }
-  return out;
+  return { unreadable, oversize };
 };
 
 export const browserhiveStorageShapeRule: ValidationRule = {
@@ -63,8 +76,8 @@ export const browserhiveStorageShapeRule: ValidationRule = {
     {
       label: "BrowserHive WACZ Profile §storage directory",
       url: {
-        en: "https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.1.0/#storage-directory",
-        ja: "https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.1.0/ja/#storage-directory",
+        en: "https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.6.0/#storage-directory",
+        ja: "https://uraitakahito.github.io/browserhive-specs/wacz-profile/1.6.0/ja/#storage-directory",
       },
     },
   ],
@@ -98,7 +111,15 @@ export const browserhiveStorageShapeRule: ValidationRule = {
     }
     if (lines === null) return ok(issues);
 
-    const unreadable = unreadableOrigins(storage);
+    const withheld = withheldOrigins(storage);
+
+    // 行の profile は**目録と同じ綴り**でなければならない。定数と比べていた頃は
+    // 綴りが 1 つしかなく、一致は自動的だった。2 つ読めるようになった今、
+    // ここを見ないと `/2` の目録に `/1` の行が並ぶアーカイブが素通りする。
+    // 目録側が文字列ですらないときは黙る —— それは storage-inventory の持ち場で、
+    // ここで重ねると 1 つの誤りが行数ぶんの issue になる。
+    const inventoryProfile = isRecord(storage) ? storage["profile"] : undefined;
+    const checkProfile = typeof inventoryProfile === "string";
 
     for (const { lineNumber, parsed } of lines) {
       const line = String(lineNumber);
@@ -110,11 +131,11 @@ export const browserhiveStorageShapeRule: ValidationRule = {
       const missing = VALUE_LINE_MEMBERS.filter((m) => !(m in parsed));
       if (missing.length > 0) push(`${RULE}.missing-member`, { line, members: missing.join(", ") });
 
-      if (parsed["profile"] !== EXPECTED_STORAGE_PROFILE) {
+      if (checkProfile && parsed["profile"] !== inventoryProfile) {
         push(`${RULE}.unknown-profile`, {
           line,
           found: JSON.stringify(parsed["profile"]),
-          expected: EXPECTED_STORAGE_PROFILE,
+          expected: inventoryProfile,
         });
       }
       if (parsed["stage"] !== EXPECTED_STORAGE_STAGE) {
@@ -131,9 +152,16 @@ export const browserhiveStorageShapeRule: ValidationRule = {
       }
 
       const origin = parsed["origin"];
-      if (typeof origin === "string" && unreadable.has(origin)) {
-        // 目録が「読めなかった」と言った origin の値が在る。どちらかが嘘。
-        push(`${RULE}.unreadable-has-values`, { line, origin });
+      if (typeof origin === "string") {
+        if (withheld.unreadable.has(origin)) {
+          // 目録が「読めなかった」と言った origin の値が在る。どちらかが嘘。
+          push(`${RULE}.unreadable-has-values`, { line, origin });
+        }
+        if (withheld.oversize.has(origin)) {
+          // 目録が「大きすぎたので運ばなかった」と言った origin の値が在る。
+          // 上限の判定と行を書く判定が**別々に書かれている**ときに出る形。
+          push(`${RULE}.oversize-has-values`, { line, origin });
+        }
       }
     }
 
