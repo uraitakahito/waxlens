@@ -33,6 +33,7 @@ import { datapackageProfileRule } from "./datapackage-profile.js";
 import { datapackageResourcesCompleteRule } from "./datapackage-resources-complete.js";
 import { datapackageWaczVersionRule } from "./datapackage-wacz-version.js";
 import { pagesPageSchemaRule } from "./pages-page-schema.js";
+import { waczAuthSignatureRule } from "./wacz-auth-signature.js";
 import { waczRequiredFilesRule } from "./wacz-required-files.js";
 import { waczReservedDirsCleanRule } from "./wacz-reserved-dirs-clean.js";
 import { warcExtensionRule } from "./warc-extension.js";
@@ -53,6 +54,7 @@ import { warcStorageStoreRule } from "./warc-storage-store.js";
 export const DEFAULT_RULES: readonly ValidationRule[] = [
   // §5.2 の構造的な MUST 欠落を最上段で。ファイルが欠けていれば他の
   // rule の指摘は二次的なので、最初に「そもそも揃っているか」を出す。
+  waczAuthSignatureRule,
   waczRequiredFilesRule,
   // 予約ディレクトリ(archive/indexes/pages)に異物が無いか(MUST NOT)。
   waczReservedDirsCleanRule,
@@ -145,6 +147,7 @@ export {
   datapackageResourcesCompleteRule,
   datapackageWaczVersionRule,
   pagesPageSchemaRule,
+  waczAuthSignatureRule,
   waczRequiredFilesRule,
   waczReservedDirsCleanRule,
   warcExtensionRule,
