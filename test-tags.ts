@@ -19,9 +19,12 @@ import type { TestTagDefinition } from "vitest/config";
  * agree with itself (`frictionless-schema.test.ts` sits beside
  * `datapackage-frictionless-structure.test.ts`).
  *
- * Deliberately not one tag per rule. Of 22 rules only 5 have a test file named
- * after them; the rest are covered inside `validate.test.ts` and the corpus
- * suite, so a rule-level vocabulary would be 17 names with nothing behind them.
+ * Deliberately not one tag per rule. Only a handful of rules have a test file
+ * named after them; the rest are covered inside `validate.test.ts` and the
+ * corpus suite, so a rule-level vocabulary would be mostly names with nothing
+ * behind them. (Counts used to be written here and rotted — 22 rules became
+ * 31 while the sentence stood still — so this comment now states the shape,
+ * not the numbers.)
  */
 export const TEST_TAGS: TestTagDefinition[] = [
   { name: "frictionless", description: "The Data Package base WACZ is built on" },
