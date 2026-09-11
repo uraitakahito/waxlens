@@ -19,7 +19,7 @@ service を駆動する手段が無いため。wacz-validator は host で動か
 
 SeaweedFS の設定は submodule
 ([seaweedfs](https://github.com/uraitakahito/seaweedfs)) にある。browserhive と
-waggle と同じものを使う。clone のときに一緒に取るか、後から取る:
+capture-ledger と同じものを使う。clone のときに一緒に取るか、後から取る:
 
 ```sh
 git clone --recurse-submodules https://github.com/uraitakahito/wacz-validator.git

@@ -18,12 +18,12 @@
  * アーカイブが来年落ちる』判定は、アーカイブについての事実ではない」。
  *
  * ここが答えるのも同じ —— **このパッケージが持っているものだけで言えるか**。
- * trust anchor と RFC 3161 は `capping verify` の持ち場で、あちらは 4 段すべてを
+ * trust anchor と RFC 3161 は `wacz-signer verify` の持ち場で、あちらは 4 段すべてを
  * `ok / failed / skipped` の 3 値で報告する。
  *
  * ## それでも塞がる穴
  *
- * 「改竄された `signedData` は wacz-validator を通り、`capping verify` でだけ落ちる」と
+ * 「改竄された `signedData` は wacz-validator を通り、`wacz-signer verify` でだけ落ちる」と
  * 記録されていた穴は、これで閉じる。改竄は 1 の署名検証を壊すので、anchor を
  * 一切持ち込まずに検出できる。`datapackage/digest` は `hash` が
  * `datapackage.json` と一致するかまでは見るが、**その `hash` に誰が署名したかは

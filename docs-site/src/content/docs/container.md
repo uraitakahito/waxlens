@@ -20,7 +20,7 @@ service could not be driven from it. wacz-validator runs either on your host or 
 
 The SeaweedFS configuration lives in a submodule
 ([seaweedfs](https://github.com/uraitakahito/seaweedfs)), shared with
-browserhive and waggle. Clone with it, or fetch it afterwards:
+browserhive and capture-ledger. Clone with it, or fetch it afterwards:
 
 ```sh
 git clone --recurse-submodules https://github.com/uraitakahito/wacz-validator.git
