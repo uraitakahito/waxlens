@@ -1,14 +1,14 @@
 {
-  "name": "@waxlens/validate-cli",
+  "name": "@wacz-validator/validate-cli",
   "version": "0.0.0",
-  "description": "waxlens-validate — the non-interactive CLI over @waxlens/core. Emits a machine-readable JSON report to stdout.",
+  "description": "wacz-validator-validate — the non-interactive CLI over @wacz-validator/core. Emits a machine-readable JSON report to stdout.",
   "license": "Unlicense",
   "type": "module",
   "engines": {
     "node": ">=24.15.0"
   },
   "bin": {
-    "waxlens-validate": "dist/waxlens-validate.js"
+    "wacz-validator-validate": "dist/wacz-validator-validate.js"
   },
   "files": [
     "dist",
@@ -16,7 +16,7 @@
   ],
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
-    "postbuild": "chmod +x dist/waxlens-validate.js",
+    "postbuild": "chmod +x dist/wacz-validator-validate.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -26,8 +26,8 @@
     "prepublishOnly": "pnpm check && pnpm build"
   },
   "dependencies": {
-    "@waxlens/contract": "workspace:*",
-    "@waxlens/core": "workspace:*",
+    "@wacz-validator/contract": "workspace:*",
+    "@wacz-validator/core": "workspace:*",
     "commander": "^15.0.0"
   },
   "devDependencies": {

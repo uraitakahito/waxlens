@@ -16,9 +16,9 @@ import type {
   RpcResponse,
   ValidateParams,
   WireReport,
-} from "@waxlens/protocol";
+} from "@wacz-validator/protocol";
 import { BUILD_INFO } from "./generated/build-info.js";
-import { describeCause } from "@waxlens/contract";
+import { describeCause } from "@wacz-validator/contract";
 import { DaemonError, readEntry, validate } from "./handlers.js";
 
 const healthStatus = (): HealthStatus => ({
@@ -33,9 +33,9 @@ const dispatch = async (
   method: string,
   params: unknown,
 ): Promise<WireReport | ReadEntryResult | HealthStatus> => {
-  if (method === "waxlens/ping") return healthStatus();
-  if (method === "waxlens/validate") return validate(params as ValidateParams);
-  if (method === "waxlens/readEntry") return readEntry(params as ReadEntryParams);
+  if (method === "wacz-validator/ping") return healthStatus();
+  if (method === "wacz-validator/validate") return validate(params as ValidateParams);
+  if (method === "wacz-validator/readEntry") return readEntry(params as ReadEntryParams);
   throw new DaemonError("badRequest", `unknown method: ${method}`);
 };
 
@@ -92,10 +92,10 @@ export interface CreateDaemonOptions {
 /** level に応じて stderr に書く薄い logger。 */
 const makeLogger = (level: LogLevel) => ({
   error: (msg: string) => {
-    if (level !== "silent") process.stderr.write(`waxlens-daemon [error] ${msg}\n`);
+    if (level !== "silent") process.stderr.write(`wacz-validator-daemon [error] ${msg}\n`);
   },
   debug: (msg: string) => {
-    if (level === "debug") process.stderr.write(`waxlens-daemon [debug] ${msg}\n`);
+    if (level === "debug") process.stderr.write(`wacz-validator-daemon [debug] ${msg}\n`);
   },
 });
 

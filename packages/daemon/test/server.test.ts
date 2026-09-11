@@ -11,7 +11,7 @@ import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WebSocket } from "ws";
-import type { RpcRequest, RpcResponse } from "@waxlens/protocol";
+import type { RpcRequest, RpcResponse } from "@wacz-validator/protocol";
 import { createDaemon } from "../src/server.js";
 
 const corpusDir = process.env["CORPUS_DIR"];
@@ -56,8 +56,8 @@ describe("daemon server (WS)", () => {
   it("未知メソッドは badRequest エラーを相関 id つきで返す", async () => {
     const res = await call({
       id: 7,
-      method: "waxlens/validate",
-      params: { source: { kind: "uri", uri: "file:///waxlens/no-such.wacz" }, locale: "en" },
+      method: "wacz-validator/validate",
+      params: { source: { kind: "uri", uri: "file:///wacz-validator/no-such.wacz" }, locale: "en" },
     });
     expect(res.id).toBe(7);
     // 開けない URI は openFailed として error 枠で返る(throw ではなく)。
@@ -68,7 +68,7 @@ describe("daemon server (WS)", () => {
     // parseReportSource が invalid-s3-uri で err → 境界で openFailed に。I/O 不要で hermetic。
     const res = await call({
       id: 8,
-      method: "waxlens/validate",
+      method: "wacz-validator/validate",
       params: { source: { kind: "uri", uri: "s3://nokey" }, locale: "en" },
     });
     expect(res.error?.code).toBe("openFailed");
@@ -111,8 +111,8 @@ describe("daemon server (WS)", () => {
     expect(body.status).toBe("ok");
   });
 
-  it("waxlens/ping は healthStatus を返す", async () => {
-    const res = await call({ id: 9, method: "waxlens/ping", params: {} });
+  it("wacz-validator/ping は healthStatus を返す", async () => {
+    const res = await call({ id: 9, method: "wacz-validator/ping", params: {} });
     expect(res.error).toBeUndefined();
     expect(res.result && "status" in res.result ? res.result.status : null).toBe("ok");
   });
@@ -121,7 +121,7 @@ describe("daemon server (WS)", () => {
     it("validate: good.wacz は valid な WireReport を返す", async () => {
       const res = await call({
         id: 1,
-        method: "waxlens/validate",
+        method: "wacz-validator/validate",
         params: { source: { kind: "uri", uri: fixtureUri("fixtures/good.wacz") }, locale: "en" },
       });
       expect(res.error).toBeUndefined();
@@ -131,7 +131,7 @@ describe("daemon server (WS)", () => {
     it("readEntry: datapackage.json の内容を返す", async () => {
       const res = await call({
         id: 2,
-        method: "waxlens/readEntry",
+        method: "wacz-validator/readEntry",
         params: { source: { kind: "uri", uri: fixtureUri("fixtures/good.wacz") }, path: "datapackage.json" },
       });
       expect(res.error).toBeUndefined();

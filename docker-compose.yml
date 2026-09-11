@@ -1,15 +1,15 @@
-# waxlens stack on Apple Container, driven by container-compose
+# wacz-validator stack on Apple Container, driven by container-compose
 # (https://github.com/Mcrich23/Container-Compose — installed via Homebrew).
 #
 #   container-compose up -d -b     # build and start
 #   container-compose down         # stop; the volume (and its data) survives
 #
 # One-time machine setup:
-#   sudo container system dns create waxlens
+#   sudo container system dns create wacz-validator
 # The project-named DNS domain switches container-compose into its real-DNS
-# mode: the container is named seaweedfs.waxlens, registered with the platform
+# mode: the container is named seaweedfs.wacz-validator, registered with the platform
 # DNS, and resolvable from other containers AND from the host — which is what
-# lets waxlens itself run on the host against this stack, with no development
+# lets wacz-validator itself run on the host against this stack, with no development
 # container of its own.
 # Do NOT add container_name: keys — they suppress the DNS naming and drop the
 # stack back to appending to the /etc/hosts *inside each container* via
@@ -22,16 +22,16 @@
 # runs inside seaweedfs's entrypoint as a retry loop, and callers wait on the
 # bucket themselves.
 #
-# waxlens itself is not a service here. container-compose has exactly four
+# wacz-validator itself is not a service here. container-compose has exactly four
 # subcommands (up / down / build / version), so a one-shot service could not be
 # driven from this file at all — the image is invoked with `container run`.
 # See docs-site (Apple Container stack) for the commands.
 
 # Pin the project name. container-compose derives it from the directory name
 # otherwise, and the project name IS the DNS domain here: it must equal the
-# `container system dns create <name>` domain and the `seaweedfs.waxlens`
+# `container system dns create <name>` domain and the `seaweedfs.wacz-validator`
 # hostname used by clients.
-name: waxlens
+name: wacz-validator
 
 services:
   seaweedfs:
@@ -40,15 +40,15 @@ services:
     # no separate one-shot init container to order around.
     entrypoint: ["/etc/seaweedfs/entrypoint.sh"]
     environment:
-      - S3_ACCESS_KEY_ID=waxlens
-      - S3_SECRET_ACCESS_KEY=waxlens
-      - S3_BUCKET=waxlens
+      - S3_ACCESS_KEY_ID=wacz-validator
+      - S3_SECRET_ACCESS_KEY=wacz-validator
+      - S3_BUCKET=wacz-validator
       # 匿名 read は要らない。browserhive の replay に相当するものが無いので、
       # S3_ANONYMOUS_READ は既定の false のまま。
       - S3_INIT_ATTEMPTS=10
-    # Published so host tooling (the aws CLI, and waxlens itself) can reach the
+    # Published so host tooling (the aws CLI, and wacz-validator itself) can reach the
     # store on localhost as well as by name. 8333 is the S3 API, 8888 the filer
-    # UI (http://localhost:8888/buckets/waxlens/), 9333 the master.
+    # UI (http://localhost:8888/buckets/wacz-validator/), 9333 the master.
     ports:
       - "127.0.0.1:8333:8333"
       - "127.0.0.1:8888:8888"

@@ -11,7 +11,7 @@ exports[`cli — JSON output shape (default) > gzipped CDXJ JSON snapshot 1`] = 
       "issues": [],
       "path": "archive/data.warc.gz",
       "present": true,
-      "uncompressedSize": 246,
+      "uncompressedSize": 252,
     },
     {
       "compressionMethod": 8,
@@ -59,7 +59,7 @@ exports[`cli — JSON output shape (default) > gzipped CDXJ JSON snapshot 1`] = 
       "issues": [],
       "path": "datapackage.json",
       "present": true,
-      "uncompressedSize": 1076,
+      "uncompressedSize": 1090,
     },
     {
       "compressionMethod": 8,
@@ -126,7 +126,7 @@ exports[`cli — JSON output shape (default) > gzipped CDXJ JSON snapshot 1`] = 
   },
   "stats": {
     "hosts": [],
-    "warcArchiveBytes": 246,
+    "warcArchiveBytes": 252,
     "warcRecordCount": 1,
   },
   "summary": {
@@ -136,7 +136,7 @@ exports[`cli — JSON output shape (default) > gzipped CDXJ JSON snapshot 1`] = 
     "passed": 20,
     "warnings": 1,
   },
-  "waxlensVersion": "0.0.0",
+  "validatorVersion": "0.0.0",
 }
 `;
 
@@ -151,7 +151,7 @@ exports[`cli — JSON output shape (default) > missing-profile JSON snapshot 1`]
       "issues": [],
       "path": "archive/data.warc.gz",
       "present": true,
-      "uncompressedSize": 246,
+      "uncompressedSize": 252,
     },
     {
       "compressionMethod": 8,
@@ -199,7 +199,7 @@ exports[`cli — JSON output shape (default) > missing-profile JSON snapshot 1`]
       ],
       "path": "datapackage.json",
       "present": true,
-      "uncompressedSize": 1041,
+      "uncompressedSize": 1055,
     },
     {
       "compressionMethod": 8,
@@ -249,7 +249,7 @@ exports[`cli — JSON output shape (default) > missing-profile JSON snapshot 1`]
     "hosts": [
       "example.com",
     ],
-    "warcArchiveBytes": 246,
+    "warcArchiveBytes": 252,
     "warcRecordCount": 1,
   },
   "summary": {
@@ -259,7 +259,7 @@ exports[`cli — JSON output shape (default) > missing-profile JSON snapshot 1`]
     "passed": 20,
     "warnings": 0,
   },
-  "waxlensVersion": "0.0.0",
+  "validatorVersion": "0.0.0",
 }
 `;
 
@@ -274,7 +274,7 @@ exports[`cli — JSON output shape (default) > valid WACZ JSON snapshot 1`] = `
       "issues": [],
       "path": "archive/data.warc.gz",
       "present": true,
-      "uncompressedSize": 246,
+      "uncompressedSize": 252,
     },
     {
       "compressionMethod": 8,
@@ -317,7 +317,7 @@ exports[`cli — JSON output shape (default) > valid WACZ JSON snapshot 1`] = `
       "issues": [],
       "path": "datapackage.json",
       "present": true,
-      "uncompressedSize": 1070,
+      "uncompressedSize": 1084,
     },
     {
       "compressionMethod": 8,
@@ -340,7 +340,7 @@ exports[`cli — JSON output shape (default) > valid WACZ JSON snapshot 1`] = `
     "hosts": [
       "example.com",
     ],
-    "warcArchiveBytes": 246,
+    "warcArchiveBytes": 252,
     "warcRecordCount": 1,
   },
   "summary": {
@@ -350,6 +350,6 @@ exports[`cli — JSON output shape (default) > valid WACZ JSON snapshot 1`] = `
     "passed": 21,
     "warnings": 0,
   },
-  "waxlensVersion": "0.0.0",
+  "validatorVersion": "0.0.0",
 }
 `;

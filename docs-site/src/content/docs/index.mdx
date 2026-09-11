@@ -1,12 +1,12 @@
 ---
-title: waxlens
+title: wacz-validator
 description: A producer-independent validator for WACZ web archives.
 template: splash
 hero:
   tagline: Tells you whether a WACZ is actually valid — and why it is not.
   actions:
     - text: Quickstart
-      link: /waxlens/quickstart/
+      link: /wacz-validator/quickstart/
       icon: right-arrow
       variant: primary
     - text: WACZ 1.1.1
@@ -14,7 +14,7 @@ hero:
       icon: external
 ---
 
-## What waxlens is
+## What wacz-validator is
 
 A **producer-independent validator** for [WACZ](https://specs.webrecorder.net/wacz/1.1.1/)
 — the format that packages WARC data and its metadata into a ZIP file. Point it
@@ -29,20 +29,20 @@ is judged the same way.
 It does not **replay** archives — that is [ReplayWeb.page](https://replayweb.page/)'s
 job. And it does not **produce** them; when this site mentions
 BrowserHive, that is a separate
-project whose output waxlens happens to check.
+project whose output wacz-validator happens to check.
 
 ## How it is put together
 
 ```mermaid
 flowchart LR
-    tui["@waxlens/tui (bin: waxlens)"] ==>|"WS / JSON-RPC"| daemon["@waxlens/daemon"]
+    tui["@wacz-validator/tui (bin: wacz-validator)"] ==>|"WS / JSON-RPC"| daemon["@wacz-validator/daemon"]
     browser(["browser (planned)"]) -.->|"WS"| daemon
-    cli["@waxlens/validate-cli (bin: waxlens-validate)"] -->|validates with| core["@waxlens/core"]
+    cli["@wacz-validator/validate-cli (bin: wacz-validator-validate)"] -->|validates with| core["@wacz-validator/core"]
     daemon -->|validates with| core
-    tui -->|import| protocol["@waxlens/protocol"]
+    tui -->|import| protocol["@wacz-validator/protocol"]
     daemon -->|import| protocol
     protocol -.->|"import type only"| core
-    core -->|import| shared["@waxlens/contract"]
+    core -->|import| shared["@wacz-validator/contract"]
     protocol -->|import| shared
 
     classDef shared fill:#fff3cd,stroke:#d4a72c,color:#5c4500;
@@ -52,15 +52,15 @@ flowchart LR
 ```
 
 The daemon is **stateless**, which is what lets a future browser frontend speak
-the same protocol as the terminal UI. See [Architecture](/waxlens/architecture/).
+the same protocol as the terminal UI. See [Architecture](/wacz-validator/architecture/).
 
 ## Where things are
 
 | I want to… | Page |
 | ---------- | ---- |
-| validate an archive for the first time | [Quickstart](/waxlens/quickstart/) |
-| know what each rule checks | [Rules](/waxlens/rules/) |
-| understand `--profile` | [Profiles](/waxlens/profiles/) |
-| consume the JSON output | [JSON report](/waxlens/json-report/) |
-| see real failing archives | [Corpus](https://uraitakahito.github.io/waxlens-corpus/) |
-| validate an `s3://` archive | [Apple Container stack](/waxlens/container/) |
+| validate an archive for the first time | [Quickstart](/wacz-validator/quickstart/) |
+| know what each rule checks | [Rules](/wacz-validator/rules/) |
+| understand `--profile` | [Profiles](/wacz-validator/profiles/) |
+| consume the JSON output | [JSON report](/wacz-validator/json-report/) |
+| see real failing archives | [Corpus](https://uraitakahito.github.io/wacz-validator-corpus/) |
+| validate an `s3://` archive | [Apple Container stack](/wacz-validator/container/) |

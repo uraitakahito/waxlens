@@ -42,7 +42,7 @@ const issuesFor = async (
   const reader = await WaczReader.open(fileTransport(sourceResult.value.path));
   try {
     const result = await runValidation(reader, {
-      waxlensVersion: "0.0.0",
+      validatorVersion: "0.0.0",
       rules: DEFAULT_RULES,
       profile: { name: profile },
     });
@@ -59,7 +59,7 @@ const hasError = (issues: { rule: string; severity: string }[]): boolean =>
 describe("cdxj/index-valid-data", () => {
   let tmpDir: string;
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), "waxlens-civd-"));
+    tmpDir = await mkdtemp(join(tmpdir(), "wacz-validator-civd-"));
   });
   afterEach(async () => {
     await rm(tmpDir, { recursive: true, force: true });

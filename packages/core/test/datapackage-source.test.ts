@@ -24,7 +24,7 @@ import { buildWacz, type FixtureOptions } from "./fixtures/generator.js";
 describe("datapackageOf", () => {
   let tmpDir: string;
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), "waxlens-dpsource-"));
+    tmpDir = await mkdtemp(join(tmpdir(), "wacz-validator-dpsource-"));
   });
   afterEach(async () => {
     await rm(tmpDir, { recursive: true, force: true });

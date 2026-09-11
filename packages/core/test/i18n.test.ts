@@ -27,10 +27,10 @@ describe("t()", () => {
 });
 
 describe("resolveLocale()", () => {
-  const saved = { WAXLENS_LANG: process.env["WAXLENS_LANG"], LANG: process.env["LANG"] };
+  const saved = { WACZ_VALIDATOR_LANG: process.env["WACZ_VALIDATOR_LANG"], LANG: process.env["LANG"] };
   afterEach(() => {
-    if (saved.WAXLENS_LANG === undefined) delete process.env["WAXLENS_LANG"];
-    else process.env["WAXLENS_LANG"] = saved.WAXLENS_LANG;
+    if (saved.WACZ_VALIDATOR_LANG === undefined) delete process.env["WACZ_VALIDATOR_LANG"];
+    else process.env["WACZ_VALIDATOR_LANG"] = saved.WACZ_VALIDATOR_LANG;
     if (saved.LANG === undefined) delete process.env["LANG"];
     else process.env["LANG"] = saved.LANG;
   });
@@ -48,11 +48,11 @@ describe("resolveLocale()", () => {
     expect(resolveLocale("fr")).toBe("en");
   });
 
-  it("フラグ未指定なら WAXLENS_LANG → LANG の順で参照する", () => {
+  it("フラグ未指定なら WACZ_VALIDATOR_LANG → LANG の順で参照する", () => {
     delete process.env["LANG"];
-    process.env["WAXLENS_LANG"] = "ja";
+    process.env["WACZ_VALIDATOR_LANG"] = "ja";
     expect(resolveLocale()).toBe("ja");
-    delete process.env["WAXLENS_LANG"];
+    delete process.env["WACZ_VALIDATOR_LANG"];
     process.env["LANG"] = "ja_JP.UTF-8";
     expect(resolveLocale()).toBe("ja");
   });

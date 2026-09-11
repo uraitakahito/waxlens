@@ -1,5 +1,5 @@
 {
-  "name": "@waxlens/devtools",
+  "name": "@wacz-validator/devtools",
   "version": "0.0.0",
   "description": "開発用の道具。WACZ をわざと壊し、rule が反応することを確かめる。publish しない。",
   "private": true,
@@ -9,7 +9,7 @@
     "node": ">=24.15.0"
   },
   "bin": {
-    "waxlens-break": "dist/break-wacz.js"
+    "wacz-validator-break": "dist/break-wacz.js"
   },
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
@@ -22,7 +22,7 @@
     "check": "pnpm typecheck && pnpm lint && pnpm build && pnpm test"
   },
   "dependencies": {
-    "@waxlens/core": "workspace:*",
+    "@wacz-validator/core": "workspace:*",
     "archiver": "^8.0.0",
     "commander": "^15.0.0",
     "yauzl-promise": "^4.0.0"

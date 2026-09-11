@@ -23,7 +23,7 @@
  *
  * ## それでも塞がる穴
  *
- * 「改竄された `signedData` は waxlens を通り、`capping verify` でだけ落ちる」と
+ * 「改竄された `signedData` は wacz-validator を通り、`capping verify` でだけ落ちる」と
  * 記録されていた穴は、これで閉じる。改竄は 1 の署名検証を壊すので、anchor を
  * 一切持ち込まずに検出できる。`datapackage/digest` は `hash` が
  * `datapackage.json` と一致するかまでは見るが、**その `hash` に誰が署名したかは

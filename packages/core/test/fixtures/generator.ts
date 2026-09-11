@@ -59,7 +59,7 @@ export interface FixtureOptions {
    *
    * 値の妥当性 (v2 が要求する「解決可能な URL であること」など) はここでは
    * 検証しない — 生成側は「何を名乗らせるか」だけを決め、判断は rule 側の
-   * 責務。現状 waxlens に `$schema` を読む rule は無い。
+   * 責務。現状 wacz-validator に `$schema` を読む rule は無い。
    */
   schema?: string;
   /**
@@ -439,7 +439,7 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
   const pageUrl = options.pageUrl ?? "https://example.com/";
   const pageTitle = options.pageTitle ?? "Example";
   const capturedAt = options.capturedAt ?? "2026-05-13T00:00:00.000Z";
-  const software = options.software ?? "waxlens-fixture/0.0.0";
+  const software = options.software ?? "wacz-validator-fixture/0.0.0";
   const waczVersion = options.waczVersion ?? "1.1.1";
   // ZIP entry の mtime を固定する。archiver は date 未指定だと現在時刻を
   // 刻むため、決定的な byte 出力 (corpus を Git LFS に置く際の churn 回避)
@@ -629,7 +629,7 @@ export const buildWacz = async (options: FixtureOptions = {}): Promise<BuiltFixt
     // `$schema` は慣例どおり先頭に置く (JSON Schema 系の descriptor の書式)。
     ...(options.schema !== undefined && { $schema: options.schema }),
     wacz_version: waczVersion,
-    name: `waxlens-fixture-${taskId}`,
+    name: `wacz-validator-fixture-${taskId}`,
     software,
     created: capturedAt,
     mainPageURL: options.mainPageUrlOverride ?? pageUrl,

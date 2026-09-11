@@ -37,7 +37,7 @@ BrowserHive はバージョンによって出力が変わります。`@` で添�
 バージョンで正しいと分かっている rule だけが走ります。
 
 ```sh
-waxlens-validate --profile browserhive@2.1.0 archive.wacz
+wacz-validator-validate --profile browserhive@2.1.0 archive.wacz
 ```
 
 バージョンを添えなければ、バージョンに条件を持つ rule も**すべて走ります**
@@ -60,7 +60,7 @@ waxlens-validate --profile browserhive@2.1.0 archive.wacz
 :::caution[バージョンは archive と照合されません]
 `--profile browserhive@1.0.0` と打っても、その archive が本当に 1.0.0 製かは
 検査しません。`datapackage.json` の `software` には producer 名とバージョンが
-書かれていますが、waxlens はまだ読んでいません。**バージョンは操作者の申告です。**
+書かれていますが、wacz-validator はまだ読んでいません。**バージョンは操作者の申告です。**
 :::
 
 ### `lenient`
@@ -73,7 +73,7 @@ legacy な archive をトリアージするとき、つまり「正しいか?」
 
 ## どの rule が実際に変わるのか
 
-[Rules](/waxlens/ja/rules/) の表に **profile 上書き**列があり、どの rule が
+[Rules](/wacz-validator/ja/rules/) の表に **profile 上書き**列があり、どの rule が
 何に組み替えられるかが正確に出ています。空欄の rule は 3 つの profile すべてで
 同じ挙動です。
 
@@ -84,5 +84,5 @@ legacy な archive をトリアージするとき、つまり「正しいか?」
 
 profile が exit code に影響するのは severity 経由だけです。何を failure と
 数えるかは変わりませんが、`info` に降格した rule は failure に寄与しなくなります。
-report から exit code への変換は `@waxlens/protocol` の `exitCodeFor` にあり、
+report から exit code への変換は `@wacz-validator/protocol` の `exitCodeFor` にあり、
 CLI と TUI が共有しているので両者がずれることはありません。

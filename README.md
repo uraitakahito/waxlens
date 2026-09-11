@@ -1,4 +1,4 @@
-# waxlens
+# wacz-validator
 
 A producer-independent validator for [WACZ](https://specs.webrecorder.net/wacz/1.1.1/)
 web archives — the format that packages WARC data and its metadata into a ZIP
@@ -12,12 +12,12 @@ Everything — quickstart, reference (rules, profiles, JSON report), and guides
 (architecture, Apple Container stack, corpus, terminology) — lives on the docs
 site:
 
-- **English** — <https://uraitakahito.github.io/waxlens/>
-- **日本語** — <https://uraitakahito.github.io/waxlens/ja/>
+- **English** — <https://uraitakahito.github.io/wacz-validator/>
+- **日本語** — <https://uraitakahito.github.io/wacz-validator/ja/>
 
 ## Related Projects
 
-- [BrowserHive](https://github.com/uraitakahito/browserhive) — a web-capture server whose WACZ output waxlens checks.
+- [BrowserHive](https://github.com/uraitakahito/browserhive) — a web-capture server whose WACZ output wacz-validator checks.
 - [WACZ 1.1.1](https://specs.webrecorder.net/wacz/1.1.1/) — the specification ([日本語訳](https://uraitakahito.github.io/specs/wacz/1.1.1/)).
 
 ## License

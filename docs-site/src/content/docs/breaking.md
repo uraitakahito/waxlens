@@ -7,7 +7,7 @@ A validator's green means one of two things: it checked and found nothing, or it
 never checked at all. **There is one way to tell them apart — break the archive
 and watch a rule turn red.**
 
-`waxlens-break`, from the `@waxlens/devtools` package (development only, never
+`wacz-validator-break`, from the `@wacz-validator/devtools` package (development only, never
 published), saves you from writing that one step by hand every time.
 
 ## The flow
@@ -16,9 +16,9 @@ published), saves you from writing that one step by hand every time.
 | --- | --- | --- |
 | 1 | BrowserHive | Capture a page; the WACZ lands in S3 |
 | 2 | aws cli | Pull it down |
-| 3 | `waxlens-validate` | **Take a baseline.** Nothing below means anything unless this is green |
-| 4 | `waxlens-break` | Break it on purpose |
-| 5 | `waxlens-validate` | Watch it turn red |
+| 3 | `wacz-validator-validate` | **Take a baseline.** Nothing below means anything unless this is green |
+| 4 | `wacz-validator-break` | Break it on purpose |
+| 5 | `wacz-validator-validate` | Watch it turn red |
 
 **Steps 3 and 5 are a pair.** Looking only at 5 and concluding "it is red, so the
 check works" leaves you blind the day you pick up an archive that was already
@@ -59,7 +59,7 @@ AWS_ACCESS_KEY_ID=browserhive AWS_SECRET_ACCESS_KEY=browserhive \
 ```sh
 pnpm install && pnpm -r build
 
-node packages/validate-cli/dist/waxlens-validate.js \
+node packages/validate-cli/dist/wacz-validator-validate.js \
   --profile browserhive ./demo.wacz \
   | jq -r '"summary: \(.summary)",
            (.issues[] | select(.rule|startswith("browserhive/tls"))
@@ -108,7 +108,7 @@ borrows an intermediate from another host's chain — leaving two genuine
 certificates in an order that does not link.
 
 :::note
-`waxlens-break` changes **only the one thing it names**. It writes entries back
+`wacz-validator-break` changes **only the one thing it names**. It writes entries back
 with their original compression, so no unrelated finding appears — one that does
 is a finding a reader will chase.
 :::
@@ -116,7 +116,7 @@ is a finding a reader will chase.
 ## 5. Watch it turn red
 
 ```sh
-node packages/validate-cli/dist/waxlens-validate.js \
+node packages/validate-cli/dist/wacz-validator-validate.js \
   --profile browserhive ./demo-broken.wacz \
   | jq -r '"summary: \(.summary)",
            (.issues[] | select(.severity=="error") | "  [\(.severity)] \(.message)")'
@@ -154,5 +154,5 @@ node packages/tui/dist/cli.js --profile browserhive ./demo-broken.wacz
 Press `enter` on the issue and the chain opens as a ladder per host: `─┐` links
 to the next certificate with a verified signature, `─✗` does not.
 
-For CI and scripts use `waxlens-validate`'s JSON — the TUI needs a terminal, but
+For CI and scripts use `wacz-validator-validate`'s JSON — the TUI needs a terminal, but
 **the same `details` is in the JSON**.

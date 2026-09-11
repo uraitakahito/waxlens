@@ -5,7 +5,7 @@ description: 全 validation rule と、その severity・根拠。
 
 import RuleTable from "../../../components/RuleTable.astro";
 
-waxlens は固定された rule の集合を archive に対して実行し、違反 1 件につき
+wacz-validator は固定された rule の集合を archive に対して実行し、違反 1 件につき
 issue を 1 件報告します。[全 rule の表](#全-rule)は **rule 定義そのものから生成**して
 いるので、コードから遅れることがありません。rule 名・severity・適合レベル・profile
 ごとの上書き・spec リンクはすべて `packages/core/src/validate/` 由来です。
@@ -13,7 +13,7 @@ issue を 1 件報告します。[全 rule の表](#全-rule)は **rule 定義�
 ## 表の読み方
 
 **適合レベル**は spec が要求する強さ(`MUST` / `SHOULD` / `MAY` / `MUST NOT`)、
-**severity** は違反に対して waxlens が取る扱いです。
+**severity** は違反に対して wacz-validator が取る扱いです。
 
 severity は `error` / `warning` / `info` の 3 値です。**判定に効くのは `error` だけ**で、
 アーカイブが使えるかどうかは `summary.failed`(= `error` の件数)が 0 かで決まります
@@ -27,7 +27,7 @@ severity は `error` / `warning` / `info` の 3 値です。**判定に効くの
 
 `MUST` / `MUST NOT` / `SHOULD` / `SHOULD NOT` / `MAY` は
 [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) の意味で用います。
-表に出る適合レベルは **waxlens が付けた重要度ではなく、spec 側の記述を写したもの**です。
+表に出る適合レベルは **wacz-validator が付けた重要度ではなく、spec 側の記述を写したもの**です。
 
 severity を決めるのは「**そのアーカイブが使えるか**」だけです。たとえば
 [`datapackage/resources-complete`](#datapackage-resources-complete) は `MUST` ですが
@@ -35,7 +35,7 @@ severity を決めるのは「**そのアーカイブが使えるか**」だけ�
 ないからです。
 
 **仕様準拠の観点で絞りたいときは適合レベルを見ます。** 2 つの軸を別々に扱う方法は
-[JSON レポート](/waxlens/ja/json-report/#severity-と-conformance-は別の問いに答えます)にあります。
+[JSON レポート](/wacz-validator/ja/json-report/#severity-と-conformance-は別の問いに答えます)にあります。
 
 ### severity 欄が 2 つ並ぶことがあります
 
@@ -56,8 +56,8 @@ severity 欄に値が 2 つ以上並んでいる rule が、これに当たり�
 **WACZ 1.1.1 / 1.2.0・wacz-auth 0.1.0・WARC 1.1 は `MUST` や `SHOULD` を使いながら、
 RFC 2119 への言及がありません**（本文中に一度も現れないことを確認済み）。
 
-そこで waxlens は、**どの仕様に由来する適合レベルでも RFC 2119 の意味で扱います**。
-慣例に従った解釈であり、出典側が明示していない部分については waxlens の側の取り決めです。
+そこで wacz-validator は、**どの仕様に由来する適合レベルでも RFC 2119 の意味で扱います**。
+慣例に従った解釈であり、出典側が明示していない部分については wacz-validator の側の取り決めです。
 :::
 
 ### severity 欄には profile 別の値がぶら下がります
@@ -67,10 +67,10 @@ severity 欄の 1 行目が**既定 (`--profile spec`) の値**で、その下�
 
 **その rule の指摘が全部変わるとは限らない**ので、複数が対象なら件数を添えています。
 `browserhive: >=1.11.0` のように**バージョンの範囲**が出る rule は、その範囲外を
-[`--profile browserhive@1.10.0`](/waxlens/ja/profiles/) のように名乗った実行では走らず、
+[`--profile browserhive@1.10.0`](/wacz-validator/ja/profiles/) のように名乗った実行では走らず、
 落としたことが JSON の `skipped` に残ります。適合レベルは profile では動きません ——
 spec がそう書いている、という事実だからです。
-[プロファイル](/waxlens/ja/profiles/)を参照。
+[プロファイル](/wacz-validator/ja/profiles/)を参照。
 
 ## 全 rule
 

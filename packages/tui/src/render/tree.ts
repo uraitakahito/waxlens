@@ -4,7 +4,7 @@
  * UI には依存しない — マーカーの「色」は tone を返すだけにして、
  * app.tsx 側で Ink の color に対応づける。
  */
-import type { ReportEntry, Severity } from "@waxlens/protocol";
+import type { ReportEntry, Severity } from "@wacz-validator/protocol";
 
 export interface TreeNode {
   /** セグメント名("archive" / "data.warc.gz")。root は ""。 */

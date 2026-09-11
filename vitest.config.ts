@@ -13,7 +13,7 @@ import { TEST_TAGS } from "./test-tags.js";
  * is what the UI needs — three separate `vitest --ui` runs would be three
  * browser tabs that cannot show a cross-package run.
  *
- * `@waxlens/protocol` is absent because it has no tests. It is the wire
+ * `@wacz-validator/protocol` is absent because it has no tests. It is the wire
  * contract itself; listing it here would produce an empty project in the UI
  * that reads as "tests missing" rather than "nothing to run".
  */

@@ -2,8 +2,8 @@ name: docs
 
 # Publishes the Astro/Starlight site to GitHub Pages:
 #
-#   /waxlens/      → English
-#   /waxlens/ja/   → Japanese
+#   /wacz-validator/      → English
+#   /wacz-validator/ja/   → Japanese
 #
 # Security:
 #   - Triggered only by push to main and manual dispatch, never on

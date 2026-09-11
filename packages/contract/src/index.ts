@@ -1,8 +1,8 @@
 /**
- * waxlens の共有語彙 — profile / locale / CLI の exit code 契約。
+ * wacz-validator の共有語彙 — profile / locale / CLI の exit code 契約。
  *
  * **この module は何も import しない。** それがこの package の存在理由で、
- * `@waxlens/protocol` (browser でも bundle される) が `@waxlens/core` を
+ * `@wacz-validator/protocol` (browser でも bundle される) が `@wacz-validator/core` を
  * runtime に引き込まずに済むようにしている。core を 1 回 import すると
  * validation engine 一式 (`@aws-sdk/client-s3` 4.4M を含む) が付いてきて、
  * 実測 67 ms かかる — 文字列 3 つのためにそれは払えない。
@@ -32,8 +32,8 @@ export type Locale = (typeof SUPPORTED_LOCALES)[number];
 /**
  * CLI の outcome (exit code に map する前の「何が起きたか」)。
  *
- * report の型は呼び手が決める — `waxlens-validate` は engine の `Report` を
- * そのまま運び、`waxlens` (tui) は daemon が解決済みで返す `WireReport` を
+ * report の型は呼び手が決める — `wacz-validator-validate` は engine の `Report` を
+ * そのまま運び、`wacz-validator` (tui) は daemon が解決済みで返す `WireReport` を
  * 運ぶ。**違うのはそこだけ**なので、型引数 1 つで両方を賄う。
  *
  * 数値 exit code に変換するのは {@link exitCodeFor} の責務で、その関数だけが

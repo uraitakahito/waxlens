@@ -1,15 +1,15 @@
 ---
 title: JSON レポート
-description: waxlens-validate が出力する JSON の形式と、その安定性の約束。
+description: wacz-validator-validate が出力する JSON の形式と、その安定性の約束。
 ---
 
-`waxlens-validate` は JSON オブジェクトを 1 つ標準出力に書きます。**これが唯一の
+`wacz-validator-validate` は JSON オブジェクトを 1 つ標準出力に書きます。**これが唯一の
 出力形式**で、切り替えるフラグはありません（同じ report を対話的に読むなら、別
-バイナリの `waxlens` — `@waxlens/tui` — を使います）。CI スクリプトや waxlens の
+バイナリの `wacz-validator` — `@wacz-validator/tui` — を使います）。CI スクリプトや wacz-validator の
 下流にとってのインターフェースなので、形式は偶然ではなく意図的に決めてあります。
 
 ```sh
-waxlens-validate samples/wikipedia.wacz | jq '.summary'
+wacz-validator-validate samples/wikipedia.wacz | jq '.summary'
 ```
 
 ## トップレベル
@@ -22,7 +22,7 @@ waxlens-validate samples/wikipedia.wacz | jq '.summary'
 やめました。
 
 ```sh
-waxlens-validate a.wacz | jq '.summary.failed == 0'
+wacz-validator-validate a.wacz | jq '.summary.failed == 0'
 ```
 
 `issues` は rule の登録順で、構造的な check が先に来るため、最も可能性の高い
@@ -40,7 +40,7 @@ producer バグが上の方に上がります。
 各 issue はそれを上げた rule を名乗るので、prose を解析しなくても rule 単位で
 絞り込み・差分が取れます。
 
-- `rule` — 安定した `<area>/<short-name>` 識別子。[Rules](/waxlens/ja/rules/) の
+- `rule` — 安定した `<area>/<short-name>` 識別子。[Rules](/wacz-validator/ja/rules/) の
   表と同じ文字列です。localise せず、version 間で書式を変えません。
 - `severity` — profile による組み替え後の値。つまり「その実行が実際にどう判断したか」です。
 - `messageKey` + `params` — メッセージは**事前にレンダリングされた prose では
@@ -57,7 +57,7 @@ producer バグが上の方に上がります。
 
 ### `severity` と `conformance` は別の問いに答えます
 
-`severity` は違反に対して waxlens がどうするか、`conformance` は仕様が何を
+`severity` は違反に対して wacz-validator がどうするか、`conformance` は仕様が何を
 要求しているかです。**片方で絞っても、もう片方の代わりにはなりません。**
 
 corpus の 30 標本での実測:
@@ -72,21 +72,21 @@ corpus の 30 標本での実測:
 `datapackage/resources-complete` は `MUST` ですが `warning` —— ZIP に未宣言の
 ファイルがあっても replay は止まりません。`datapackage/digest` は逆向きで、
 仕様は `SHOULD` に留めていますが、hash が合わないのはアーカイブが変更された
-可能性があるため waxlens は `error` にします。
+可能性があるため wacz-validator は `error` にします。
 
 なお **`summary.failed` は `severity` だけを数えます** —— 適合レベルは見ません。
 **`MUST` に違反していても `failed` が 0 になりえます**。仕様準拠の観点が要るなら、
 issue から自分で読み取ってください。
 
 ```sh
-# waxlens が「壊れている」と判断したもの
-waxlens archive.wacz | jq '[.issues[] | select(.severity == "error")]'
+# wacz-validator が「壊れている」と判断したもの
+wacz-validator archive.wacz | jq '[.issues[] | select(.severity == "error")]'
 
 # 仕様が要求しているもの
-waxlens archive.wacz | jq '[.issues[] | select(.conformance == "MUST" or .conformance == "MUST NOT")]'
+wacz-validator archive.wacz | jq '[.issues[] | select(.conformance == "MUST" or .conformance == "MUST NOT")]'
 
 # 両者が食い違っている箇所 —— たいていここがいちばん情報量があります
-waxlens archive.wacz | jq '[.issues[]
+wacz-validator archive.wacz | jq '[.issues[]
   | select((.conformance == "MUST" and .severity != "error")
         or (.conformance != "MUST" and .severity == "error"))]'
 ```
@@ -96,7 +96,7 @@ waxlens archive.wacz | jq '[.issues[]
 
 ## 安定性の約束
 
-`waxlensVersion` は `package.json#version` を映したもので、consumer が schema の
+`validatorVersion` は `package.json#version` を映したもので、consumer が schema の
 drift を推測ではなく検出できるようにするために存在します。
 
 同一 major version の中では:
@@ -129,7 +129,7 @@ jq -r '.profile.version // "unpinned"'   # バージョンだけが要るとき
 ```
 
 `version` は **`--profile` で名乗られた値**で、archive と照合したものではありません
-（[プロファイル](/waxlens/ja/profiles/)を参照）。
+（[プロファイル](/wacz-validator/ja/profiles/)を参照）。
 
 ## `skipped` — 見なかったものを書く
 
@@ -156,7 +156,7 @@ jq -r '.profile.version // "unpinned"'   # バージョンだけが要るとき
 ## exit code
 
 
-exit code は `@waxlens/protocol` の `exitCodeFor` が report から導出します。
+exit code は `@wacz-validator/protocol` の `exitCodeFor` が report から導出します。
 CLI と TUI が共有しているので両者がずれることはありません。よくある用途なら
 自分のスクリプトで `summary.failed` を見ても等価です。failure の種類を区別したい
 ときに共有ヘルパを使ってください。

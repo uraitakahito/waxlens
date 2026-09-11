@@ -1,5 +1,5 @@
 /**
- * waxlens-corpus の fixture 定義 (案 3 — flat fixtures + 中央 manifest)。
+ * wacz-validator-corpus の fixture 定義 (案 3 — flat fixtures + 中央 manifest)。
  *
  * 各エントリは「どう作るか (`options`)」 と「意図する違反 rule
  * (`expectRules`)」 を宣言する。 実際の違反 rule は build-corpus が

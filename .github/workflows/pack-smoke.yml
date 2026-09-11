@@ -9,12 +9,12 @@ name: pack-smoke
 #      registry traffic — purely a local validation that `files` /
 #      `bin` / `prepublishOnly` would behave correctly if we DID push)
 #
-# `@waxlens/core` carries no bin — it is the library. It is still packed
-# here because `@waxlens/validate-cli` declares it as a runtime dep, and
+# `@wacz-validator/core` carries no bin — it is the library. It is still packed
+# here because `@wacz-validator/validate-cli` declares it as a runtime dep, and
 # `pnpm pack` rewrites `workspace:*` to a concrete version: installing
 # both tarballs side by side satisfies that range locally, so the smoke
 # step stays a real gate instead of degrading to a registry lookup for
-# an unpublished package (which is why the @waxlens/tui step below is
+# an unpublished package (which is why the @wacz-validator/tui step below is
 # allowed to fail soft).
 #
 # Catches packaging regressions (missing `bin`, lost shebang, excluded
@@ -56,13 +56,13 @@ jobs:
         # build がそれを消すことを確かめる。
         run: |
           touch packages/core/dist/__stale__.js
-          pnpm --filter @waxlens/core build
+          pnpm --filter @wacz-validator/core build
           if [ -e packages/core/dist/__stale__.js ]; then
             echo "::error::pnpm build left a stale output in dist/ — the clean step is missing"
             exit 1
           fi
 
-      - name: Pack @waxlens/contract
+      - name: Pack @wacz-validator/contract
         id: pack-contract
         working-directory: packages/contract
         run: |
@@ -70,7 +70,7 @@ jobs:
           echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
           echo "Packed: $tarball"
 
-      - name: Pack @waxlens/core
+      - name: Pack @wacz-validator/core
         id: pack-core
         working-directory: packages/core
         run: |
@@ -78,7 +78,7 @@ jobs:
           echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
           echo "Packed: $tarball"
 
-      - name: Pack @waxlens/validate-cli
+      - name: Pack @wacz-validator/validate-cli
         id: pack-cli
         working-directory: packages/validate-cli
         run: |
@@ -86,7 +86,7 @@ jobs:
           echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
           echo "Packed: $tarball"
 
-      - name: Pack @waxlens/tui
+      - name: Pack @wacz-validator/tui
         id: pack-tui
         working-directory: packages/tui
         run: |
@@ -94,16 +94,16 @@ jobs:
           echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
           echo "Packed: $tarball"
 
-      - name: Smoke waxlens-validate from a clean directory
+      - name: Smoke wacz-validator-validate from a clean directory
         run: |
-          mkdir -p /tmp/waxlens-smoke-cli
-          cp "${GITHUB_WORKSPACE}/packages/contract/${{ steps.pack-contract.outputs.tarball }}" /tmp/waxlens-smoke-cli/
-          cp "${GITHUB_WORKSPACE}/packages/core/${{ steps.pack-core.outputs.tarball }}" /tmp/waxlens-smoke-cli/
-          cp "${GITHUB_WORKSPACE}/packages/validate-cli/${{ steps.pack-cli.outputs.tarball }}" /tmp/waxlens-smoke-cli/
-          cd /tmp/waxlens-smoke-cli
+          mkdir -p /tmp/wacz-validator-smoke-cli
+          cp "${GITHUB_WORKSPACE}/packages/contract/${{ steps.pack-contract.outputs.tarball }}" /tmp/wacz-validator-smoke-cli/
+          cp "${GITHUB_WORKSPACE}/packages/core/${{ steps.pack-core.outputs.tarball }}" /tmp/wacz-validator-smoke-cli/
+          cp "${GITHUB_WORKSPACE}/packages/validate-cli/${{ steps.pack-cli.outputs.tarball }}" /tmp/wacz-validator-smoke-cli/
+          cd /tmp/wacz-validator-smoke-cli
           # Installing the whole local chain at once is what keeps this a
-          # real gate: the CLI asks for `@waxlens/core@<version>` and core
-          # asks for `@waxlens/contract@<version>`, and these tarballs
+          # real gate: the CLI asks for `@wacz-validator/core@<version>` and core
+          # asks for `@wacz-validator/contract@<version>`, and these tarballs
           # supply exactly those, so npm never reaches for the
           # (unpublished) registry packages.
           npm init -y > /dev/null
@@ -111,23 +111,23 @@ jobs:
             "./${{ steps.pack-contract.outputs.tarball }}" \
             "./${{ steps.pack-core.outputs.tarball }}" \
             "./${{ steps.pack-cli.outputs.tarball }}"
-          npx waxlens-validate --version
+          npx wacz-validator-validate --version
 
-      - name: Smoke @waxlens/tui from a clean directory
+      - name: Smoke @wacz-validator/tui from a clean directory
         run: |
-          mkdir -p /tmp/waxlens-smoke-tui
-          cp "${GITHUB_WORKSPACE}/packages/tui/${{ steps.pack-tui.outputs.tarball }}" /tmp/waxlens-smoke-tui/
-          cd /tmp/waxlens-smoke-tui
-          # The tui tarball declares `@waxlens/core` as a runtime dep.
+          mkdir -p /tmp/wacz-validator-smoke-tui
+          cp "${GITHUB_WORKSPACE}/packages/tui/${{ steps.pack-tui.outputs.tarball }}" /tmp/wacz-validator-smoke-tui/
+          cd /tmp/wacz-validator-smoke-tui
+          # The tui tarball declares `@wacz-validator/core` as a runtime dep.
           # pnpm rewrites `workspace:*` to a concrete version range at
           # pack time, so the published manifest no longer carries the
           # `workspace:` protocol — npx resolves the dep against the
-          # public registry. Until @waxlens/core is published, this step
+          # public registry. Until @wacz-validator/core is published, this step
           # will pull whatever the registry returns (probably 404). We
           # allow it to fail-soft for now and revisit when the
           # publish-ready workflow becomes a real release pipeline.
           npx --yes "./${{ steps.pack-tui.outputs.tarball }}" --version || \
-            echo "::warning::@waxlens/tui smoke skipped — @waxlens/core not yet on the registry"
+            echo "::warning::@wacz-validator/tui smoke skipped — @wacz-validator/core not yet on the registry"
 
       - name: Publish dry-run (all workspaces)
         # `pnpm publish --dry-run` writes nothing to the registry and
@@ -141,9 +141,9 @@ jobs:
         # workflow that requires the NPM_TOKEN secret — never automate
         # `pnpm publish` from a `push` / `pull_request` trigger.
         run: |
-          pnpm publish --dry-run --no-git-checks --filter @waxlens/contract
-          pnpm publish --dry-run --no-git-checks --filter @waxlens/protocol
-          pnpm publish --dry-run --no-git-checks --filter @waxlens/core
-          pnpm publish --dry-run --no-git-checks --filter @waxlens/validate-cli
-          pnpm publish --dry-run --no-git-checks --filter @waxlens/daemon
-          pnpm publish --dry-run --no-git-checks --filter @waxlens/tui
+          pnpm publish --dry-run --no-git-checks --filter @wacz-validator/contract
+          pnpm publish --dry-run --no-git-checks --filter @wacz-validator/protocol
+          pnpm publish --dry-run --no-git-checks --filter @wacz-validator/core
+          pnpm publish --dry-run --no-git-checks --filter @wacz-validator/validate-cli
+          pnpm publish --dry-run --no-git-checks --filter @wacz-validator/daemon
+          pnpm publish --dry-run --no-git-checks --filter @wacz-validator/tui

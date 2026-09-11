@@ -1,5 +1,5 @@
 /**
- * waxlens-corpus の `manifest.json` を docs 用の Markdown カタログに変換する
+ * wacz-validator-corpus の `manifest.json` を docs 用の Markdown カタログに変換する
  * 純粋関数群 (副作用なし)。
  *
  * `manifest.json` は build-corpus が **実 runValidation 出力**から書く単一
@@ -10,7 +10,7 @@
  * exercise できる。
  */
 
-import { ALL_PROFILES } from "@waxlens/contract";
+import { ALL_PROFILES } from "@wacz-validator/contract";
 import type { FixtureEntry, Manifest, ProfileResult } from "./manifest.js";
 
 // 既存の import 元 (build-docs.test.ts / catalog.test.ts) を壊さないよう、
@@ -18,7 +18,7 @@ import type { FixtureEntry, Manifest, ProfileResult } from "./manifest.js";
 // する」だけを担う。
 export type { FixtureEntry, Manifest, ProfileResult };
 
-/** profile 差テーブルの列順。持ち主は @waxlens/contract。 */
+/** profile 差テーブルの列順。持ち主は @wacz-validator/contract。 */
 const PROFILES = ALL_PROFILES;
 
 /**

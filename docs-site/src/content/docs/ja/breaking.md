@@ -7,7 +7,7 @@ validator の「緑」は 2 通りの意味を持ちます ― 検査して問�
 そもそも検査していないのか。**区別する方法は 1 つで、壊して赤くなるところを
 見ること**です。
 
-`@waxlens/devtools`(publish しない開発用パッケージ)の `waxlens-break` は、
+`@wacz-validator/devtools`(publish しない開発用パッケージ)の `wacz-validator-break` は、
 その 1 手間を毎回書き直さずに済むようにする道具です。
 
 ## 全体の流れ
@@ -16,9 +16,9 @@ validator の「緑」は 2 通りの意味を持ちます ― 検査して問�
 | --- | --- | --- |
 | 1 | BrowserHive | ページを取り込み、WACZ を S3 へ |
 | 2 | aws cli | S3 から手元へ落とす |
-| 3 | `waxlens-validate` | **基準を取る**。ここが緑でなければ以降に意味が無い |
-| 4 | `waxlens-break` | わざと壊す |
-| 5 | `waxlens-validate` | 赤くなることを確かめる |
+| 3 | `wacz-validator-validate` | **基準を取る**。ここが緑でなければ以降に意味が無い |
+| 4 | `wacz-validator-break` | わざと壊す |
+| 5 | `wacz-validator-validate` | 赤くなることを確かめる |
 
 **3 と 5 は対です。** 5 だけを見て「赤いから検査は働いている」と結論すると、
 元から壊れていたアーカイブを掴んだときに気づけません。
@@ -58,7 +58,7 @@ AWS_ACCESS_KEY_ID=browserhive AWS_SECRET_ACCESS_KEY=browserhive \
 ```sh
 pnpm install && pnpm -r build
 
-node packages/validate-cli/dist/waxlens-validate.js \
+node packages/validate-cli/dist/wacz-validator-validate.js \
   --profile browserhive ./demo.wacz \
   | jq -r '"summary: \(.summary)",
            (.issues[] | select(.rule|startswith("browserhive/tls"))
@@ -112,7 +112,7 @@ node packages/devtools/dist/break-wacz.js \
 組み合わせで並んでいる状態になります。
 
 :::note
-`waxlens-break` は**名乗った 1 箇所しか変えません**。zip の圧縮方式も元のまま
+`wacz-validator-break` は**名乗った 1 箇所しか変えません**。zip の圧縮方式も元のまま
 書き戻すので、壊し方と無関係な指摘は増えません ― 増えると、読み手はそれを
 追いかけることになります。
 :::
@@ -120,7 +120,7 @@ node packages/devtools/dist/break-wacz.js \
 ## 5. 赤くなることを確かめる
 
 ```sh
-node packages/validate-cli/dist/waxlens-validate.js \
+node packages/validate-cli/dist/wacz-validator-validate.js \
   --profile browserhive ./demo-broken.wacz \
   | jq -r '"summary: \(.summary)",
            (.issues[] | select(.severity=="error") | "  [\(.severity)] \(.message)")'
@@ -158,5 +158,5 @@ node packages/tui/dist/cli.js --profile browserhive --lang ja ./demo-broken.wacz
 Issues ビューで `enter` を押すと、host ごとのチェーンが梯子として開きます。
 `─┐` が「次と繋がっていて署名も通った」、`─✗` が切れている印です。
 
-CI やスクリプトでは `waxlens-validate` の JSON を使ってください ― TUI は端末が
+CI やスクリプトでは `wacz-validator-validate` の JSON を使ってください ― TUI は端末が
 要りますが、**同じ `details` がそのまま JSON に入っています**。

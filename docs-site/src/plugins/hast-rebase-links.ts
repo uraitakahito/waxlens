@@ -8,7 +8,7 @@
 import { fileURLToPath } from "node:url";
 import { defineHastPlugin } from "satteri";
 
-const BASE = "/waxlens";
+const BASE = "/wacz-validator";
 
 export default defineHastPlugin({
   name: "rebase-links",

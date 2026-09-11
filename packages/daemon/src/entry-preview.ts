@@ -8,7 +8,7 @@
  * I/O は持たず Buffer だけで完結するので hermetic にテストできる。
  */
 import { createGunzip } from "node:zlib";
-import type { ReadEntryResult } from "@waxlens/protocol";
+import type { ReadEntryResult } from "@wacz-validator/protocol";
 
 /** NUL の手前にこれ未満しかテキストが無ければ、プレビューに値しない=バイナリ扱い。 */
 const TEXT_MIN = 16;

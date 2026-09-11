@@ -1,7 +1,7 @@
 /**
  * コードから「事実」を取り出す唯一の入口。
  *
- * waxlens の docs は他リポジトリより「コードの写し」の比率が高い。rule の
+ * wacz-validator の docs は他リポジトリより「コードの写し」の比率が高い。rule の
  * severity / conformance / profile ごとの上書き / spec リンクはすべて
  * `packages/core/src/validate/` に定義があり、それを手で書き写した表を
  * 日英 2 言語ぶん維持するのは現実的でない。ここで読んで注入する。
@@ -12,7 +12,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 
-// waxlens ルート。docs-site は waxlens 直下にあり、astro dev/build は docs-site
+// wacz-validator ルート。docs-site は wacz-validator 直下にあり、astro dev/build は docs-site
 // を cwd に実行されるので、その親がリポジトリルート。
 // ※ import.meta.url は astro ビルド後の dist パスになるため使えない。
 const ROOT = resolve(process.cwd(), "..");

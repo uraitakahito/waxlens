@@ -11,7 +11,7 @@ import {
   describeCause,
   parseProfileSelector,
   type ProfileSelector,
-} from "@waxlens/contract";
+} from "@wacz-validator/contract";
 import {
   DEFAULT_RULES,
   WaczReader,
@@ -22,14 +22,14 @@ import {
   runValidation,
   s3Transport,
   type ReportSource,
-} from "@waxlens/core";
+} from "@wacz-validator/core";
 import type {
   ReadEntryParams,
   ReadEntryResult,
   RpcErrorCode,
   ValidateParams,
   WireReport,
-} from "@waxlens/protocol";
+} from "@wacz-validator/protocol";
 import { BUILD_INFO } from "./generated/build-info.js";
 import { previewEntry } from "./entry-preview.js";
 
@@ -93,7 +93,7 @@ export const validate = async (params: ValidateParams): Promise<WireReport> => {
   const reader = await openFromSource(parsed.value, params.s3ForcePathStyle ?? false);
   try {
     const result = await runValidation(reader, {
-      waxlensVersion: BUILD_INFO.version,
+      validatorVersion: BUILD_INFO.version,
       rules: DEFAULT_RULES,
       profile,
     });

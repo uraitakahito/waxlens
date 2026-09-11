@@ -15,7 +15,7 @@
  * specific に反応するかどうかであって、 想定の有無ではない。 判断は
  * API ごとに caller の現コードを見て決める。
  *
- * waxlens の用例: validation rule は `Result<Issue[], never>` を返す
+ * wacz-validator の用例: validation rule は `Result<Issue[], never>` を返す
  * — engine が失敗を必ず Issue に畳む契約なので、 caller (engine) は
  * 失敗を見ない。 err variant が空 (`never`) で表現される。
  */

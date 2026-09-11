@@ -3,8 +3,8 @@
 /**
  * corpus-driven 回帰テスト。
  *
- * waxlens-corpus の `manifest.json` をループし、committed な
- * `fixtures/*.wacz` (Git LFS) を waxlens で validation して、実出力が
+ * wacz-validator-corpus の `manifest.json` をループし、committed な
+ * `fixtures/*.wacz` (Git LFS) を wacz-validator で validation して、実出力が
  * manifest の期待 (`expect` または `byProfile`) と完全一致するか assert
  * する。既存 `validate.test.ts` がその場生成して個別 rule を見るのに対し、
  * こちらは「凍結された WACZ bytes が凍結された期待レポートを生む」ことを
@@ -16,7 +16,7 @@
  * を緑に保つため。CI は corpus を clone + `git lfs pull` してから実走させる。
  * skip の理由はテスト名ではなく注釈に載るので、名前は環境で変わらない。
  *
- *   CORPUS_DIR=<corpus の絶対パス> pnpm --filter @waxlens/core test:corpus
+ *   CORPUS_DIR=<corpus の絶対パス> pnpm --filter @wacz-validator/core test:corpus
  *
  * 各 fixture には manifest の `description` (意図) と実際の validation 結果を
  * 注釈する。テスト名は fixture のファイル名だけなので、失敗したときに何を
@@ -94,7 +94,7 @@ const validate = async (absPath: string, profile: RuleProfile): Promise<ProfileR
   const reader = await WaczReader.open(fileTransport(parsed.value.path));
   try {
     const result = await runValidation(reader, {
-      waxlensVersion: "0.0.0",
+      validatorVersion: "0.0.0",
       rules: DEFAULT_RULES,
       profile: { name: profile },
     });
@@ -110,7 +110,7 @@ const validate = async (absPath: string, profile: RuleProfile): Promise<ProfileR
   }
 };
 
-describe("waxlens-corpus regression", () => {
+describe("wacz-validator-corpus regression", () => {
   if (manifest === undefined || root === undefined) {
     // 理由はテスト名ではなく注釈と skip の第 2 引数に載せる。名前に埋めると
     // 環境ごとにテスト名が変わり、名前で追跡するツールから別のテストに見える。

@@ -2,7 +2,7 @@
  * Rule registry — engine が実行時に参照する唯一のリスト。
  *
  * 新しい rule を追加する = 専用ファイルから export して、`DEFAULT_RULES`
- * に append する。waxlens 内の他の層は新しい rule を知る必要が無い。
+ * に append する。wacz-validator 内の他の層は新しい rule を知る必要が無い。
  * CLI の将来の `--rule` filter は `ValidationRule.name` で識別する。
  *
  * 順序は cosmetic な理由でしか効かない: renderer は rule が生成した

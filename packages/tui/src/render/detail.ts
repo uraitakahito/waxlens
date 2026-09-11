@@ -4,7 +4,7 @@
  * 文字列化・突合だけを担い Ink に依存しないので、そのまま単体テストできる。
  * ペインに出す情報はすべて WireReport 内にあり、ファイルのバイトは読まない。
  */
-import type { ExpectedBy, WireIssue, WireReport } from "@waxlens/protocol";
+import type { ExpectedBy, WireIssue, WireReport } from "@wacz-validator/protocol";
 
 /** ZIP の圧縮方式コード → 表示名(0=STORE / 8=DEFLATE / 他=?)。 */
 export const codecName = (method?: number): string =>

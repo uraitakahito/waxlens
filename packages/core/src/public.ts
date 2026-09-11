@@ -1,11 +1,11 @@
 /**
- * @waxlens/core の public API。
+ * @wacz-validator/core の public API。
  *
  * downstream consumer が in-process で validation を駆動するのに
  * 必要なものを一通り export する。この package は library だけで、
- * bin を持たない — CLI (`waxlens-validate`) は @waxlens/validate-cli
+ * bin を持たない — CLI (`wacz-validator-validate`) は @wacz-validator/validate-cli
  * に居り、commander もそちらの依存なので、library として使う分には
- * 引き込まれない。human-readable な rendering は @waxlens/tui 側。
+ * 引き込まれない。human-readable な rendering は @wacz-validator/tui 側。
  */
 export { WaczReader } from "./wacz/reader.js";
 export { fileTransport, s3Transport } from "./wacz/transport.js";

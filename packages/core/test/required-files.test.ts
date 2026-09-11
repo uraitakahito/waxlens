@@ -26,7 +26,7 @@ const rulesFor = async (tmpDir: string, options: FixtureOptions = {}): Promise<s
   const reader = await WaczReader.open(fileTransport(src.value.path));
   try {
     const result = await runValidation(reader, {
-      waxlensVersion: "0.0.0",
+      validatorVersion: "0.0.0",
       rules: DEFAULT_RULES,
       profile: { name: "spec" },
     });
@@ -46,7 +46,7 @@ const issuesFor = async (tmpDir: string, options: FixtureOptions = {}) => {
   const reader = await WaczReader.open(fileTransport(src.value.path));
   try {
     const result = await runValidation(reader, {
-      waxlensVersion: "0.0.0",
+      validatorVersion: "0.0.0",
       rules: DEFAULT_RULES,
       profile: { name: "spec" },
     });
@@ -60,7 +60,7 @@ const issuesFor = async (tmpDir: string, options: FixtureOptions = {}) => {
 describe("wacz/required-files", () => {
   let tmpDir: string;
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), "waxlens-rf-"));
+    tmpDir = await mkdtemp(join(tmpdir(), "wacz-validator-rf-"));
   });
   afterEach(async () => {
     await rm(tmpDir, { recursive: true, force: true });
@@ -94,7 +94,7 @@ describe("wacz/required-files", () => {
 describe("datapackage/profile-required の de-dup", () => {
   let tmpDir: string;
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), "waxlens-rf-"));
+    tmpDir = await mkdtemp(join(tmpdir(), "wacz-validator-rf-"));
   });
   afterEach(async () => {
     await rm(tmpDir, { recursive: true, force: true });

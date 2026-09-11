@@ -2,8 +2,8 @@
 /**
  * exit code 契約の固定。
  *
- * この package が持つ唯一の実行されるロジックで、しかも `waxlens-validate`
- * と `waxlens` の**両方**が守る対外契約 (CI がこの数値で分岐する)。
+ * この package が持つ唯一の実行されるロジックで、しかも `wacz-validator-validate`
+ * と `wacz-validator` の**両方**が守る対外契約 (CI がこの数値で分岐する)。
  * exhaustiveness は tsc が見てくれるが、**どの kind がどの数値になるか**は
  * 型では表現できないのでここで固定する。
  */

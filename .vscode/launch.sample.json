@@ -4,8 +4,8 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "A: waxlens-validate (built dist)",
-      "preLaunchTask": "pnpm: build @waxlens/core",
+      "name": "A: wacz-validator-validate (built dist)",
+      "preLaunchTask": "pnpm: build @wacz-validator/core",
       "program": "${workspaceFolder}/packages/core/dist/cli.js",
       "args": ["${input:waczPath}"],
       "cwd": "${workspaceFolder}",
@@ -22,8 +22,8 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "A: waxlens TUI (built dist)",
-      "preLaunchTask": "pnpm: build @waxlens/tui",
+      "name": "A: wacz-validator TUI (built dist)",
+      "preLaunchTask": "pnpm: build @wacz-validator/tui",
       "program": "${workspaceFolder}/packages/tui/dist/cli.js",
       "args": ["${input:waczPath}"],
       "cwd": "${workspaceFolder}",
@@ -44,7 +44,7 @@
       "id": "waczPath",
       "type": "promptString",
       "description": "WACZ file path or s3:// URI",
-      "default": "/tmp/waxlens-demo/wikipedia.wacz"
+      "default": "/tmp/wacz-validator-demo/wikipedia.wacz"
     }
   ]
 }

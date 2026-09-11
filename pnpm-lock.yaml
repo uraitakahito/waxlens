@@ -50,7 +50,7 @@ importers:
       '@aws-sdk/client-s3':
         specifier: ^3.1107.0
         version: 3.1107.0
-      '@waxlens/contract':
+      '@wacz-validator/contract':
         specifier: workspace:*
         version: link:../contract
       ajv:
@@ -96,13 +96,13 @@ importers:
 
   packages/daemon:
     dependencies:
-      '@waxlens/contract':
+      '@wacz-validator/contract':
         specifier: workspace:*
         version: link:../contract
-      '@waxlens/core':
+      '@wacz-validator/core':
         specifier: workspace:*
         version: link:../core
-      '@waxlens/protocol':
+      '@wacz-validator/protocol':
         specifier: workspace:*
         version: link:../protocol
       commander:
@@ -130,7 +130,7 @@ importers:
 
   packages/devtools:
     dependencies:
-      '@waxlens/core':
+      '@wacz-validator/core':
         specifier: workspace:*
         version: link:../core
       archiver:
@@ -164,10 +164,10 @@ importers:
 
   packages/protocol:
     dependencies:
-      '@waxlens/contract':
+      '@wacz-validator/contract':
         specifier: workspace:*
         version: link:../contract
-      '@waxlens/core':
+      '@wacz-validator/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -180,10 +180,10 @@ importers:
 
   packages/tui:
     dependencies:
-      '@waxlens/daemon':
+      '@wacz-validator/daemon':
         specifier: workspace:*
         version: link:../daemon
-      '@waxlens/protocol':
+      '@wacz-validator/protocol':
         specifier: workspace:*
         version: link:../protocol
       commander:
@@ -226,10 +226,10 @@ importers:
 
   packages/validate-cli:
     dependencies:
-      '@waxlens/contract':
+      '@wacz-validator/contract':
         specifier: workspace:*
         version: link:../contract
-      '@waxlens/core':
+      '@wacz-validator/core':
         specifier: workspace:*
         version: link:../core
       commander:

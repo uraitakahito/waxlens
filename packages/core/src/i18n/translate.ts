@@ -13,11 +13,11 @@
  *   ため、ajv-draft-04 と同じく `createRequire` で値(クラス)を取得する。
  */
 import { createRequire } from "node:module";
-import { SUPPORTED_LOCALES, type Locale } from "@waxlens/contract";
+import { SUPPORTED_LOCALES, type Locale } from "@wacz-validator/contract";
 import en from "./locales/en.json" with { type: "json" };
 import ja from "./locales/ja.json" with { type: "json" };
 
-// 定義の持ち主は @waxlens/contract (cf. validate/domain.ts の ALL_PROFILES)。
+// 定義の持ち主は @wacz-validator/contract (cf. validate/domain.ts の ALL_PROFILES)。
 // カタログを読む `t()` / `resolveLocale()` は core に残る — contract は
 // 何も import しない葉 module でいる必要がある。
 export { SUPPORTED_LOCALES };
@@ -61,7 +61,7 @@ export const t = (id: string, params: MsgParams, locale: Locale): string => {
  * 表示ロケールを決める。
  */
 export const resolveLocale = (flag?: string): Locale => {
-  const raw = flag ?? process.env["WAXLENS_LANG"] ?? process.env["LANG"] ?? "en";
+  const raw = flag ?? process.env["WACZ_VALIDATOR_LANG"] ?? process.env["LANG"] ?? "en";
   const base = raw.toLowerCase().split(/[-_.]/)[0] ?? "en";
   return (SUPPORTED_LOCALES as readonly string[]).includes(base) ? (base as Locale) : "en";
 };

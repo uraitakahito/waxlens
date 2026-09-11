@@ -3,10 +3,10 @@
  *
  * validation は daemon が行い、message / specUrl / conformance まで解決済みの
  * {@link WireReport} を受け取るので、ここでは core の i18n も lookup も呼ばず
- * 解決済みフィールドをそのまま描く(`@waxlens/core` を import しない)。
+ * 解決済みフィールドをそのまま描く(`@wacz-validator/core` を import しない)。
  *
  * Layout ビューでファイルを選んで `enter` を押すと、`requestContent`(daemon の
- * `waxlens/readEntry` への薄いブリッジ)でそのファイルの内容を取得し、右ペインに
+ * `wacz-validator/readEntry` への薄いブリッジ)でそのファイルの内容を取得し、右ペインに
  * 表示する。`requestContent` 未指定(テスト等)なら no-op。
  *
  * Exit code の経路: CLI は `render(...)` の後に `instance.waitUntilExit()` を
@@ -22,7 +22,7 @@ import {
   useWindowSize,
   type DOMElement,
 } from "ink";
-import type { ReadEntryResult, ReportEntry, ResolvedDocLink, WireIssue, WireReport } from "@waxlens/protocol";
+import type { ReadEntryResult, ReportEntry, ResolvedDocLink, WireIssue, WireReport } from "@wacz-validator/protocol";
 import { buildEntryTree, entryMarker, flattenTree, type TreeRow } from "./render/tree.js";
 import { codecName, entryIssues, expectedLabel } from "./render/detail.js";
 import { explodeLine } from "./line-fields.js";
@@ -519,7 +519,7 @@ const Header: FC<{ report: WireReport; view: View; build: AppProps["build"] }> =
   const drift = build.tui.gitSha !== build.daemon.gitSha;
   return (
     <Box>
-      <Text bold>waxlens</Text>
+      <Text bold>wacz-validator</Text>
       <Text dimColor> {build.tui.version} </Text>
       {drift ? (
         <Text color="yellow">{`·${build.tui.gitSha} `}</Text>

@@ -49,7 +49,7 @@ const runFor = async (
   const reader = await WaczReader.open(fileTransport(source.value.path));
   try {
     const result = await runValidation(reader, {
-      waxlensVersion: "0.0.0",
+      validatorVersion: "0.0.0",
       rules: DEFAULT_RULES,
       profile: version === undefined ? { name: profile } : { name: profile, version },
     });
@@ -65,7 +65,7 @@ const of = (issues: Issue[], rule: string): Issue[] => issues.filter((i) => i.ru
 describe("browserhive/tls-chain", () => {
   let tmpDir: string;
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), "waxlens-tls-"));
+    tmpDir = await mkdtemp(join(tmpdir(), "wacz-validator-tls-"));
   });
   afterEach(async () => {
     await rm(tmpDir, { recursive: true, force: true });
@@ -124,7 +124,7 @@ describe("browserhive/tls-chain", () => {
 describe("browserhive/tls-san", () => {
   let tmpDir: string;
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), "waxlens-san-"));
+    tmpDir = await mkdtemp(join(tmpdir(), "wacz-validator-san-"));
   });
   afterEach(async () => {
     await rm(tmpDir, { recursive: true, force: true });

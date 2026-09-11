@@ -79,7 +79,7 @@ export function makeConfig(workspaceDir) {
     // strip-types` style execution.
     //
     // Plus type-import discipline and a naming convention adjusted for
-    // waxlens conventions (UPPER_CASE module constants, PascalCase
+    // wacz-validator conventions (UPPER_CASE module constants, PascalCase
     // React FC consts, no boolean-prefix requirement).
     {
       rules: {

@@ -17,7 +17,7 @@ const fixtureUri = (rel: string): string => pathToFileURL(resolve(corpusDir ?? "
 describe("daemon handlers", () => {
   it("開けない URI は openFailed の DaemonError", async () => {
     await expect(
-      validate({ source: { kind: "uri", uri: "file:///waxlens/no-such-file.wacz" }, locale: "en" }),
+      validate({ source: { kind: "uri", uri: "file:///wacz-validator/no-such-file.wacz" }, locale: "en" }),
     ).rejects.toBeInstanceOf(DaemonError);
   });
 

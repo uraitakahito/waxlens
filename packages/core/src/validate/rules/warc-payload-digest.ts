@@ -17,7 +17,7 @@
  * digest フォーマットは `sha256:<BASE32>` (RFC 4648、uppercase、
  * padding なし)。他のアルゴリズム (`sha1:...` 等) を emit する
  * producer は warning ではなく info レベルの note として受け入れる。
- * spec が任意の `algorithm:value` を許容しており、waxlens は
+ * spec が任意の `algorithm:value` を許容しており、wacz-validator は
  * spec-coverage suite ではないため。
  *
  * Severity: `warning`。replay ツールは lookup 時に digest を再検証

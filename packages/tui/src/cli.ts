@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 /**
- * `waxlens` — WACZ validation のための Ink TUI(daemon クライアント)。
+ * `wacz-validator` — WACZ validation のための Ink TUI(daemon クライアント)。
  *
- * validation は自前で行わず、stateless な `@waxlens/daemon` を spawn
- * (or `--server URL` に接続)し、WS で `waxlens/validate` を呼ぶ。daemon が
+ * validation は自前で行わず、stateless な `@wacz-validator/daemon` を spawn
+ * (or `--server URL` に接続)し、WS で `wacz-validator/validate` を呼ぶ。daemon が
  * core を所有し、`renderJson(report, locale)` で解決済みの `WireReport` を返す
  * ので、tui はそれを interactive に render する。Layout で enter すると
- * `waxlens/readEntry` でファイル内容を取り、右ペインに表示する。waxlens は対話 TUI
+ * `wacz-validator/readEntry` でファイル内容を取り、右ペインに表示する。wacz-validator は対話 TUI
  * 専用で、stdout / stdin が TTY でない(パイプ / CI 等)場合は描画できないので、
- * daemon を起動する前に `waxlens-validate`(core の bin)を案内して exit 2 で終わる。
- * 非対話・機械可読な出力は `waxlens-validate` の領分。
+ * daemon を起動する前に `wacz-validator-validate`(core の bin)を案内して exit 2 で終わる。
+ * 非対話・機械可読な出力は `wacz-validator-validate` の領分。
  *
- * tui は `@waxlens/core` を import しない — 型 / 定数 / exitCodeFor はすべて
- * `@waxlens/protocol` 由来で、validation engine も i18n カタログも読み込まない。
+ * tui は `@wacz-validator/core` を import しない — 型 / 定数 / exitCodeFor はすべて
+ * `@wacz-validator/protocol` 由来で、validation engine も i18n カタログも読み込まない。
  *
  * daemon の寿命は action が所有する: spawn → validate → (TUI の間は接続維持で
  * readEntry) → waitUntilExit → client.close → daemon.close(child の exit を待つ)
@@ -37,7 +37,7 @@ import {
   type ReadEntryResult,
   type ProfileSelector,
   type WireReport,
-} from "@waxlens/protocol";
+} from "@wacz-validator/protocol";
 import {
   connect,
   DaemonSession,
@@ -58,7 +58,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const manifestPath = join(here, "..", "package.json");
 const manifest = JSON.parse(readFileSync(manifestPath, "utf-8")) as { version: string };
 
-const envS3ForcePathStyle = process.env["WAXLENS_S3_FORCE_PATH_STYLE"] === "true";
+const envS3ForcePathStyle = process.env["WACZ_VALIDATOR_S3_FORCE_PATH_STYLE"] === "true";
 
 interface CliOptions {
   profile: ProfileSelector;
@@ -86,8 +86,8 @@ const parseProfile = (raw: string): ProfileSelector => {
 
 const program = new Command();
 program
-  .name("waxlens")
-  .description("Interactive TUI for WACZ validation (use waxlens-validate for JSON output)")
+  .name("wacz-validator")
+  .description("Interactive TUI for WACZ validation (use wacz-validator-validate for JSON output)")
   .version(`${manifest.version} (${BUILD_INFO.gitSha})`)
   .argument("<source>", "Local path or s3://bucket/key URI of the .wacz to validate")
   .option(
@@ -99,7 +99,7 @@ program
   )
   .option(
     "--s3-force-path-style",
-    "Force path-style S3 addressing for bundled SeaweedFS / MinIO 等 (also via WAXLENS_S3_FORCE_PATH_STYLE=true)",
+    "Force path-style S3 addressing for bundled SeaweedFS / MinIO 等 (also via WACZ_VALIDATOR_S3_FORCE_PATH_STYLE=true)",
     envS3ForcePathStyle,
   )
   .option(
@@ -108,15 +108,15 @@ program
   )
   .option(
     "--server <url>",
-    "Connect to a running waxlens-daemon (e.g. ws://127.0.0.1:7333) instead of spawning one",
+    "Connect to a running wacz-validator-daemon (e.g. ws://127.0.0.1:7333) instead of spawning one",
     (raw: string) => ServerEndpoint.parse(raw),
   )
   .action(async (filePath: string, options: CliOptions) => {
-    // waxlens は対話 TUI 専用。非 TTY(パイプ / CI 等)では描画できないので、daemon を
-    // 起動する前に fail-fast し、非対話・機械可読な出力は waxlens-validate に委ねる。
+    // wacz-validator は対話 TUI 専用。非 TTY(パイプ / CI 等)では描画できないので、daemon を
+    // 起動する前に fail-fast し、非対話・機械可読な出力は wacz-validator-validate に委ねる。
     if (!process.stdout.isTTY || !process.stdin.isTTY) {
       process.stderr.write(
-        "waxlens: interactive TUI only. Use waxlens-validate for non-interactive or machine-readable output.\n",
+        "wacz-validator: interactive TUI only. Use wacz-validator-validate for non-interactive or machine-readable output.\n",
       );
       process.exitCode = 2;
       return;
@@ -132,14 +132,14 @@ program
       try {
         // 起動直後に daemon のバージョンを問い合わせる。tui 自身のバージョン(BUILD_INFO)と
         // 突き合わせ、Header で SHA を出し・不一致(古いプロセス)を警告する。
-        const health = await client.request<HealthStatus>("waxlens/ping", {});
+        const health = await client.request<HealthStatus>("wacz-validator/ping", {});
         const build: BuildInfo = {
           tui: { version: BUILD_INFO.version, gitSha: BUILD_INFO.gitSha },
           daemon: { version: health.version, gitSha: health.gitSha },
         };
         const outcome = await validateOnce(client, uri, filePath, options);
         const requestContent: RequestContent = (path) =>
-          client.request<ReadEntryResult>("waxlens/readEntry", { source: { kind: "uri", uri }, path });
+          client.request<ReadEntryResult>("wacz-validator/readEntry", { source: { kind: "uri", uri }, path });
         await dispatch(outcome, requestContent, build);
         // session は finally で release し(spawn 時は kill + exit 待ち)、その後に
         // process が終わる(exitCode を確定後に child が残らないようにするため)。
@@ -149,7 +149,7 @@ program
       }
     } catch (cause) {
       // spawn / 接続 / 想定外の失敗 → operational failure。
-      process.stderr.write(`waxlens: ${describeCause(cause)}\n`);
+      process.stderr.write(`wacz-validator: ${describeCause(cause)}\n`);
       process.exitCode = 2;
     } finally {
       await session?.release();
@@ -166,7 +166,7 @@ async function validateOnce(
   opts: CliOptions,
 ): Promise<CliOutcome<WireReport>> {
   try {
-    const report = await client.request<WireReport>("waxlens/validate", {
+    const report = await client.request<WireReport>("wacz-validator/validate", {
       source: { kind: "uri", uri },
       profile: formatProfileSelector(opts.profile),
       locale: opts.lang ?? "",
@@ -209,7 +209,7 @@ async function dispatch(
         outcome.cause instanceof RpcCallError
           ? outcome.cause.message
           : describeCause(outcome.cause);
-      process.stderr.write(`waxlens: cannot open "${outcome.filePath}": ${message}\n`);
+      process.stderr.write(`wacz-validator: cannot open "${outcome.filePath}": ${message}\n`);
       return;
     }
     case "engineFailed":

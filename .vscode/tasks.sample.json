@@ -2,9 +2,9 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "pnpm: build @waxlens/core",
+      "label": "pnpm: build @wacz-validator/core",
       "type": "shell",
-      "command": "pnpm --filter @waxlens/core build",
+      "command": "pnpm --filter @wacz-validator/core build",
       "options": { "cwd": "${workspaceFolder}" },
       "problemMatcher": ["$tsc"],
       "presentation": {
@@ -14,9 +14,9 @@
       }
     },
     {
-      "label": "pnpm: build @waxlens/tui",
+      "label": "pnpm: build @wacz-validator/tui",
       "type": "shell",
-      "command": "pnpm --filter @waxlens/tui build",
+      "command": "pnpm --filter @wacz-validator/tui build",
       "options": { "cwd": "${workspaceFolder}" },
       "problemMatcher": ["$tsc"],
       "presentation": {

@@ -5,7 +5,7 @@ description: Every validation rule, its severity, and what it is grounded in.
 
 import RuleTable from "../../components/RuleTable.astro";
 
-waxlens runs a fixed set of rules over an archive and reports one issue per
+wacz-validator runs a fixed set of rules over an archive and reports one issue per
 violation. [The table](#every-rule) is **generated from the rule definitions
 themselves**, so it cannot fall behind the code: name, severity, conformance
 level, per-profile overrides and spec links all come out of
@@ -14,7 +14,7 @@ level, per-profile overrides and spec links all come out of
 ## Reading the table
 
 **Conformance** is what the spec demands — `MUST`, `SHOULD`, `MAY`, `MUST NOT`.
-**Severity** is what waxlens does about a violation.
+**Severity** is what wacz-validator does about a violation.
 
 Severity takes one of three values. **Only `error` decides the verdict** — an
 archive is usable exactly when `summary.failed` (the `error` count) is zero, and
@@ -33,7 +33,7 @@ replay.
 
 **When you want the conformance view, read the conformance column.** Handling
 the two axes separately is covered in
-[JSON report](/waxlens/json-report/#severity-and-conformance-answer-different-questions).
+[JSON report](/wacz-validator/json-report/#severity-and-conformance-answer-different-questions).
 
 ### Some rules list two severities
 
@@ -49,7 +49,7 @@ Any rule whose severity column lists more than one value is like this.
 
 `MUST`, `MUST NOT`, `SHOULD`, `SHOULD NOT` and `MAY` carry their
 [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) meanings. The conformance
-column is **copied from the specification, not waxlens's own grading of how
+column is **copied from the specification, not wacz-validator's own grading of how
 much a rule matters**.
 
 :::note[Where the sources stand]
@@ -59,9 +59,9 @@ be interpreted as described in RFC 2119". **WACZ 1.1.1 and 1.2.0, wacz-auth
 0.1.0 and WARC 1.1 use `MUST` and `SHOULD` without ever citing RFC 2119** —
 checked: the string does not appear in any of them.
 
-waxlens therefore reads every conformance level it records as RFC 2119 intends,
+wacz-validator therefore reads every conformance level it records as RFC 2119 intends,
 whichever specification it came from. That follows the convention, but where a
-source does not say so, it is waxlens's reading rather than the source's
+source does not say so, it is wacz-validator's reading rather than the source's
 statement.
 :::
 
@@ -76,7 +76,7 @@ more than one does. A line like `browserhive: >=1.11.0` is a **producer version
 range**: name a version outside it (`--profile browserhive@1.10.0`) and the rule
 does not run, which the report records under `skipped`. Conformance never moves
 with the profile — it is what the spec says.
-See [Profiles](/waxlens/profiles/).
+See [Profiles](/wacz-validator/profiles/).
 
 ## Every rule
 

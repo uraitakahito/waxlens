@@ -3,7 +3,7 @@ title: Terminology
 description: The WACZ vocabulary this project uses, and where it comes from.
 ---
 
-waxlens uses the vocabulary defined by
+wacz-validator uses the vocabulary defined by
 [WACZ 1.1.1 §Terminology](https://specs.webrecorder.net/wacz/1.1.1/#terminology)
 without paraphrasing it. This page collects the terms that appear throughout
 these docs, so that a word means one thing here and the same thing in the spec.
@@ -39,7 +39,7 @@ search over the index possible.
 The index is why a replay tool does not have to download a whole WACZ: it reads
 the index, then fetches only the byte ranges it needs. If the index is wrong the
 archive is intact but unplayable, which is why six of the
-[rules](/waxlens/rules/) check it.
+[rules](/wacz-validator/rules/) check it.
 
 ## Scope
 

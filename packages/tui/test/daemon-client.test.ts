@@ -10,7 +10,7 @@
 import { createServer, type Server } from "node:http";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { WebSocketServer } from "ws";
-import type { RpcRequest } from "@waxlens/protocol";
+import type { RpcRequest } from "@wacz-validator/protocol";
 import { connect, DaemonSession, RpcCallError } from "../src/daemon-client.js";
 import { ServerEndpoint } from "../src/server-url.js";
 
@@ -53,18 +53,18 @@ const url = (): string => `ws://127.0.0.1:${String(port)}`;
 describe("daemon-client", () => {
   it("request は相関 id で結果を解決する", async () => {
     const client = await connect(ServerEndpoint.parse(url()));
-    const result = await client.request<{ ok: boolean; method: string }>("waxlens/validate", {
+    const result = await client.request<{ ok: boolean; method: string }>("wacz-validator/validate", {
       source: { kind: "uri", uri: "x" },
       locale: "en",
     });
-    expect(result).toEqual({ ok: true, method: "waxlens/validate" });
+    expect(result).toEqual({ ok: true, method: "wacz-validator/validate" });
     client.close();
   });
 
   it("error 応答は RpcCallError で reject し code を保持する", async () => {
     const client = await connect(ServerEndpoint.parse(url()));
     await expect(
-      client.request("waxlens/validate", { source: { kind: "uri", uri: "fail" }, locale: "en" }),
+      client.request("wacz-validator/validate", { source: { kind: "uri", uri: "fail" }, locale: "en" }),
     ).rejects.toBeInstanceOf(RpcCallError);
     client.close();
   });

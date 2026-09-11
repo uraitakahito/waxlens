@@ -3,10 +3,10 @@
     "Discussion on how to write comments in package.json:",
     "https://stackoverflow.com/questions/14221579/how-do-i-add-comments-to-package-json-for-npm-install"
   ],
-  "name": "waxlens-monorepo",
+  "name": "wacz-validator-monorepo",
   "version": "0.0.0",
   "private": true,
-  "description": "Monorepo for waxlens — @waxlens/core (validator) and @waxlens/tui (Ink TUI).",
+  "description": "Monorepo for wacz-validator — @wacz-validator/core (validator) and @wacz-validator/tui (Ink TUI).",
   "license": "Unlicense",
   "type": "module",
   "engines": {
@@ -20,7 +20,7 @@
     "test:ui": "vitest --ui",
     "test:report": "vitest run --reporter=html",
     "lint": "pnpm -r lint",
-    "check": "pnpm audit --audit-level=moderate && pnpm --filter @waxlens/contract check && pnpm --filter @waxlens/core check && pnpm --filter @waxlens/validate-cli check && pnpm --filter @waxlens/protocol check && pnpm --filter @waxlens/daemon check && pnpm --filter @waxlens/devtools check && pnpm --filter @waxlens/tui check",
+    "check": "pnpm audit --audit-level=moderate && pnpm --filter @wacz-validator/contract check && pnpm --filter @wacz-validator/core check && pnpm --filter @wacz-validator/validate-cli check && pnpm --filter @wacz-validator/protocol check && pnpm --filter @wacz-validator/daemon check && pnpm --filter @wacz-validator/devtools check && pnpm --filter @wacz-validator/tui check",
     "site:dev": "npm --prefix docs-site run dev",
     "site:build": "npm --prefix docs-site run build",
     "site:preview": "npm --prefix docs-site run preview",
