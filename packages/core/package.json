@@ -30,8 +30,8 @@
     "prepublishOnly": "pnpm check && pnpm build"
   },
   "dependencies": {
-    "@waxlens/contract": "workspace:*",
     "@aws-sdk/client-s3": "^3.1107.0",
+    "@waxlens/contract": "workspace:*",
     "ajv": "^8.20.0",
     "ajv-draft-04": "^1.0.0",
     "intl-messageformat": "^11.2.13",
@@ -46,6 +46,6 @@
     "aws-sdk-client-mock": "^4.1.0",
     "eslint": "^10.8.1",
     "typescript": "^7.0.2",
-    "vitest": "^4.1.5"
+    "vitest": "^4.1.11"
   }
 }
