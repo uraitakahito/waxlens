@@ -54,7 +54,7 @@ services:
       - "127.0.0.1:8888:8888"
       - "127.0.0.1:9333:9333"
     volumes:
-      # 設定は seaweedfs submodule から。browserhive / waggle と同じものを使う ——
+      # 設定は seaweedfs submodule から。browserhive / capture-ledger と同じものを使う ——
       # 以前はここに写しを置いていて、3 ファイルとも上流から分岐していた。
       - ./seaweedfs/etc:/etc/seaweedfs:ro
       - seaweedfs-data:/data

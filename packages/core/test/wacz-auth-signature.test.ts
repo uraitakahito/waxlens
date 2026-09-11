@@ -3,7 +3,7 @@
  * `wacz-auth/signature` のテスト。
  *
  * この rule が塞ぐのは、記録されていた 1 つの穴 ——
- * **「改竄された `signedData` は wacz-validator を通り、`capping verify` でだけ落ちる」**。
+ * **「改竄された `signedData` は wacz-validator を通り、`wacz-signer verify` でだけ落ちる」**。
  *
  * `datapackage/digest` は `hash` が `datapackage.json` と一致するかまでは見るが、
  * **その `hash` に誰が署名したかは見ていない**。だから `signedData` を丸ごと
@@ -11,13 +11,13 @@
  *
  * ## fixture は本物
  *
- * `fixtures/signing/signed-data.json` は capping が実際に作ったもの。
+ * `fixtures/signing/signed-data.json` は wacz-signer が実際に作ったもの。
  * placeholder にすると、**常に true を返す verifier がここの全テストを通る**。
  * だから各検査を両方向で固定する —— 正しい入力と、その検査だけを落とす 1 つの改変。
  *
  * chain と timestamp は**ここでは見ない**。あれは呼ぶ側の trust anchor を要求する
  * ので、`browserhive/tls-chain` が先に答えを出している方針
- * (「ルートストアは検査する側のもの」) に従って capping の持ち場に残してある。
+ * (「ルートストアは検査する側のもの」) に従って wacz-signer の持ち場に残してある。
  * だから fixture にも `timeSignature` と `timestampCert` は写していない。
  */
 import { readFileSync } from "node:fs";
@@ -73,7 +73,7 @@ describe("wacz-auth/signature", () => {
     }
   };
 
-  it("capping が実際に作った署名を受け入れる", async () => {
+  it("wacz-signer が実際に作った署名を受け入れる", async () => {
     const issues = await run({ signedData: signedData() });
     expect(issues.map((i) => i.messageKey)).toEqual([`${RULE}.verified`]);
     expect(issues[0]?.severity).toBe("info");
@@ -81,7 +81,7 @@ describe("wacz-auth/signature", () => {
 
   /**
    * **この 1 件がこの rule の存在理由。** 署名を 1 バイト変えるだけで、
-   * `capping verify` を待たずにここで落ちる。
+   * `wacz-signer verify` を待たずにここで落ちる。
    */
   it("署名を書き換えたら落とす", async () => {
     const sig = Buffer.from(REAL["signature"] as string, "base64");
