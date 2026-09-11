@@ -22,17 +22,17 @@ pnpm check
 | --- | --- |
 | `pnpm check` | audit + 7 パッケージ全部。**CI が回すもの。** |
 | `pnpm test` | テストのみ、全パッケージ |
-| `pnpm --filter @waxlens/core test` | 1 パッケージだけ |
-| `pnpm --filter @waxlens/core test:watch` | 1 パッケージを watch |
+| `pnpm --filter @wacz-validator/core test` | 1 パッケージだけ |
+| `pnpm --filter @wacz-validator/core test:watch` | 1 パッケージを watch |
 | `pnpm typecheck` / `pnpm lint` / `pnpm build` | 1 段階を全パッケージに |
 | `pnpm test:ui` | ブラウザの UI で全パッケージ（watch） |
 | `pnpm test:report` | `html/` に静的レポート |
 
 `--filter` に渡すのはディレクトリ名ではなく**パッケージ名**です ―
-`@waxlens/contract`、`@waxlens/core`、`@waxlens/validate-cli`、`@waxlens/daemon`、
-`@waxlens/protocol`、`@waxlens/tui`。
+`@wacz-validator/contract`、`@wacz-validator/core`、`@wacz-validator/validate-cli`、`@wacz-validator/daemon`、
+`@wacz-validator/protocol`、`@wacz-validator/tui`。
 
-`@waxlens/protocol` にはテストがありません。ここは wire contract そのもので、
+`@wacz-validator/protocol` にはテストがありません。ここは wire contract そのもので、
 `check` は `build` で終わります。抜けているのではなく、**走らせるものが無い**からです。
 
 ## 観点で絞る
@@ -122,7 +122,7 @@ pnpm test:ui --tagsFilter 'docs && i18n'
 **`file://` では開けません** ―― `npx vite preview --outDir html` のように配信してください。
 
 :::note
-`@waxlens/protocol` は `projects` に入れていません。テストが無いので、
+`@wacz-validator/protocol` は `projects` に入れていません。テストが無いので、
 入れると UI に**空のプロジェクト**が並び、「テストが足りない」と読めてしまいます。
 「走らせるものが無い」のであって、欠けているのではありません。
 :::
@@ -130,14 +130,14 @@ pnpm test:ui --tagsFilter 'docs && i18n'
 ## なぜ `build` が `test` より前なのか
 
 各パッケージの `check` は `typecheck && lint && build && test` で、この順序は意図的です。
-`@waxlens/daemon` と `@waxlens/tui` はビルドの一部として `build-info.ts` を生成するので、
+`@wacz-validator/daemon` と `@wacz-validator/tui` はビルドの一部として `build-info.ts` を生成するので、
 古いまま（あるいは無いまま）テストを回すと**別物を検査する**ことになります。
 型エラーと lint は数秒で終わるのに対しビルドは長い ― 安いゲートを先に置く、という理由もあります。
 
 ## corpus テスト
 
-`@waxlens/core` にはもう 1 種類のテストがあります。インラインで組み立てた fixture ではなく、
-[waxlens-corpus](https://uraitakahito.github.io/waxlens-corpus/ja/) リポジトリの**実物の WACZ** を検証するものです。
+`@wacz-validator/core` にはもう 1 種類のテストがあります。インラインで組み立てた fixture ではなく、
+[wacz-validator-corpus](https://uraitakahito.github.io/wacz-validator-corpus/ja/) リポジトリの**実物の WACZ** を検証するものです。
 アーカイブ本体が要るので `CORPUS_DIR` を読み、**未設定なら skip します**。
 
 ```
@@ -154,10 +154,10 @@ Test Files  20 passed | 2 skipped (22)
 
 ```sh
 git clone --branch "$(cat .corpus-version)" \
-  https://github.com/uraitakahito/waxlens-corpus.git ../waxlens-corpus
-git -C ../waxlens-corpus lfs pull
+  https://github.com/uraitakahito/wacz-validator-corpus.git ../wacz-validator-corpus
+git -C ../wacz-validator-corpus lfs pull
 
-CORPUS_DIR="$(cd ../waxlens-corpus && pwd)" pnpm --filter @waxlens/core test:corpus
+CORPUS_DIR="$(cd ../wacz-validator-corpus && pwd)" pnpm --filter @wacz-validator/core test:corpus
 ```
 
 リポジトリ直下の `.corpus-version` は tag を 1 つだけ持ちます —— このチェック
@@ -167,7 +167,7 @@ CORPUS_DIR="$(cd ../waxlens-corpus && pwd)" pnpm --filter @waxlens/core test:cor
 渡されたものを名指しします。
 
 ```
-CORPUS_DIR は 28bcc70 を指していますが、この waxlens は v0.1.0 に固定されています。
+CORPUS_DIR は 28bcc70 を指していますが、この wacz-validator は v0.1.0 に固定されています。
 ```
 
 リリース資産の tarball を展開したものは git のチェックアウトではないのでバージョンを
@@ -176,8 +176,8 @@ CORPUS_DIR は 28bcc70 を指していますが、この waxlens は v0.1.0 に�
 
 `$(cd … && pwd)` は飾りではありません。`pnpm --filter` は作業ディレクトリを
 `packages/core` に移してスクリプトを走らせるので、相対パスの `CORPUS_DIR` は
-シェルではなくそこを基準に解決されます。つまり `../waxlens-corpus` は
-`packages/waxlens-corpus` を探しに行き、何も見つからず、**「manifest が無い」と
+シェルではなくそこを基準に解決されます。つまり `../wacz-validator-corpus` は
+`packages/wacz-validator-corpus` を探しに行き、何も見つからず、**「manifest が無い」と
 言いながら skip します**。シェルの側で先に絶対パスへ変換しておけば、この問題自体が
 起きません。
 
@@ -192,9 +192,9 @@ CORPUS_DIR は 28bcc70 を指していますが、この waxlens は v0.1.0 に�
 corpus に何かをマージしても、ここは何も変わりません —— このチェックアウトは
 `.corpus-version` の tag に対して検証し続けます。追随は明示的な行為で、3 段階です。
 
-1. waxlens-corpus 側で変更をマージし、**リリースを切る**
+1. wacz-validator-corpus 側で変更をマージし、**リリースを切る**
 2. `.corpus-version` を新しい tag に書き換える
-3. その書き換えと、それに伴うコード変更を**1 つの waxlens PR** にまとめて出す
+3. その書き換えと、それに伴うコード変更を**1 つの wacz-validator PR** にまとめて出す
 
 最後の点が固定する理由です。PR は**自分の足元で動かない corpus**に対して測られるので、
 緑か赤かがその PR だけで決まります。
@@ -218,8 +218,8 @@ corpus に何かをマージしても、ここは何も変わりません ——
 | workflow | 内容 |
 | --- | --- |
 | `check` | `pnpm check` ― 日常のスイート全部 |
-| `corpus` | waxlens-corpus を **`.corpus-version` のバージョンで**クローンし、`corpus:docs:check` と `test:corpus` |
-| `pack-smoke` | `@waxlens/contract`・`@waxlens/core`・`@waxlens/validate-cli`・`@waxlens/tui` を `npm pack` し、まっさらなディレクトリに入れてバイナリを実行 |
+| `corpus` | wacz-validator-corpus を **`.corpus-version` のバージョンで**クローンし、`corpus:docs:check` と `test:corpus` |
+| `pack-smoke` | `@wacz-validator/contract`・`@wacz-validator/core`・`@wacz-validator/validate-cli`・`@wacz-validator/tui` を `npm pack` し、まっさらなディレクトリに入れてバイナリを実行 |
 | `site` | ドキュメントをビルドし、参照を検証 |
 | `docs` | サイトを公開 |
 

@@ -7,17 +7,17 @@ description: なぜ 7 つの package と stateless な daemon なのか。
 
 | Package | bin | 役割 |
 | ------- | --- | ---- |
-| `@waxlens/contract` | — | すべての面が従う共有語彙。rule profile・locale・CLI の exit code 契約。何にも依存しないので、browser クライアントが engine を引き込まずに使える。 |
-| `@waxlens/core` | — | Validation engine。WACZ を読み、rule を実行し、machine-readable な report を返す。library であり、bin も `commander` も持たない。 |
-| `@waxlens/validate-cli` | `waxlens-validate` | core の上に載る非対話コマンド。引数を解釈し、JSON report を書き、exit code を立てる。他を使わず CI から直接呼べる。 |
-| `@waxlens/daemon` | `waxlens-daemon` | stateless な HTTP/WS daemon。core を所有し、解決済み(message / specUrl / conformance を inline した)report を返す。 |
-| `@waxlens/tui` | `waxlens` | 対話的な terminal UI。daemon の薄いクライアント。 |
-| `@waxlens/protocol` | — | クライアントと daemon が共有する wire 型と CLI 契約。runtime では core に依存しないので browser-safe。 |
-| `@waxlens/devtools` | `waxlens-break` | 開発用。publish しない(`private`)。WACZ をわざと壊し、rule が赤くなるところを見るための道具 —— validator の緑は、赤くなるところを見るまで意味を持たない。 |
+| `@wacz-validator/contract` | — | すべての面が従う共有語彙。rule profile・locale・CLI の exit code 契約。何にも依存しないので、browser クライアントが engine を引き込まずに使える。 |
+| `@wacz-validator/core` | — | Validation engine。WACZ を読み、rule を実行し、machine-readable な report を返す。library であり、bin も `commander` も持たない。 |
+| `@wacz-validator/validate-cli` | `wacz-validator-validate` | core の上に載る非対話コマンド。引数を解釈し、JSON report を書き、exit code を立てる。他を使わず CI から直接呼べる。 |
+| `@wacz-validator/daemon` | `wacz-validator-daemon` | stateless な HTTP/WS daemon。core を所有し、解決済み(message / specUrl / conformance を inline した)report を返す。 |
+| `@wacz-validator/tui` | `wacz-validator` | 対話的な terminal UI。daemon の薄いクライアント。 |
+| `@wacz-validator/protocol` | — | クライアントと daemon が共有する wire 型と CLI 契約。runtime では core に依存しないので browser-safe。 |
+| `@wacz-validator/devtools` | `wacz-validator-break` | 開発用。publish しない(`private`)。WACZ をわざと壊し、rule が赤くなるところを見るための道具 —— validator の緑は、赤くなるところを見るまで意味を持たない。 |
 
-`waxlens` は既定で `waxlens-daemon` を子プロセスとして起動します。常駐 daemon に
+`wacz-validator` は既定で `wacz-validator-daemon` を子プロセスとして起動します。常駐 daemon に
 繋ぐ場合は、その daemon が起動時に出力した port を使って
-`--server ws://127.0.0.1:7333` のように渡します（[クイックスタート](/waxlens/ja/quickstart/)参照）。
+`--server ws://127.0.0.1:7333` のように渡します（[クイックスタート](/wacz-validator/ja/quickstart/)参照）。
 
 ## なぜ daemon を挟むのか
 
@@ -26,14 +26,14 @@ validator は単一バイナリでも作れます。分離しているのは、*
 
 ```mermaid
 flowchart LR
-    tui["@waxlens/tui"] ==>|"WS / JSON-RPC"| daemon["@waxlens/daemon"]
+    tui["@wacz-validator/tui"] ==>|"WS / JSON-RPC"| daemon["@wacz-validator/daemon"]
     browser(["browser (将来)"]) -.->|"WS"| daemon
-    cli["@waxlens/validate-cli"] -->|"検証に使う"| core["@waxlens/core"]
+    cli["@wacz-validator/validate-cli"] -->|"検証に使う"| core["@wacz-validator/core"]
     daemon -->|"検証に使う"| core
-    tui -->|import| protocol["@waxlens/protocol"]
+    tui -->|import| protocol["@wacz-validator/protocol"]
     daemon -->|import| protocol
     protocol -.->|"import type のみ"| core
-    core -->|import| shared["@waxlens/contract"]
+    core -->|import| shared["@wacz-validator/contract"]
     protocol -->|import| shared
     cli -->|import| shared
 
@@ -48,10 +48,10 @@ daemon が state を持たないことが、それを安価にしています。
 
 ## core が prose を持たない理由
 
-`@waxlens/core` は人間可読な文を一切生成しません。issue が持つのはメッセージの
+`@wacz-validator/core` は人間可読な文を一切生成しません。issue が持つのはメッセージの
 **キー**とランタイム値で、renderer が locale カタログで解決します。
 
-これが、1 つの report を複数言語で提示できる理由であり、`@waxlens/protocol` が
+これが、1 つの report を複数言語で提示できる理由であり、`@wacz-validator/protocol` が
 core 本体を引き込まずに core の型だけを使える理由でもあります — wire format は
 テキストではなくデータです。
 
@@ -59,7 +59,7 @@ core 本体を引き込まずに core の型だけを使える理由でもあり
 
 各 rule は `name` / `severity` / `conformance` と profile ごとの上書きを宣言し、
 engine は個別に特別扱いせずその宣言を読みます。このサイトの
-[Rules](/waxlens/ja/rules/) の表は同じ宣言から生成しているので、実際に走るものと
+[Rules](/wacz-validator/ja/rules/) の表は同じ宣言から生成しているので、実際に走るものと
 ずれません。
 
 rule が有効になるのは、`packages/core/src/validate/rules/` に定義があり、**かつ**

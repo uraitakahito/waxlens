@@ -16,7 +16,7 @@ import type {
   RpcRequest,
   RpcResponse,
   ValidateParams,
-} from "@waxlens/protocol";
+} from "@wacz-validator/protocol";
 import { ServerEndpoint } from "./server-url.js";
 
 /** daemon が RpcError を返したときに reject する型つきエラー。 */
@@ -48,11 +48,11 @@ export class DaemonSession {
 
   /** daemon bin を spawn して endpoint を得る(release で kill し exit を待つ)。 */
   static async spawn(): Promise<DaemonSession> {
-    const cliPath = createRequire(import.meta.url).resolve("@waxlens/daemon/dist/cli.js");
+    const cliPath = createRequire(import.meta.url).resolve("@wacz-validator/daemon/dist/cli.js");
     const child = spawn(process.execPath, [cliPath], {
       // spawn する ephemeral daemon は loopback に固定する(ambient な
-      // WAXLENS_DAEMON_HOST が漏れて全 interface に晒されるのを防ぐ)。
-      env: { ...process.env, WAXLENS_DAEMON_PORT: "0", WAXLENS_DAEMON_HOST: "127.0.0.1" },
+      // WACZ_VALIDATOR_DAEMON_HOST が漏れて全 interface に晒されるのを防ぐ)。
+      env: { ...process.env, WACZ_VALIDATOR_DAEMON_PORT: "0", WACZ_VALIDATOR_DAEMON_HOST: "127.0.0.1" },
       stdio: ["ignore", "ignore", "pipe"],
     });
     const endpoint = await new Promise<ServerEndpoint>((resolveEndpoint, rejectSpawn) => {

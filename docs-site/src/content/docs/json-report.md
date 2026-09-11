@@ -1,16 +1,16 @@
 ---
 title: JSON report
-description: The shape of what waxlens-validate prints, and what is promised about it.
+description: The shape of what wacz-validator-validate prints, and what is promised about it.
 ---
 
-`waxlens-validate` prints one JSON object to stdout. **That is its only output
+`wacz-validator-validate` prints one JSON object to stdout. **That is its only output
 format** — there is no flag to switch (to read the same report interactively,
-use the separate `waxlens` binary from `@waxlens/tui`). It is the interface for
-CI scripts and for anything downstream of waxlens, so its shape is deliberate
+use the separate `wacz-validator` binary from `@wacz-validator/tui`). It is the interface for
+CI scripts and for anything downstream of wacz-validator, so its shape is deliberate
 rather than incidental.
 
 ```sh
-waxlens-validate samples/wikipedia.wacz | jq '.summary'
+wacz-validator-validate samples/wikipedia.wacz | jq '.summary'
 ```
 
 ## Top level
@@ -23,7 +23,7 @@ cached in a separate field; it only created room to disagree with `summary`, so
 it is gone.
 
 ```sh
-waxlens-validate a.wacz | jq '.summary.failed == 0'
+wacz-validator-validate a.wacz | jq '.summary.failed == 0'
 ```
 
 `issues` are in rule registration order, which means the structural checks come
@@ -42,7 +42,7 @@ Each issue names the rule that raised it, so a report can be filtered or diffed
 by rule without parsing prose:
 
 - `rule` — the stable `<area>/<short-name>` identifier, the same string used in
-  the [Rules](/waxlens/rules/) table. Never localised, never reformatted between
+  the [Rules](/wacz-validator/rules/) table. Never localised, never reformatted between
   versions.
 - `severity` — after profile re-grading, so this is what the run actually
   decided rather than the rule's default.
@@ -61,7 +61,7 @@ by rule without parsing prose:
 
 ### `severity` and `conformance` answer different questions
 
-`severity` is what waxlens does about a violation; `conformance` is what the
+`severity` is what wacz-validator does about a violation; `conformance` is what the
 specification asks for. **Filtering on one is not a substitute for the other.**
 
 Across the 30 corpus specimens:
@@ -76,21 +76,21 @@ The two bold cells are why neither column predicts the other.
 `datapackage/resources-complete` is a `MUST` reported as a `warning` — an
 undeclared file in the ZIP does not stop replay. `datapackage/digest` runs the
 other way: the spec only says `SHOULD`, but a hash that does not match may mean
-the archive was altered, so waxlens calls it an `error`.
+the archive was altered, so wacz-validator calls it an `error`.
 
 Note that **`summary.failed` counts `severity` alone** — it never looks at
 conformance. An archive can have `failed: 0` and still violate a `MUST`. If you
 need the conformance view, read it off the issues:
 
 ```sh
-# What waxlens judges to be broken
-waxlens archive.wacz | jq '[.issues[] | select(.severity == "error")]'
+# What wacz-validator judges to be broken
+wacz-validator archive.wacz | jq '[.issues[] | select(.severity == "error")]'
 
 # What the specification requires
-waxlens archive.wacz | jq '[.issues[] | select(.conformance == "MUST" or .conformance == "MUST NOT")]'
+wacz-validator archive.wacz | jq '[.issues[] | select(.conformance == "MUST" or .conformance == "MUST NOT")]'
 
 # Where the two disagree — usually the most informative list
-waxlens archive.wacz | jq '[.issues[]
+wacz-validator archive.wacz | jq '[.issues[]
   | select((.conformance == "MUST" and .severity != "error")
         or (.conformance != "MUST" and .severity == "error"))]'
 ```
@@ -100,7 +100,7 @@ filtering is left to the caller.
 
 ## What is promised
 
-`waxlensVersion` mirrors `package.json#version` and exists so a consumer can
+`validatorVersion` mirrors `package.json#version` and exists so a consumer can
 detect schema drift rather than guess at it.
 
 Within a major version:
@@ -133,7 +133,7 @@ jq -r '.profile.version // "unpinned"'   # when only the version matters
 ```
 
 `version` is **what `--profile` claimed**, not something checked against the
-archive — see [Profiles](/waxlens/profiles/).
+archive — see [Profiles](/wacz-validator/profiles/).
 
 ## `skipped` — recording what was not looked at
 
@@ -162,6 +162,6 @@ the first is being misled.
 
 
 The exit code is derived from the report by `exitCodeFor` in
-`@waxlens/protocol`, shared by the CLI and the TUI so the two cannot disagree.
+`@wacz-validator/protocol`, shared by the CLI and the TUI so the two cannot disagree.
 Deciding from `summary.failed` in your own script is equivalent for the common
 case; use the shared helper when the distinction between failure kinds matters.

@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * `waxlens-break` —— WACZ をわざと壊し、rule が反応することを確かめるための道具。
+ * `wacz-validator-break` —— WACZ をわざと壊し、rule が反応することを確かめるための道具。
  *
  * validator の「緑」は 2 通りの意味を持つ: 検査して問題が無かったのか、そもそも
  * 検査していないのか。区別する方法は 1 つで、**壊して赤くなるところを見る**こと。
  * その 1 手間を毎回スクリプトに書き直さずに済むよう、壊し方をここに集める。
  *
  * 判定はしない。壊した WACZ を書き出すところまでで、赤くなったかは
- * `waxlens-validate` に渡して読む —— 道具が「壊した」と「検出された」の両方を
+ * `wacz-validator-validate` に渡して読む —— 道具が「壊した」と「検出された」の両方を
  * 名乗ると、どちらが嘘をついたのか分からなくなる。
  *
  * publish しない (`private`)。壊し方はまだ browserhive 固有で、他の producer に
@@ -83,7 +83,7 @@ const writeZip = async (path: string, entries: Map<string, Entry>): Promise<void
 
 const main = async (): Promise<void> => {
   const program = new Command()
-    .name("waxlens-break")
+    .name("wacz-validator-break")
     .description("WACZ をわざと壊し、rule が反応することを確かめる (開発用)")
     .argument("[source]", "壊す元の .wacz")
     .argument("[dest]", "書き出す先の .wacz")
@@ -99,7 +99,7 @@ const main = async (): Promise<void> => {
     for (const m of MUTATIONS) {
       stdout.write(`  ${m.name.padEnd(24)} ${m.target.padEnd(28)} → ${m.expects}\n`);
     }
-    stdout.write("\n  例: waxlens-break sample.wacz broken.wacz -m swap-intermediate\n");
+    stdout.write("\n  例: wacz-validator-break sample.wacz broken.wacz -m swap-intermediate\n");
     return;
   }
 

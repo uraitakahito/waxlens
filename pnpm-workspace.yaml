@@ -2,7 +2,7 @@ packages:
   - "packages/*"
 
 # Workspace dep を可能な限り symlink で解決する (もと .npmrc)。
-# package.json の "@waxlens/core": "workspace:*" を満たす際、
+# package.json の "@wacz-validator/core": "workspace:*" を満たす際、
 # registry ではなく workspace 内 package を最優先で繋ぐ。
 linkWorkspacePackages: deep
 preferWorkspacePackages: true

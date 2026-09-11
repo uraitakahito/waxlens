@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * `waxlens-validate` — validation engine の CLI。
+ * `wacz-validator-validate` — validation engine の CLI。
  *
  * machine-readable な出力のみ
  *
  * この package が持つのは引数の解釈と出力の発火だけで、validation は
- * `@waxlens/core` が全部やる。
+ * `@wacz-validator/core` が全部やる。
  *
  * Exit codes:
  *   0 — validation 成功 (error 重大度の issue なし)
@@ -30,7 +30,7 @@ import {
   type Locale,
   type Report,
   type ReportSource,
-} from "@waxlens/core";
+} from "@wacz-validator/core";
 import {
   ALL_PROFILES,
   DEFAULT_PROFILE,
@@ -40,13 +40,13 @@ import {
   parseProfileSelector,
   type CliOutcome,
   type ProfileSelector,
-} from "@waxlens/contract";
+} from "@wacz-validator/contract";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const manifestPath = join(here, "..", "package.json");
 const manifest = JSON.parse(readFileSync(manifestPath, "utf-8")) as { version: string };
 
-const envS3ForcePathStyle = process.env["WAXLENS_S3_FORCE_PATH_STYLE"] === "true";
+const envS3ForcePathStyle = process.env["WACZ_VALIDATOR_S3_FORCE_PATH_STYLE"] === "true";
 
 interface CliOptions {
   profile: ProfileSelector;
@@ -91,7 +91,7 @@ async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome<Re
 
   try {
     const result = await runValidation(reader, {
-      waxlensVersion: manifest.version,
+      validatorVersion: manifest.version,
       rules: DEFAULT_RULES,
       profile: opts.profile,
     });
@@ -110,7 +110,7 @@ async function runCli(filePath: string, opts: CliOptions): Promise<CliOutcome<Re
 
 const program = new Command();
 program
-  .name("waxlens-validate")
+  .name("wacz-validator-validate")
   .description("WACZ validator — emits a machine-readable JSON report to stdout")
   .version(manifest.version)
   .argument(
@@ -126,7 +126,7 @@ program
   )
   .option(
     "--s3-force-path-style",
-    "Force path-style S3 addressing for bundled SeaweedFS / MinIO 等 (also via WAXLENS_S3_FORCE_PATH_STYLE=true)",
+    "Force path-style S3 addressing for bundled SeaweedFS / MinIO 等 (also via WACZ_VALIDATOR_S3_FORCE_PATH_STYLE=true)",
     envS3ForcePathStyle,
   )
   .option("--lang <locale>", `Message language (${SUPPORTED_LOCALES.join(" | ")}). Defaults to LANG / en.`)
@@ -140,7 +140,7 @@ program
     // await しているので、外側に lingering handle は残らない。
     //
     // 反面、event loop が drain しないと process は hang する (例: stdout
-    // pipe を読まない consumer)。waxlens は timer / socket / watcher を
+    // pipe を読まない consumer)。wacz-validator は timer / socket / watcher を
     // 持たず fd も finally で閉じるので drain 阻害経路は stdout のみで、
     // pathological consumer による hang は `process.exit(N)` に切り替え
     // ても output が truncate するだけで防げない — loud な hang の方が
@@ -169,7 +169,7 @@ function dispatch(outcome: CliOutcome<Report>, locale: Locale): void {
       return;
     case "openFailed":
       process.stderr.write(
-        `waxlens-validate: cannot open "${outcome.filePath}": ${describeCause(outcome.cause)}\n`,
+        `wacz-validator-validate: cannot open "${outcome.filePath}": ${describeCause(outcome.cause)}\n`,
       );
       return;
     case "engineFailed":

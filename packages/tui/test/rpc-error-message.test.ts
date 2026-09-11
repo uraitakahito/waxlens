@@ -11,7 +11,7 @@
  * この経路は手動では踏めない。ここでしか守れない。
  */
 import { describe, expect, it } from "vitest";
-import { describeCause } from "@waxlens/protocol";
+import { describeCause } from "@wacz-validator/protocol";
 import { RpcCallError } from "../src/daemon-client.js";
 
 describe("wire で運ばれた説明の扱い", () => {

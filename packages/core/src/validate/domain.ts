@@ -9,7 +9,7 @@
  * wire format (`Report`) は `--json` が出力するもので、`docs/json-schema.md`
  * が公開 schema として pin している (0.x line 中安定)。future-proofing
  * のための note:
- *   - `waxlensVersion` によって downstream consumer が schema の drift
+ *   - `validatorVersion` によって downstream consumer が schema の drift
  *     を検出できる。
  *   - `summary.durationMs` を最初から入れることで、CI dashboard が
  *     コストの regression を trend として追える。
@@ -18,7 +18,7 @@
  *     としては "serialise 可能なら何でも"。
  */
 import { isAbsolute, resolve as resolvePath } from "node:path";
-import type { Locale } from "@waxlens/contract";
+import type { Locale } from "@wacz-validator/contract";
 import type { MsgParams } from "../i18n/translate.js";
 import { err, ok, type Result } from "../result.js";
 import type { WaczReader } from "../wacz/reader.js";
@@ -26,7 +26,7 @@ import type { WaczReader } from "../wacz/reader.js";
 export type Severity = "error" | "warning" | "info";
 
 /**
- * spec の規範レベル(RFC 2119)。`Severity`(waxlens の影響判断・profile 依存)
+ * spec の規範レベル(RFC 2119)。`Severity`(wacz-validator の影響判断・profile 依存)
  * とは直交する別軸で、spec が定める要件の強さを表す(profile 非依存)。
  */
 export type Conformance = "MUST" | "MUST NOT" | "SHOULD" | "SHOULD NOT" | "MAY";
@@ -46,10 +46,10 @@ export type Conformance = "MUST" | "MUST NOT" | "SHOULD" | "SHOULD NOT" | "MAY";
  *   降格させる。legacy archive をトリアージしていて "replay 破損"
  *   系の hard error だけを見たいときに便利。
  */
-// 定義の持ち主は @waxlens/contract。engine も i18n も読まない葉 package に
-// 置いてあるので、browser 側 (@waxlens/protocol 経由) が core を引き込まずに
+// 定義の持ち主は @wacz-validator/contract。engine も i18n も読まない葉 package に
+// 置いてあるので、browser 側 (@wacz-validator/protocol 経由) が core を引き込まずに
 // 同じ値を使える。ここは従来どおりの import 経路を保つための re-export。
-import { ALL_PROFILES, type RuleProfile } from "@waxlens/contract";
+import { ALL_PROFILES, type RuleProfile } from "@wacz-validator/contract";
 
 export { ALL_PROFILES };
 export type { RuleProfile };
@@ -88,7 +88,7 @@ export interface RuleApplicability {
    * selector がバージョンを名乗らなければ範囲は見ない (＝ 従来どおり走る)。
    * 既定をそちらに置いているので、バージョンを書かない呼び出しの挙動は変わらない。
    *
-   * 範囲式は `@waxlens/contract` の最小部分集合 (`>=x.y.z` / `<x.y.z` と
+   * 範囲式は `@wacz-validator/contract` の最小部分集合 (`>=x.y.z` / `<x.y.z` と
    * 空白区切りの AND)。解せない式は engine 実行時に throw する。
    */
   profileVersions?: Partial<Record<RuleProfile, string>>;
@@ -376,7 +376,7 @@ export interface ReportEntry {
 
 // #region report
 export interface Report {
-  waxlensVersion: string;
+  validatorVersion: string;
   /** report を評価した profile。{@link ReportProfile} を参照。 */
   profile: ReportProfile;
   /** validate された WACZ の identity。{@link ReportSource} を参照。 */

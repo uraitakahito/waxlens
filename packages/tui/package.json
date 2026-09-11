@@ -1,7 +1,7 @@
 {
-  "name": "@waxlens/tui",
+  "name": "@wacz-validator/tui",
   "version": "0.0.0",
-  "description": "Ink TUI for waxlens — a thin client that renders the WireReport served by @waxlens/daemon.",
+  "description": "Ink TUI for wacz-validator — a thin client that renders the WireReport served by @wacz-validator/daemon.",
   "license": "Unlicense",
   "type": "module",
   "engines": {
@@ -10,7 +10,7 @@
   "main": "dist/app.js",
   "types": "dist/app.d.ts",
   "bin": {
-    "waxlens": "dist/cli.js"
+    "wacz-validator": "dist/cli.js"
   },
   "files": [
     "dist",
@@ -29,8 +29,8 @@
     "prepublishOnly": "pnpm check && pnpm build"
   },
   "dependencies": {
-    "@waxlens/daemon": "workspace:*",
-    "@waxlens/protocol": "workspace:*",
+    "@wacz-validator/daemon": "workspace:*",
+    "@wacz-validator/protocol": "workspace:*",
     "commander": "^15.0.0",
     "ink": "^7.0.2",
     "picocolors": "^1.1.1",

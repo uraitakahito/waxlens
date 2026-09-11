@@ -22,17 +22,17 @@ suite that does is skipped unless you ask for it — see below.
 | --- | --- |
 | `pnpm check` | audit + all seven packages. **What CI runs.** |
 | `pnpm test` | tests only, all packages |
-| `pnpm --filter @waxlens/core test` | one package |
-| `pnpm --filter @waxlens/core test:watch` | one package, watching |
+| `pnpm --filter @wacz-validator/core test` | one package |
+| `pnpm --filter @wacz-validator/core test:watch` | one package, watching |
 | `pnpm typecheck` / `pnpm lint` / `pnpm build` | one stage across all packages |
 | `pnpm test:ui` | every package in a browser UI (watch) |
 | `pnpm test:report` | a static report into `html/` |
 
-`--filter` takes the package name, not the directory: `@waxlens/contract`,
-`@waxlens/core`, `@waxlens/validate-cli`, `@waxlens/daemon`, `@waxlens/protocol`,
-`@waxlens/tui`.
+`--filter` takes the package name, not the directory: `@wacz-validator/contract`,
+`@wacz-validator/core`, `@wacz-validator/validate-cli`, `@wacz-validator/daemon`, `@wacz-validator/protocol`,
+`@wacz-validator/tui`.
 
-`@waxlens/protocol` has no tests — it is the wire contract, and its `check` stops
+`@wacz-validator/protocol` has no tests — it is the wire contract, and its `check` stops
 after `build`. That is not an omission: there is nothing there to run.
 
 ## Filtering by concern
@@ -126,7 +126,7 @@ either way).
 over `file://`** — serve it, e.g. `npx vite preview --outDir html`.
 
 :::note
-`@waxlens/protocol` is deliberately absent from `projects`. With no tests, it
+`@wacz-validator/protocol` is deliberately absent from `projects`. With no tests, it
 would appear in the UI as an **empty project**, which reads as "tests missing"
 rather than "nothing to run".
 :::
@@ -134,15 +134,15 @@ rather than "nothing to run".
 ## Why `build` comes before `test`
 
 Each package's `check` is `typecheck && lint && build && test`, and the order is
-deliberate. `@waxlens/daemon` and `@waxlens/tui` generate `build-info.ts` as part
+deliberate. `@wacz-validator/daemon` and `@wacz-validator/tui` generate `build-info.ts` as part
 of their build; running their tests against a stale or missing one tests the
 wrong thing. Type errors and lint failures also cost seconds, while a build costs
 longer — cheap gates first.
 
 ## The corpus tests
 
-`@waxlens/core` carries a second kind of test: it validates **real WACZ archives**
-from the [waxlens-corpus](https://uraitakahito.github.io/waxlens-corpus/) repository rather than fixtures built inline.
+`@wacz-validator/core` carries a second kind of test: it validates **real WACZ archives**
+from the [wacz-validator-corpus](https://uraitakahito.github.io/wacz-validator-corpus/) repository rather than fixtures built inline.
 Those need the archives, so they read `CORPUS_DIR` and **skip when it is unset**:
 
 ```
@@ -158,10 +158,10 @@ then point at it with an **absolute** path:
 
 ```sh
 git clone --branch "$(cat .corpus-version)" \
-  https://github.com/uraitakahito/waxlens-corpus.git ../waxlens-corpus
-git -C ../waxlens-corpus lfs pull
+  https://github.com/uraitakahito/wacz-validator-corpus.git ../wacz-validator-corpus
+git -C ../wacz-validator-corpus lfs pull
 
-CORPUS_DIR="$(cd ../waxlens-corpus && pwd)" pnpm --filter @waxlens/core test:corpus
+CORPUS_DIR="$(cd ../wacz-validator-corpus && pwd)" pnpm --filter @wacz-validator/core test:corpus
 ```
 
 `.corpus-version` at the repository root holds a single tag — the corpus release
@@ -171,7 +171,7 @@ suite refuses to run**, naming what it got rather than failing later with
 expectations that do not match:
 
 ```
-CORPUS_DIR は 28bcc70 を指していますが、この waxlens は v0.1.0 に固定されています。
+CORPUS_DIR は 28bcc70 を指していますが、この wacz-validator は v0.1.0 に固定されています。
 ```
 
 An unpacked release tarball is not a git checkout, so its version cannot be read
@@ -179,8 +179,8 @@ An unpacked release tarball is not a git checkout, so its version cannot be read
 
 The `$(cd … && pwd)` is not decoration. `pnpm --filter` runs the script with its
 working directory set to `packages/core`, and a relative `CORPUS_DIR` is resolved
-there, not in your shell — so `../waxlens-corpus` looks for
-`packages/waxlens-corpus`, finds nothing, and the suite **skips while telling you
+there, not in your shell — so `../wacz-validator-corpus` looks for
+`packages/wacz-validator-corpus`, finds nothing, and the suite **skips while telling you
 it found no manifest**. Resolving to an absolute path in the shell first sidesteps
 the question.
 
@@ -196,9 +196,9 @@ Merging something into the corpus changes nothing here — this checkout keeps
 testing against the tag in `.corpus-version`. Following it is a deliberate act,
 in three steps:
 
-1. land the change in waxlens-corpus and **cut a release** there
+1. land the change in wacz-validator-corpus and **cut a release** there
 2. edit `.corpus-version` to the new tag
-3. open one waxlens PR carrying that edit **and** whatever code has to change
+3. open one wacz-validator PR carrying that edit **and** whatever code has to change
    with it
 
 The last point is why the pin exists: the PR is judged against a corpus that
@@ -225,8 +225,8 @@ Five workflows, and only the first is the one you reproduce locally with
 | Workflow | Runs |
 | --- | --- |
 | `check` | `pnpm check` — the whole routine suite |
-| `corpus` | clones waxlens-corpus **at `.corpus-version`**, then `corpus:docs:check` and `test:corpus` |
-| `pack-smoke` | `npm pack` for `@waxlens/contract`, `@waxlens/core`, `@waxlens/validate-cli` and `@waxlens/tui`, then installs them into a clean directory and runs the binaries |
+| `corpus` | clones wacz-validator-corpus **at `.corpus-version`**, then `corpus:docs:check` and `test:corpus` |
+| `pack-smoke` | `npm pack` for `@wacz-validator/contract`, `@wacz-validator/core`, `@wacz-validator/validate-cli` and `@wacz-validator/tui`, then installs them into a clean directory and runs the binaries |
 | `site` | builds the documentation and verifies its references |
 | `docs` | publishes the site |
 

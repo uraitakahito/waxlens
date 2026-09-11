@@ -2,7 +2,7 @@
 /**
  * CLI integration テスト。
  *
- * 生成された fixture に対してビルド済みの `dist/waxlens-validate.js` を spawn し、
+ * 生成された fixture に対してビルド済みの `dist/wacz-validator-validate.js` を spawn し、
  * 以下を assert する:
  *   - exit code     — valid なら 0、invalid なら 1、operational な失敗なら 2
  *   - JSON shape    — snapshot ベース。非決定的な field は scrub する
@@ -30,7 +30,7 @@ import { buildWacz, type FixtureOptions } from "../../core/test/fixtures/generat
 const execFileAsync = promisify(execFile);
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const CLI_PATH = resolve(HERE, "..", "dist", "waxlens-validate.js");
+const CLI_PATH = resolve(HERE, "..", "dist", "wacz-validator-validate.js");
 
 interface RunResult {
   stdout: string;
@@ -39,7 +39,7 @@ interface RunResult {
 }
 
 /**
- * ビルド済み CLI を実行する。`dist/waxlens-validate.js` は `node` 経由で起動して
+ * ビルド済み CLI を実行する。`dist/wacz-validator-validate.js` は `node` 経由で起動して
  * いるので、この test の session で chmod が走っているかどうかに
  * 依存しない (test スイートが test 走行前に `pnpm build` 自体を
  * 駆動する)。
@@ -47,7 +47,7 @@ interface RunResult {
 const runCli = async (args: string[]): Promise<RunResult> => {
   // snapshot を locale 非依存にするため、メッセージ言語を en に固定する
   // (マシンの LANG が ja でも JSON 出力が決定的になる)。
-  const env = { ...process.env, WAXLENS_LANG: "en" };
+  const env = { ...process.env, WACZ_VALIDATOR_LANG: "en" };
   try {
     const { stdout, stderr } = await execFileAsync("node", [CLI_PATH, ...args], { env });
     return { stdout, stderr, code: 0 };
@@ -97,7 +97,7 @@ const stabiliseJson = (text: string): unknown => {
 describe("cli — exit codes", () => {
   let tmpDir: string;
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), "waxlens-cli-test-"));
+    tmpDir = await mkdtemp(join(tmpdir(), "wacz-validator-cli-test-"));
   });
   afterEach(async () => {
     await rm(tmpDir, { recursive: true, force: true });
@@ -129,7 +129,7 @@ describe("cli — exit codes", () => {
 describe("cli — JSON output shape (default)", () => {
   let tmpDir: string;
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), "waxlens-cli-test-"));
+    tmpDir = await mkdtemp(join(tmpdir(), "wacz-validator-cli-test-"));
   });
   afterEach(async () => {
     await rm(tmpDir, { recursive: true, force: true });

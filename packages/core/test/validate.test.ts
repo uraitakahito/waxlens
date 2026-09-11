@@ -39,7 +39,7 @@ const runAgainstFixture = async (
   const reader = await WaczReader.open(fileTransport(source.path));
   try {
     const result = await runValidation(reader, {
-      waxlensVersion: "0.0.0",
+      validatorVersion: "0.0.0",
       rules: DEFAULT_RULES,
       profile: { name: profile },
     });
@@ -55,7 +55,7 @@ const ruleNames = (report: Report): string[] => report.issues.map((i) => i.rule)
 describe("validation engine — happy path", () => {
   let tmpDir: string;
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), "waxlens-test-"));
+    tmpDir = await mkdtemp(join(tmpdir(), "wacz-validator-test-"));
   });
   afterEach(async () => {
     await rm(tmpDir, { recursive: true, force: true });
@@ -79,7 +79,7 @@ describe("validation engine — happy path", () => {
 describe("validation engine — corrupted variants", () => {
   let tmpDir: string;
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), "waxlens-test-"));
+    tmpDir = await mkdtemp(join(tmpdir(), "wacz-validator-test-"));
   });
   afterEach(async () => {
     await rm(tmpDir, { recursive: true, force: true });

@@ -18,7 +18,7 @@
 import { createServer, type Server } from "node:http";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { WebSocket } from "ws";
-import type { RpcRequest, RpcResponse } from "@waxlens/protocol";
+import type { RpcRequest, RpcResponse } from "@wacz-validator/protocol";
 import { createDaemon } from "../src/server.js";
 
 let fakeS3: Server;
@@ -89,7 +89,7 @@ describe("openFailed の message", () => {
   it("本文の無い 404 でも HTTP status が wire に載る", async () => {
     const res = await call({
       id: 1,
-      method: "waxlens/validate",
+      method: "wacz-validator/validate",
       params: {
         source: { kind: "uri", uri: "s3://bucket/missing.wacz" },
         locale: "en",

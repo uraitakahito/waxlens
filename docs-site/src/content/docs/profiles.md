@@ -37,7 +37,7 @@ BrowserHive's output changes between versions. Append `@<x.y.z>` and only the
 rules known to be correct for that version run.
 
 ```sh
-waxlens-validate --profile browserhive@2.1.0 archive.wacz
+wacz-validator-validate --profile browserhive@2.1.0 archive.wacz
 ```
 
 Without a version, every rule runs, including the version-conditional ones —
@@ -60,7 +60,7 @@ at" is being misled.
 :::caution[The version is not checked against the archive]
 `--profile browserhive@1.0.0` is taken at face value; nothing verifies that the
 archive was really produced by 1.0.0. `datapackage.json` carries a `software`
-field naming the producer and its version, but waxlens does not read it yet.
+field naming the producer and its version, but wacz-validator does not read it yet.
 **The version is the operator's claim.**
 :::
 
@@ -74,7 +74,7 @@ but "is this salvageable?"
 
 ## Which rules a profile actually changes
 
-The [Rules](/waxlens/rules/) table has a **Profile overrides** column showing
+The [Rules](/wacz-validator/rules/) table has a **Profile overrides** column showing
 exactly which rules are re-graded and to what. Rules with an empty cell behave
 identically under all three profiles.
 
@@ -85,5 +85,5 @@ the authoritative answer — not a summary of one.
 
 The profile affects the exit code only through severity: what counts as a
 failure is unchanged, but a rule demoted to `info` no longer contributes one.
-The mapping from report to exit code lives in `@waxlens/protocol`
+The mapping from report to exit code lives in `@wacz-validator/protocol`
 (`exitCodeFor`), shared by the CLI and the TUI so both agree.

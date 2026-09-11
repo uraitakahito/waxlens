@@ -15,7 +15,7 @@ import { render } from "ink-testing-library";
 import { render as inkRender } from "ink";
 import { describe, expect, it } from "vitest";
 import type { ReactElement } from "react";
-import type { AbsolutePath, ExpectedBy, ReadEntryResult, WireReport } from "@waxlens/protocol";
+import type { AbsolutePath, ExpectedBy, ReadEntryResult, WireReport } from "@wacz-validator/protocol";
 import { App } from "../src/app.js";
 
 /**
@@ -80,7 +80,7 @@ const renderAt = (
 };
 
 const makeReport = (overrides: Partial<WireReport> = {}): WireReport => ({
-  waxlensVersion: "0.0.0",
+  validatorVersion: "0.0.0",
   profile: { name: "spec" },
   source: { kind: "file", path: "/tmp/fixture.wacz" as AbsolutePath },
   summary: { passed: 3, failed: 2, warnings: 0, info: 0, durationMs: 12 },
@@ -120,7 +120,7 @@ describe("tui rendering", () => {
     // パスが終わるまで 1 tick 待つ(以降のスクロール系テストも同様)。
     await new Promise((resolve) => setTimeout(resolve, 60));
     const frame = lastFrame() ?? "";
-    expect(frame).toContain("waxlens");
+    expect(frame).toContain("wacz-validator");
     expect(frame).toContain("datapackage/profile-required");
     expect(frame).toContain("cdxj/filename-archive-relative");
     expect(frame).toContain("3 passed");

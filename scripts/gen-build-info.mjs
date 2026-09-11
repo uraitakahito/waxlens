@@ -10,7 +10,7 @@
  * file is git-ignored and regenerated on every build, so it is never committed.
  *
  * git failures (no .git, published tarball) degrade gracefully: the SHA falls
- * back to `WAXLENS_GIT_SHA` (CI injection) or the literal "nogit".
+ * back to `WACZ_VALIDATOR_GIT_SHA` (CI injection) or the literal "nogit".
  */
 import { execSync } from "node:child_process";
 import { mkdirSync, writeFileSync, readFileSync } from "node:fs";
@@ -36,7 +36,7 @@ const git = (cmd, fallback) => {
     return fallback;
   }
 };
-const sha = git("git rev-parse --short HEAD", process.env.WAXLENS_GIT_SHA ?? "nogit");
+const sha = git("git rev-parse --short HEAD", process.env.WACZ_VALIDATOR_GIT_SHA ?? "nogit");
 const dirty = git("git status --porcelain", "") ? "-dirty" : "";
 const gitSha = sha + dirty;
 const builtAt = new Date().toISOString();

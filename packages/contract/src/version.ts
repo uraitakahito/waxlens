@@ -2,7 +2,7 @@
  * 最小の semver 実装。
  *
  * **`semver` パッケージは入れない。** この package の存在理由は「何も
- * import しない」ことで、それが `@waxlens/protocol` 経由で browser に
+ * import しない」ことで、それが `@wacz-validator/protocol` 経由で browser に
  * validation engine を引き込まない保証になっている。依存を 1 つでも
  * 足せばその保証が消える。
  *

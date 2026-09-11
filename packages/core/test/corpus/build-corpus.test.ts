@@ -1,22 +1,22 @@
 // @module-tag corpus
 /**
- * waxlens-corpus 生成エントリ (案 3)。
+ * wacz-validator-corpus 生成エントリ (案 3)。
  *
  * `CORPUS_DIR` が指す repo に `fixtures/*.wacz` と `manifest.json` を
  * 書き出す。 各 fixture は `spec.ts` の宣言に従って生成し、 さらに
  * **3 profile (spec / browserhive / lenient) で実際に runValidation** して
  * 結果を manifest に記録する。 manifest の `issues` は手書きではなく
- * waxlens の実出力なので嘘が入らない。 加えて `spec.expectRules ⊆ 実結果`
+ * wacz-validator の実出力なので嘘が入らない。 加えて `spec.expectRules ⊆ 実結果`
  * を assert し、 意図した rule をちゃんと踏むかも保証する。
  *
  * `CORPUS_DIR` 未設定時は skip するので、 通常の `pnpm check` (= vitest
  * run) には影響しない。 生成は明示的に:
  *
- *     CORPUS_DIR="$(cd ../waxlens-corpus && pwd)" pnpm --filter @waxlens/core corpus:build
+ *     CORPUS_DIR="$(cd ../wacz-validator-corpus && pwd)" pnpm --filter @wacz-validator/core corpus:build
  *
  * **絶対パスで渡すこと。** `pnpm --filter` は cwd を packages/core にして走らせる
- * ので、 相対パスはそこ基準で解決される (`../waxlens-corpus` は
- * `packages/waxlens-corpus` になり、 何も見つからず skip する)。 しかもこの
+ * ので、 相対パスはそこ基準で解決される (`../wacz-validator-corpus` は
+ * `packages/wacz-validator-corpus` になり、 何も見つからず skip する)。 しかもこの
  * script は fixtures を丸ごと削除してから書き直すので、 パスの誤りは
  * 「何も起きない」で済まない可能性がある。
  */
@@ -82,7 +82,7 @@ const validateFixture = async (absPath: string, profile: RuleProfile): Promise<P
   const reader = await openFixture(absPath);
   try {
     const result = await runValidation(reader, {
-      waxlensVersion: "0.0.0",
+      validatorVersion: "0.0.0",
       rules: DEFAULT_RULES,
       profile: { name: profile },
     });
@@ -164,7 +164,7 @@ describe.skipIf(corpusRootDir === undefined)("build-corpus", () => {
       expect(entries.length).toBe(CORPUS.length);
 
       const manifest = {
-        generatedBy: "waxlens / build-corpus",
+        generatedBy: "wacz-validator / build-corpus",
         defaultProfile: "spec",
         fixtures: entries,
       };

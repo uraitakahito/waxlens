@@ -1,7 +1,7 @@
 {
-  "name": "@waxlens/daemon",
+  "name": "@wacz-validator/daemon",
   "version": "0.0.0",
-  "description": "Stateless HTTP/WS validation daemon — owns @waxlens/core, serves the tui and (future) browser clients.",
+  "description": "Stateless HTTP/WS validation daemon — owns @wacz-validator/core, serves the tui and (future) browser clients.",
   "license": "Unlicense",
   "type": "module",
   "engines": {
@@ -10,7 +10,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "waxlens-daemon": "dist/cli.js"
+    "wacz-validator-daemon": "dist/cli.js"
   },
   "files": [
     "dist"
@@ -26,9 +26,9 @@
     "check": "pnpm typecheck && pnpm lint && pnpm build && pnpm test"
   },
   "dependencies": {
-    "@waxlens/contract": "workspace:*",
-    "@waxlens/core": "workspace:*",
-    "@waxlens/protocol": "workspace:*",
+    "@wacz-validator/contract": "workspace:*",
+    "@wacz-validator/core": "workspace:*",
+    "@wacz-validator/protocol": "workspace:*",
     "commander": "^15.0.0",
     "ws": "^8.21.3"
   },

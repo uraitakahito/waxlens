@@ -14,7 +14,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { ProfileSelector } from "@waxlens/contract";
+import type { ProfileSelector } from "@wacz-validator/contract";
 import {
   parseReportSource,
   type Issue,
@@ -44,7 +44,7 @@ const issuesFor = async (
   const reader = await WaczReader.open(fileTransport(sourceResult.value.path));
   try {
     const result = await runValidation(reader, {
-      waxlensVersion: "0.0.0",
+      validatorVersion: "0.0.0",
       rules: DEFAULT_RULES,
       profile: { name: profile },
     });
@@ -58,7 +58,7 @@ const issuesFor = async (
 describe("warc/recording-complete", () => {
   let tmpDir: string;
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), "waxlens-rec-"));
+    tmpDir = await mkdtemp(join(tmpdir(), "wacz-validator-rec-"));
   });
   afterEach(async () => {
     await rm(tmpDir, { recursive: true, force: true });
@@ -115,7 +115,7 @@ describe("warc/recording-complete", () => {
 describe("producer のバージョンによるゲート", () => {
   let tmpDir: string;
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), "waxlens-recording-version-"));
+    tmpDir = await mkdtemp(join(tmpdir(), "wacz-validator-recording-version-"));
   });
   afterEach(async () => {
     await rm(tmpDir, { recursive: true, force: true });
@@ -131,7 +131,7 @@ describe("producer のバージョンによるゲート", () => {
     const reader = await WaczReader.open(fileTransport(parsed.value.path));
     try {
       const result = await runValidation(reader, {
-        waxlensVersion: "0.0.0",
+        validatorVersion: "0.0.0",
         rules: DEFAULT_RULES,
         profile: selector,
       });

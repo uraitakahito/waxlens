@@ -9,7 +9,7 @@ import type { TestTagDefinition } from "vitest/config";
  * which runs each package through its own config and never loads the root at
  * all. `strictTags` is on by default, so a vocabulary the per-package configs
  * cannot see stops those runs before a single test executes — which is the CI
- * path (`pnpm --filter @waxlens/core check`).
+ * path (`pnpm --filter @wacz-validator/core check`).
  *
  * No `timeout` or `retry` on any of these, which is half of what Vitest's tags
  * are for. The whole suite is ~200 tests in 3.5s, so no class of test here
@@ -37,6 +37,6 @@ export const TEST_TAGS: TestTagDefinition[] = [
   { name: "i18n", description: "Messages and translations" },
   { name: "cli", description: "The command-line surface" },
   { name: "remote", description: "Reading an archive over S3" },
-  { name: "daemon", description: "@waxlens/daemon" },
-  { name: "tui", description: "@waxlens/tui" },
+  { name: "daemon", description: "@wacz-validator/daemon" },
+  { name: "tui", description: "@wacz-validator/tui" },
 ];

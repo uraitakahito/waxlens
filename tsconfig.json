@@ -1,5 +1,5 @@
 {
-  // Base compiler options shared across @waxlens/core and @waxlens/tui.
+  // Base compiler options shared across @wacz-validator/core and @wacz-validator/tui.
   // Each workspace extends this and only sets:
   //   - `include` / `exclude` (per-workspace layout)
   //   - emit-related options in its own `tsconfig.build.json`

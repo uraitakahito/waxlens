@@ -1,10 +1,10 @@
 /**
- * waxlens daemon protocol — tui / daemon / 将来の browser が共有する契約。
+ * wacz-validator daemon protocol — tui / daemon / 将来の browser が共有する契約。
  *
  * 大半は型(`import type` で core を参照するが runtime には残らない)。加えて
  * クライアントが validation engine を引き込まずに済むよう、軽量な CLI 契約
  * (profile/locale 定数・`exitCodeFor`・`CliOutcome`)も通す — 実体は
- * `@waxlens/contract` に在り、あちらは何も import しない葉 package なので
+ * `@wacz-validator/contract` に在り、あちらは何も import しない葉 package なので
  * browser でも安全に bundle できる。
  *
  * daemon が validation を所有し、i18n は `renderJson(report, locale)` で解決して
@@ -13,7 +13,7 @@
  * 案1(URI 参照渡し・stateless): 各リクエストが `source.uri` を運び、
  * daemon は open → validate → close するだけで状態を持たない。
  */
-import type { Issue, Report, ResolvedDocLink } from "@waxlens/core";
+import type { Issue, Report, ResolvedDocLink } from "@wacz-validator/core";
 
 // クライアント(tui / browser)が core を直接 import せずに済むよう、表示用の
 // 型を protocol から re-export する(すべて型なので runtime には残らない)。
@@ -29,7 +29,7 @@ export type {
   ReportSummary,
   RuleProfile,
   Severity,
-} from "@waxlens/core";
+} from "@wacz-validator/core";
 
 /** WACZ の在り処。案1 では URI のみ(`file://` / `s3://` / `https://`)。 */
 export interface SourceRef {
@@ -82,12 +82,12 @@ export interface RpcError {
 }
 
 /** WS のメッセージ枠(相関 id つき request/response。セッション状態は持たない)。 */
-export type RpcMethod = "waxlens/validate" | "waxlens/readEntry" | "waxlens/ping";
+export type RpcMethod = "wacz-validator/validate" | "wacz-validator/readEntry" | "wacz-validator/ping";
 
-/** waxlens/ping は引数を取らない。 */
+/** wacz-validator/ping は引数を取らない。 */
 export type PingParams = Record<string, never>;
 
-/** /healthz と waxlens/ping が返す生存ステータス。 */
+/** /healthz と wacz-validator/ping が返す生存ステータス。 */
 export interface HealthStatus {
   status: "ok";
   version: string;
@@ -110,12 +110,12 @@ export interface RpcResponse {
 }
 
 // ── CLI 契約 ───────────────────────────────────────────────────────────
-// 持ち主は @waxlens/contract。あちらは何も import しない葉 package なので、
+// 持ち主は @wacz-validator/contract。あちらは何も import しない葉 package なので、
 // ここを経由してもクライアントに validation engine は付いてこない。
 //
 // 以前はこの節が同じ定義を手で複製していた。型 (`RuleProfile`) は core から
 // re-export しつつ値 (`ALL_PROFILES`) だけ複製していたので、core に profile を
-// 足しても何もエラーにならず、waxlens-validate は受理するのに waxlens は
+// 足しても何もエラーにならず、wacz-validator-validate は受理するのに wacz-validator は
 // 拒否する、という食い違いが型検査も全 test も緑のまま成立していた。
 
 export {
@@ -127,5 +127,5 @@ export {
   exitCodeFor,
   formatProfileSelector,
   parseProfileSelector,
-} from "@waxlens/contract";
-export type { CliOutcome, ProfileSelector, SemVer } from "@waxlens/contract";
+} from "@wacz-validator/contract";
+export type { CliOutcome, ProfileSelector, SemVer } from "@wacz-validator/contract";

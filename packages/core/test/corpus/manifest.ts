@@ -1,5 +1,5 @@
 /**
- * waxlens-corpus `manifest.json` の形。
+ * wacz-validator-corpus `manifest.json` の形。
  *
  * 生成側 (build-corpus) と消費側 (corpus-driven / build-docs) が共有する
  * 契約なので、どちらにも寄せずここに 1 本だけ置く。

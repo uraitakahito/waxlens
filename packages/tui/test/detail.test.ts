@@ -4,7 +4,7 @@
  * Ink に依存しないので文字列化・突合だけを決定的に検証する。
  */
 import { describe, expect, it } from "vitest";
-import type { AbsolutePath, WireReport } from "@waxlens/protocol";
+import type { AbsolutePath, WireReport } from "@wacz-validator/protocol";
 import { codecName, entryIssues, expectedLabel } from "../src/render/detail.js";
 
 describe("codecName", () => {
@@ -30,7 +30,7 @@ describe("expectedLabel", () => {
 
 describe("entryIssues", () => {
   const report = {
-    waxlensVersion: "0.0.0",
+    validatorVersion: "0.0.0",
     profile: { name: "spec" },
     source: { kind: "file", path: "/tmp/x.wacz" as AbsolutePath },
     summary: { passed: 0, failed: 2, warnings: 0, info: 0, durationMs: 1 },

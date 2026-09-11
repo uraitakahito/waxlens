@@ -1,7 +1,7 @@
 {
-  "name": "@waxlens/protocol",
+  "name": "@wacz-validator/protocol",
   "version": "0.0.0",
-  "description": "Shared wire types for the waxlens daemon protocol (tui / daemon / future browser).",
+  "description": "Shared wire types for the wacz-validator daemon protocol (tui / daemon / future browser).",
   "license": "Unlicense",
   "type": "module",
   "engines": {
@@ -20,8 +20,8 @@
     "check": "pnpm typecheck && pnpm lint && pnpm build"
   },
   "dependencies": {
-    "@waxlens/contract": "workspace:*",
-    "@waxlens/core": "workspace:*"
+    "@wacz-validator/contract": "workspace:*",
+    "@wacz-validator/core": "workspace:*"
   },
   "devDependencies": {
     "eslint": "^10.8.1",

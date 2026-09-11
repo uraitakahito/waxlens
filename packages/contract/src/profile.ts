@@ -22,7 +22,7 @@ export const DEFAULT_PROFILE: RuleProfile = "spec";
 /**
  * `--profile` の値。`<name>` または `<name>@<version>`。
  *
- * ここでいうバージョンは **producer のもの**であって waxlens のではない。
+ * ここでいうバージョンは **producer のもの**であって wacz-validator のではない。
  * `browserhive@2.1.0` は「この archive は BrowserHive 2.1.0 が作ったものとして
  * 扱え」の意。
  *

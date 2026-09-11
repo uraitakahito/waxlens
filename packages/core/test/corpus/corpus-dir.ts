@@ -8,9 +8,9 @@
  *   なので、置いていない開発者の `pnpm check` を落とさないための設計。
  *
  *   設定されているが相対パス → **throw**。これらは `pnpm --filter
- *   @waxlens/core` 経由で走り、その cwd は packages/core になる。相対パスは
- *   入力したシェルではなくそこを基準に解決されるので、`../waxlens-corpus` は
- *   `packages/waxlens-corpus` を指す。存在しないので manifest が見つからず、
+ *   @wacz-validator/core` 経由で走り、その cwd は packages/core になる。相対パスは
+ *   入力したシェルではなくそこを基準に解決されるので、`../wacz-validator-corpus` は
+ *   `packages/wacz-validator-corpus` を指す。存在しないので manifest が見つからず、
  *   スイートは skip する — 渡したのにスキップされる、という原因から最も遠い
  *   症状になる。黙って skip するより、渡し方を名指しして落ちるほうが早い。
  *
@@ -29,7 +29,7 @@ export const corpusRoot = (): string | undefined => {
         `These scripts run with cwd=packages/core (pnpm --filter), so a relative ` +
         `path resolves there rather than in your shell.\n` +
         `Let the shell expand it first:\n` +
-        `  CORPUS_DIR="$(cd ${raw} && pwd)" pnpm --filter @waxlens/core <script>`,
+        `  CORPUS_DIR="$(cd ${raw} && pwd)" pnpm --filter @wacz-validator/core <script>`,
     );
   }
 

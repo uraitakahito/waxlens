@@ -28,7 +28,7 @@ const reportFor = async (tmpDir: string, options: FixtureOptions = {}): Promise<
   const reader = await WaczReader.open(fileTransport(parsed.value.path));
   try {
     const result = await runValidation(reader, {
-      waxlensVersion: "0.0.0",
+      validatorVersion: "0.0.0",
       rules: DEFAULT_RULES,
       profile: { name: "spec" },
     });
@@ -44,7 +44,7 @@ const rules = (report: Report): string[] => report.issues.map((i) => i.rule);
 describe("spec-coverage rules", () => {
   let tmpDir: string;
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), "waxlens-spec-cov-"));
+    tmpDir = await mkdtemp(join(tmpdir(), "wacz-validator-spec-cov-"));
   });
   afterEach(async () => {
     await rm(tmpDir, { recursive: true, force: true });

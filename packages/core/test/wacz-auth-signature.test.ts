@@ -3,7 +3,7 @@
  * `wacz-auth/signature` のテスト。
  *
  * この rule が塞ぐのは、記録されていた 1 つの穴 ——
- * **「改竄された `signedData` は waxlens を通り、`capping verify` でだけ落ちる」**。
+ * **「改竄された `signedData` は wacz-validator を通り、`capping verify` でだけ落ちる」**。
  *
  * `datapackage/digest` は `hash` が `datapackage.json` と一致するかまでは見るが、
  * **その `hash` に誰が署名したかは見ていない**。だから `signedData` を丸ごと
@@ -47,7 +47,7 @@ const signedData = (over: Record<string, unknown> = {}): Record<string, unknown>
 describe("wacz-auth/signature", () => {
   let tmpDir: string;
   beforeEach(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), "waxlens-signature-"));
+    tmpDir = await mkdtemp(join(tmpdir(), "wacz-validator-signature-"));
   });
   afterEach(async () => {
     await rm(tmpDir, { recursive: true, force: true });
@@ -62,7 +62,7 @@ describe("wacz-auth/signature", () => {
     const reader = await WaczReader.open(fileTransport(source.value.path));
     try {
       const result = await runValidation(reader, {
-        waxlensVersion: "0.0.0",
+        validatorVersion: "0.0.0",
         rules: DEFAULT_RULES,
         profile: { name: "spec" },
       });

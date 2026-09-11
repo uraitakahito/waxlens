@@ -5,7 +5,7 @@
  * `forcePathStyle` は **boolean か Provider 関数** のどちらかになりうる
  * union 型なので、 `typeof` で narrow してから await する。
  *
- * env (`WAXLENS_S3_FORCE_PATH_STYLE`) と CLI flag (`--s3-force-path-style`)
+ * env (`WACZ_VALIDATOR_S3_FORCE_PATH_STYLE`) と CLI flag (`--s3-force-path-style`)
  * の merge は cli.ts 側 (commander の `Option.env()` + `argParser()`)
  * が行うので、 ここでは扱わない。 `buildS3Client` は受け取った boolean
  * を SDK に渡すだけの pure wrapper。

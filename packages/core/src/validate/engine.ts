@@ -34,7 +34,7 @@ import {
   formatSemVer,
   satisfies,
   type ProfileSelector,
-} from "@waxlens/contract";
+} from "@wacz-validator/contract";
 import type { Result } from "../result.js";
 import { ok } from "../result.js";
 import type { WaczReader } from "../wacz/reader.js";
@@ -50,7 +50,7 @@ import type {
 } from "./domain.js";
 
 export interface RunOptions {
-  waxlensVersion: string;
+  validatorVersion: string;
   rules: readonly ValidationRule[];
   /**
    * Profile selector。既定は `"spec"`(バージョンなし)。
@@ -62,7 +62,7 @@ export interface RunOptions {
   profile?: ProfileSelector;
 }
 
-// 定義の持ち主は @waxlens/contract (cf. domain.ts の ALL_PROFILES)。
+// 定義の持ち主は @wacz-validator/contract (cf. domain.ts の ALL_PROFILES)。
 export { DEFAULT_PROFILE };
 
 export const runValidation = async (
@@ -129,7 +129,7 @@ export const runValidation = async (
   const entries = await buildEntries(wacz, issues);
 
   const report: Report = {
-    waxlensVersion: opts.waxlensVersion,
+    validatorVersion: opts.validatorVersion,
     profile: {
       name: selector.name,
       // stats / skipped と同じ条件付き spread。バージョンなしなら key ごと出ない

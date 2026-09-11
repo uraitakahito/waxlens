@@ -5,7 +5,7 @@ import { satteri } from "@astrojs/markdown-satteri";
 import mdastCodeRegion from "./src/plugins/mdast-code-region";
 import hastRebaseLinks from "./src/plugins/hast-rebase-links";
 
-const BASE = "/waxlens";
+const BASE = "/wacz-validator";
 
 // WACZ 1.1.1 の日本語訳(別リポジトリで公開済み)。用語ページから参照する。
 const SPEC_JA = "https://uraitakahito.github.io/specs/wacz/1.1.1/";
@@ -18,7 +18,7 @@ export default defineConfig({
   integrations: [
     mermaid({ theme: "neutral" }),
     starlight({
-      title: "waxlens Docs",
+      title: "wacz-validator Docs",
       customCss: ["./src/styles/tables.css"],
       defaultLocale: "root",
       locales: {
@@ -54,13 +54,13 @@ export default defineConfig({
             {
               label: "Corpus ↗",
               translations: { ja: "Corpus ↗" },
-              link: "https://uraitakahito.github.io/waxlens-corpus/",
+              link: "https://uraitakahito.github.io/wacz-validator-corpus/",
             },
             { label: "Terminology", translations: { ja: "用語" }, slug: "terminology" },
           ],
         },
         {
-          // waxlens そのものを開発する人向け。使う側の Guides とは読者が違う。
+          // wacz-validator そのものを開発する人向け。使う側の Guides とは読者が違う。
           label: "For developers",
           translations: { ja: "開発者向け" },
           items: [

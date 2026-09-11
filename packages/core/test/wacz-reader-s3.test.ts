@@ -70,7 +70,7 @@ describe("WaczReader.open (s3Transport)", () => {
       expect(reader.source).toEqual({ kind: "s3", uri });
 
       const result = await runValidation(reader, {
-        waxlensVersion: "0.0.0",
+        validatorVersion: "0.0.0",
         rules: DEFAULT_RULES,
       });
       expect(result.ok).toBe(true);

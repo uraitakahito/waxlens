@@ -1,10 +1,10 @@
 // @module-tag corpus
 /**
- * `CORPUS_DIR` が指す corpus が、この waxlens の固定先と同じバージョンかを確かめる。
+ * `CORPUS_DIR` が指す corpus が、この wacz-validator の固定先と同じバージョンかを確かめる。
  *
  * 固定先は repo ルートの `.corpus-version` (1 行、tag 名) で、CI の
  * `corpus.yml` も同じファイルを読んで clone する。CI は必ず一致するので、
- * ここが効くのは手元 — `../waxlens-corpus` が `main` のまま渡されると、
+ * ここが効くのは手元 — `../wacz-validator-corpus` が `main` のまま渡されると、
  * そのまま走って「なぜか期待値が合わない」という、原因から最も遠い症状に
  * なる。
  *
@@ -70,7 +70,7 @@ export const assertPinnedCorpus = (root: string): void => {
   const actual = corpusRefAt(root) ?? "(不明)";
   if (actual === pinned) return;
   throw new Error(
-    `CORPUS_DIR は ${actual} を指していますが、この waxlens は ${pinned} に固定されています。\n` +
+    `CORPUS_DIR は ${actual} を指していますが、この wacz-validator は ${pinned} に固定されています。\n` +
       `  git -C ${root} fetch --tags && git -C ${root} checkout ${pinned}\n` +
       `固定先を上げたい場合は .corpus-version を変更してください ` +
       `(corpus 側のリリースが先に要ります)。`,
